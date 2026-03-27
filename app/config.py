@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     ENABLE_WEBHOOKS: bool = True
     ENABLE_CHANGE_TRACKING: bool = True
 
+    # Auth / JWT
+    JWT_SECRET_KEY: str = "change-me-to-a-random-secret-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRATION_MINUTES: int = 1440  # 24 hours
+
     # Email service (external)
     EMAIL_SERVICE_URL: str = "http://localhost:3000"
     EMAIL_SERVICE_API_KEY: str = ""
