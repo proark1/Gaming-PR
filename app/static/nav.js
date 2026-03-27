@@ -122,6 +122,9 @@
                     ${link('/dashboard', 'Dashboard', 'dashboard')}
                     ${link('/articles', 'Articles', 'articles')}
                     ${link('/outlets', 'Outlets', 'outlets')}
+                    ${link('/scraper', 'Scraper', 'scraper')}
+                    ${link('/feed', 'Live Feed', 'feed')}
+                    ${link('/emails', 'Email', 'emails')}
                     ${link('/webhooks', 'Webhooks', 'webhooks')}
                     ${link('/export', 'Export', 'export')}
                     ${link('/docs', 'API Docs', 'docs')}

@@ -176,6 +176,21 @@ def export_page():
     return _serve_page("export.html")
 
 
+@app.get("/emails", response_class=HTMLResponse)
+def emails_page():
+    return _serve_page("emails.html")
+
+
+@app.get("/scraper", response_class=HTMLResponse)
+def scraper_page():
+    return _serve_page("scraper.html")
+
+
+@app.get("/feed", response_class=HTMLResponse)
+def feed_page():
+    return _serve_page("feed.html")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "version": "4.0.0"}

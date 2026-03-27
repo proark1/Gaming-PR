@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Feed — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0a0a0f; --bg-secondary: #111118; --bg-card: #16161f; --bg-card-hover: #1c1c28;
+            --border: #2a2a3a; --text-primary: #f0f0f5; --text-secondary: #8888a0; --text-muted: #5a5a72;
+            --accent: #7c5cff; --accent-light: #9b7fff; --green: #22c55e; --green-dim: rgba(34,197,94,0.15);
+            --orange: #f59e0b; --orange-dim: rgba(245,158,11,0.15); --red: #ef4444; --red-dim: rgba(239,68,68,0.15);
+            --cyan: #06b6d4; --cyan-dim: rgba(6,182,212,0.15); --radius: 12px;
+        }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
+        .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(124,92,255,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(124,92,255,0.03) 1px,transparent 1px); background-size: 60px 60px; z-index: 0; pointer-events: none; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 32px 24px; position: relative; z-index: 1; }
+        h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+        .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; }
+
+        /* Connection bar */
+        .conn-bar {
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+            padding: 14px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            margin-bottom: 20px;
+        }
+        .conn-status { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 600; }
+        .conn-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .conn-dot.connected { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.5); animation: pulse 2s infinite; }
+        .conn-dot.disconnected { background: var(--red); }
+        .conn-dot.connecting { background: var(--orange); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .conn-stats { display: flex; gap: 20px; font-size: 0.82rem; color: var(--text-secondary); }
+        .conn-stats strong { color: var(--text-primary); }
+        .conn-btn {
+            padding: 8px 18px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer;
+            font-family: inherit; transition: all .2s; border: none;
+        }
+        .conn-btn.connect { background: var(--green); color: #fff; }
+        .conn-btn.connect:hover { background: #16a34a; }
+        .conn-btn.disconnect { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+        .conn-btn.disconnect:hover { background: rgba(239,68,68,0.2); }
+
+        /* Filters */
+        .filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding: 14px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        .filter-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .filter-select { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-size: 0.84rem; font-family: inherit; outline: none; min-width: 140px; cursor: pointer; }
+        .filter-select option { background: var(--bg-primary); }
+        .filter-btn { align-self: flex-end; background: var(--accent); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .filter-btn:hover { opacity: 0.85; }
+        .filter-btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+
+        /* Event log */
+        .feed-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .feed-item {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 16px 20px; transition: border-color .2s; animation: slideIn 0.3s ease;
+        }
+        .feed-item:hover { border-color: rgba(124,92,255,0.3); }
+        .feed-item.type-new_article { border-left: 3px solid var(--green); }
+        .feed-item.type-scrape_progress { border-left: 3px solid var(--cyan); }
+        .feed-item.type-stats_update { border-left: 3px solid var(--accent); }
+        .feed-item.type-connected { border-left: 3px solid var(--green); }
+        .feed-item.type-filters_updated { border-left: 3px solid var(--orange); }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .feed-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+        .feed-type { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .feed-type.new_article { color: var(--green); }
+        .feed-type.scrape_progress { color: var(--cyan); }
+        .feed-type.stats_update { color: var(--accent-light); }
+        .feed-type.connected { color: var(--green); }
+        .feed-type.filters_updated { color: var(--orange); }
+        .feed-time { font-size: 0.72rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        .feed-title { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+        .feed-title a { color: inherit; text-decoration: none; }
+        .feed-title a:hover { color: var(--accent-light); }
+        .feed-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--text-muted); align-items: center; }
+        .feed-body { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+        .feed-json { font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; color: var(--text-muted); background: var(--bg-primary); padding: 10px; border-radius: 6px; max-height: 120px; overflow-y: auto; margin-top: 6px; white-space: pre-wrap; word-break: break-all; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .badge-green { background: var(--green-dim); color: var(--green); }
+        .badge-accent { background: rgba(124,92,255,0.15); color: var(--accent-light); }
+        .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
+        .badge-orange { background: var(--orange-dim); color: var(--orange); }
+
+        .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty .icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+        /* Toggle raw JSON */
+        .toggle-raw { font-size: 0.72rem; color: var(--text-muted); cursor: pointer; text-decoration: underline; }
+        .toggle-raw:hover { color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="feed"></script>
+
+    <div class="container">
+        <h1>Live Feed</h1>
+        <div class="subtitle">Real-time WebSocket stream of new articles and scraping activity</div>
+
+        <!-- Connection bar -->
+        <div class="conn-bar">
+            <div class="conn-status">
+                <span class="conn-dot disconnected" id="conn-dot"></span>
+                <span id="conn-text">Disconnected</span>
+            </div>
+            <div class="conn-stats">
+                <span>Events: <strong id="event-count">0</strong></span>
+                <span>Articles: <strong id="article-count">0</strong></span>
+            </div>
+            <button class="conn-btn connect" id="conn-btn" onclick="toggleConnection()">Connect</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <span class="filter-label">Language</span>
+                <select class="filter-select" id="f-language"><option value="">All Languages</option></select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Article Type</span>
+                <select class="filter-select" id="f-type">
+                    <option value="">All Types</option>
+                    <option value="news">News</option>
+                    <option value="review">Review</option>
+                    <option value="preview">Preview</option>
+                    <option value="guide">Guide</option>
+                    <option value="opinion">Opinion</option>
+                    <option value="interview">Interview</option>
+                </select>
+            </div>
+            <button class="filter-btn" onclick="updateFilters()">Apply Filters</button>
+            <button class="filter-btn secondary" onclick="clearFeed()">Clear Feed</button>
+        </div>
+
+        <!-- Feed -->
+        <div class="feed-list" id="feed-list">
+            <div class="empty">
+                <div class="icon">&#128225;</div>
+                <div style="font-size:1.05rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px">Ready to stream</div>
+                <div>Click <strong>Connect</strong> to start receiving real-time events</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let eventCount = 0;
+        let articleCount = 0;
+        const MAX_ITEMS = 200;
+
+        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        async function loadLanguages() {
+            try {
+                const res = await fetch('/api/languages');
+                const langs = await res.json();
+                const sel = document.getElementById('f-language');
+                for (const [code, name] of Object.entries(langs)) {
+                    const opt = document.createElement('option');
+                    opt.value = code; opt.textContent = name;
+                    sel.appendChild(opt);
+                }
+            } catch (e) {}
+        }
+
+        function setConnectionState(state) {
+            const dot = document.getElementById('conn-dot');
+            const text = document.getElementById('conn-text');
+            const btn = document.getElementById('conn-btn');
+            dot.className = 'conn-dot ' + state;
+            if (state === 'connected') {
+                text.textContent = 'Connected';
+                btn.textContent = 'Disconnect';
+                btn.className = 'conn-btn disconnect';
+            } else if (state === 'connecting') {
+                text.textContent = 'Connecting...';
+                btn.textContent = 'Connecting...';
+                btn.disabled = true;
+            } else {
+                text.textContent = 'Disconnected';
+                btn.textContent = 'Connect';
+                btn.className = 'conn-btn connect';
+                btn.disabled = false;
+            }
+        }
+
+        function buildWsUrl() {
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const params = new URLSearchParams();
+            const lang = document.getElementById('f-language').value;
+            const type = document.getElementById('f-type').value;
+            if (lang) params.set('language', lang);
+            if (type) params.set('article_type', type);
+            const qs = params.toString();
+            return `${proto}//${location.host}/ws/feed${qs ? '?' + qs : ''}`;
+        }
+
+        function toggleConnection() {
+            if (ws && ws.readyState <= 1) {
+                ws.close();
+                ws = null;
+                setConnectionState('disconnected');
+                return;
+            }
+            connect();
+        }
+
+        function connect() {
+            setConnectionState('connecting');
+            ws = new WebSocket(buildWsUrl());
+
+            ws.onopen = () => setConnectionState('connected');
+
+            ws.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    addEvent(msg);
+                } catch (err) {
+                    addRawEvent(e.data);
+                }
+            };
+
+            ws.onerror = () => setConnectionState('disconnected');
+
+            ws.onclose = () => {
+                setConnectionState('disconnected');
+                ws = null;
+            };
+        }
+
+        function addEvent(msg) {
+            eventCount++;
+            document.getElementById('event-count').textContent = eventCount;
+
+            if (msg.type === 'new_article') articleCount++;
+            document.getElementById('article-count').textContent = articleCount;
+
+            const list = document.getElementById('feed-list');
+
+            // Remove empty state
+            const empty = list.querySelector('.empty');
+            if (empty) empty.remove();
+
+            const item = document.createElement('div');
+            item.className = `feed-item type-${msg.type || 'unknown'}`;
+
+            const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
+            const data = msg.data || {};
+
+            let content = '';
+
+            if (msg.type === 'new_article') {
+                content = `
+                    <div class="feed-title"><a href="${esc(data.url)}" target="_blank" rel="noopener">${esc(data.title || 'Untitled')}</a></div>
+                    <div class="feed-meta">
+                        ${data.author ? `<span>${esc(data.author)}</span>` : ''}
+                        ${data.language ? `<span class="badge badge-accent">${data.language}</span>` : ''}
+                        ${data.article_type ? `<span class="badge badge-cyan">${data.article_type}</span>` : ''}
+                        ${data.word_count ? `<span>${data.word_count} words</span>` : ''}
+                    </div>
+                    ${data.summary ? `<div class="feed-body" style="margin-top:6px">${esc(data.summary).substring(0, 200)}</div>` : ''}
+                `;
+            } else if (msg.type === 'scrape_progress') {
+                content = `<div class="feed-body">
+                    ${data.outlet_name ? `<strong>${esc(data.outlet_name)}</strong> — ` : ''}
+                    ${data.status || 'Progress update'}
+                    ${data.articles_found != null ? ` | Found: ${data.articles_found}` : ''}
+                    ${data.new_articles != null ? ` | New: ${data.new_articles}` : ''}
+                </div>`;
+            } else if (msg.type === 'connected') {
+                content = `<div class="feed-body">${esc(msg.message || 'Connected to live feed')}</div>`;
+            } else if (msg.type === 'filters_updated') {
+                content = `<div class="feed-body">Filters updated: ${esc(JSON.stringify(msg.filters || {}))}</div>`;
+            } else {
+                content = `<div class="feed-body">${esc(msg.message || msg.type || 'Event received')}</div>`;
+            }
+
+            const rawJson = JSON.stringify(msg, null, 2);
+            const rawId = 'raw-' + eventCount;
+
+            item.innerHTML = `
+                <div class="feed-header">
+                    <span class="feed-type ${msg.type || ''}">${msg.type || 'event'}</span>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <span class="toggle-raw" onclick="document.getElementById('${rawId}').style.display=document.getElementById('${rawId}').style.display==='none'?'block':'none'">JSON</span>
+                        <span class="feed-time">${time}</span>
+                    </div>
+                </div>
+                ${content}
+                <div class="feed-json" id="${rawId}" style="display:none">${esc(rawJson)}</div>
+            `;
+
+            list.prepend(item);
+
+            // Cap items
+            while (list.children.length > MAX_ITEMS) list.lastChild.remove();
+        }
+
+        function addRawEvent(data) {
+            addEvent({ type: 'raw', message: data, timestamp: new Date().toISOString() });
+        }
+
+        function updateFilters() {
+            if (ws && ws.readyState === 1) {
+                const filters = {};
+                const lang = document.getElementById('f-language').value;
+                const type = document.getElementById('f-type').value;
+                if (lang) filters.language = lang;
+                if (type) filters.article_type = type;
+                ws.send(JSON.stringify({ type: 'update_filters', filters: filters }));
+            }
+        }
+
+        function clearFeed() {
+            eventCount = 0; articleCount = 0;
+            document.getElementById('event-count').textContent = '0';
+            document.getElementById('article-count').textContent = '0';
+            document.getElementById('feed-list').innerHTML = `<div class="empty">
+                <div class="icon">&#128225;</div>
+                <div style="font-size:1.05rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px">${ws ? 'Waiting for events...' : 'Ready to stream'}</div>
+                <div>${ws ? 'New events will appear here' : 'Click <strong>Connect</strong> to start receiving real-time events'}</div>
+            </div>`;
+        }
+
+        loadLanguages();
+    </script>
+</body>
+</html>
