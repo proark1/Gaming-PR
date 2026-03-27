@@ -21,16 +21,22 @@ class ConnectionManager:
 
     def __init__(self):
         self._connections: dict[WebSocket, dict] = {}
-        self._lock = asyncio.Lock()
+        self._lock: Optional[asyncio.Lock] = None
+
+    def _get_lock(self) -> asyncio.Lock:
+        """Lazily create the asyncio.Lock to avoid event loop issues at import time."""
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        return self._lock
 
     async def connect(self, websocket: WebSocket, filters: dict = None):
         await websocket.accept()
-        async with self._lock:
+        async with self._get_lock():
             self._connections[websocket] = filters or {}
         logger.info(f"WebSocket client connected. Total: {len(self._connections)}")
 
     async def disconnect(self, websocket: WebSocket):
-        async with self._lock:
+        async with self._get_lock():
             self._connections.pop(websocket, None)
         logger.info(f"WebSocket client disconnected. Total: {len(self._connections)}")
 
@@ -45,7 +51,7 @@ class ConnectionManager:
             "data": article_data,
         }, default=str)
 
-        async with self._lock:
+        async with self._get_lock():
             dead = []
             for ws, filters in self._connections.items():
                 if self._matches_filters(article_data, filters):
@@ -68,7 +74,7 @@ class ConnectionManager:
             "data": progress_data,
         }, default=str)
 
-        async with self._lock:
+        async with self._get_lock():
             dead = []
             for ws in self._connections:
                 try:
@@ -89,7 +95,7 @@ class ConnectionManager:
             "data": stats,
         }, default=str)
 
-        async with self._lock:
+        async with self._get_lock():
             dead = []
             for ws in self._connections:
                 try:

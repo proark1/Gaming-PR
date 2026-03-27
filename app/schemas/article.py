@@ -28,8 +28,8 @@ class TranslationResponse(BaseModel):
     id: int
     article_id: int
     language: str
-    translated_title: str
-    translated_body: str
+    translated_title: Optional[str] = ""
+    translated_body: Optional[str] = ""
     status: str
     created_at: datetime
 

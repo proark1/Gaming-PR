@@ -15,9 +15,15 @@ from app.models.webhook import ContentSnapshot
 logger = logging.getLogger(__name__)
 
 
-def track_change(db: Session, article: ScrapedArticle, new_text: str, new_title: str = "") -> bool:
+def track_change(db: Session, article: ScrapedArticle, new_text: str,
+                 new_title: str = "", old_hash_override: str = None) -> bool:
     """
     Compare new content against stored content and record changes.
+
+    Args:
+        old_hash_override: If provided, use this as the old hash instead of
+            article.content_hash. Needed when the article's hash has already
+            been updated before calling this function.
 
     Returns True if content changed.
     """
@@ -25,7 +31,7 @@ def track_change(db: Session, article: ScrapedArticle, new_text: str, new_title:
         return False
 
     new_hash = hashlib.sha256(new_text.encode()).hexdigest()
-    old_hash = article.content_hash
+    old_hash = old_hash_override or article.content_hash
 
     if not old_hash:
         # First time tracking - record initial snapshot

@@ -164,19 +164,31 @@ def _parse_urlset(root, max_age_days: int, max_urls: int) -> list[dict]:
 
 def _parse_sitemap_date(date_str: str) -> Optional[datetime]:
     """Parse sitemap date formats."""
-    formats = [
+    clean = date_str.strip()
+
+    # Formats with timezone info (%z) - don't add tzinfo manually
+    tz_formats = [
         "%Y-%m-%dT%H:%M:%S%z",
         "%Y-%m-%dT%H:%M:%S.%f%z",
+    ]
+    for fmt in tz_formats:
+        try:
+            return datetime.strptime(clean, fmt)
+        except ValueError:
+            continue
+
+    # Formats without timezone - assume UTC
+    naive_formats = [
         "%Y-%m-%dT%H:%M:%SZ",
         "%Y-%m-%dT%H:%M:%S",
         "%Y-%m-%d",
     ]
-    clean = date_str.strip()
-    for fmt in formats:
+    for fmt in naive_formats:
         try:
-            return datetime.strptime(clean, fmt).replace(tzinfo=timezone.utc) if "z" not in fmt.lower() else datetime.strptime(clean, fmt)
+            return datetime.strptime(clean, fmt).replace(tzinfo=timezone.utc)
         except ValueError:
             continue
+
     return None
 
 

@@ -37,7 +37,8 @@ def can_fetch(url: str) -> bool:
         if rp is None:
             return True
 
-        return rp.can_fetch(USER_AGENT, url) and rp.can_fetch("*", url)
+        # Check our specific bot UA first; fall back to wildcard rules
+        return rp.can_fetch(USER_AGENT, url)
 
     except Exception as e:
         logger.debug(f"robots.txt check failed for {url}: {e}")

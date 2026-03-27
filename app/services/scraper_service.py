@@ -207,14 +207,21 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
             existing = db.query(ScrapedArticle).filter(ScrapedArticle.url == url).first()
 
             if existing:
+                # Save old content hash for change tracking
+                old_hash = existing.content_hash
+                old_title = existing.title
+
                 updated = _update_existing_article(db, existing, article_data, extract_content, outlet.language)
                 if updated:
                     result["updated_articles"] += 1
-                    # Content change tracking
-                    if settings.ENABLE_CHANGE_TRACKING and existing.full_body_text:
+                    # Content change tracking - compare new content against saved old hash
+                    if settings.ENABLE_CHANGE_TRACKING and existing.full_body_text and old_hash:
                         try:
                             from app.services.change_tracker import track_change
-                            changed = track_change(db, existing, existing.full_body_text, existing.title)
+                            changed = track_change(
+                                db, existing, existing.full_body_text,
+                                existing.title, old_hash_override=old_hash,
+                            )
                             if changed:
                                 result["content_changes_detected"] += 1
                         except Exception as e:
@@ -288,13 +295,11 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
                 except Exception as e:
                     logger.debug(f"Webhook notification error: {e}")
 
-            # Broadcast to WebSocket clients
+            # Broadcast to WebSocket clients (best-effort, handles sync/async contexts)
             try:
                 from app.routers.websocket import ws_manager
-                import asyncio
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    asyncio.ensure_future(ws_manager.broadcast_article({
+                if ws_manager.connection_count > 0:
+                    _broadcast_to_websocket(ws_manager, {
                         "article_id": scraped.id,
                         "title": scraped.title,
                         "url": scraped.url,
@@ -304,7 +309,7 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
                         "outlet_name": outlet.name,
                         "author": scraped.author,
                         "featured_image_url": scraped.featured_image_url,
-                    }))
+                    })
             except Exception:
                 pass  # WebSocket is best-effort
 
@@ -445,6 +450,22 @@ async def _scrape_all_async(db: Session, extract_content: bool, adaptive: bool =
 # ═══════════════════════════════════════════
 # Helpers
 # ═══════════════════════════════════════════
+
+
+def _broadcast_to_websocket(ws_manager, article_data: dict):
+    """Safely broadcast to WebSocket from sync or async context."""
+    try:
+        loop = asyncio.get_running_loop()
+        # We're in an async context - schedule the coroutine
+        asyncio.ensure_future(ws_manager.broadcast_article(article_data))
+    except RuntimeError:
+        # No running loop - create one just for this broadcast
+        try:
+            loop = asyncio.new_event_loop()
+            loop.run_until_complete(ws_manager.broadcast_article(article_data))
+            loop.close()
+        except Exception:
+            pass
 
 
 def _scrape_outlet_thread(outlet_id: int, extract_content: bool) -> dict:

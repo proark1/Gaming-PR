@@ -1,12 +1,21 @@
 import logging
 from datetime import datetime, timezone
 from time import mktime
+from urllib.parse import urlparse
 
 import feedparser
+import requests
 
 from app.scrapers.base import BaseScraper
+from app.scrapers.stealth import get_session_headers
 
 logger = logging.getLogger(__name__)
+
+FALLBACK_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "application/rss+xml, application/xml, text/xml, */*",
+}
 
 
 class RssScraper(BaseScraper):
@@ -16,7 +25,17 @@ class RssScraper(BaseScraper):
             return []
 
         try:
-            feed = feedparser.parse(self.outlet.rss_feed_url)
+            # Fetch RSS with stealth headers, then parse the content
+            domain = urlparse(self.outlet.rss_feed_url).netloc
+            try:
+                headers = get_session_headers(domain, language=self.outlet.language)
+                headers["Accept"] = "application/rss+xml, application/xml, text/xml, */*"
+            except Exception:
+                headers = FALLBACK_HEADERS
+
+            resp = requests.get(self.outlet.rss_feed_url, headers=headers, timeout=20)
+            resp.raise_for_status()
+            feed = feedparser.parse(resp.content)
         except Exception as e:
             logger.error(f"Failed to parse RSS feed for {self.outlet.name}: {e}")
             return []

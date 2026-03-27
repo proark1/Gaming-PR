@@ -5,10 +5,11 @@ import requests
 from bs4 import BeautifulSoup
 
 from app.scrapers.base import BaseScraper
+from app.scrapers.stealth import get_session_headers
 
 logger = logging.getLogger(__name__)
 
-HEADERS = {
+FALLBACK_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                   "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -37,7 +38,13 @@ class GenericHtmlScraper(BaseScraper):
 
     def scrape(self) -> list[dict]:
         try:
-            response = requests.get(self.outlet.url, headers=HEADERS, timeout=15)
+            domain = urlparse(self.outlet.url).netloc
+            headers = get_session_headers(domain, language=self.outlet.language)
+        except Exception:
+            headers = FALLBACK_HEADERS
+
+        try:
+            response = requests.get(self.outlet.url, headers=headers, timeout=15)
             response.raise_for_status()
         except requests.RequestException as e:
             logger.error(f"Failed to fetch {self.outlet.name} ({self.outlet.url}): {e}")

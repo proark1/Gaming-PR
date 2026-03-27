@@ -24,6 +24,15 @@ def _make_outlet(**kwargs):
     return outlet
 
 
+def _mock_rss_response(content=b"<rss></rss>"):
+    """Create a mock requests.Response for RSS fetch."""
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.content = content
+    resp.raise_for_status = MagicMock()
+    return resp
+
+
 def test_rss_scraper_parses_entries():
     outlet = _make_outlet()
     mock_feed = MagicMock()
@@ -40,7 +49,8 @@ def test_rss_scraper_parses_entries():
     entry.authors = []
     mock_feed.entries = [entry]
 
-    with patch("app.scrapers.generic_rss.feedparser.parse", return_value=mock_feed):
+    with patch("app.scrapers.generic_rss.requests.get", return_value=_mock_rss_response()), \
+         patch("app.scrapers.generic_rss.feedparser.parse", return_value=mock_feed):
         scraper = RssScraper(outlet)
         results = scraper.scrape()
 
@@ -59,7 +69,7 @@ def test_rss_scraper_no_feed_url():
 
 def test_rss_scraper_handles_parse_error():
     outlet = _make_outlet()
-    with patch("app.scrapers.generic_rss.feedparser.parse", side_effect=Exception("Network error")):
+    with patch("app.scrapers.generic_rss.requests.get", side_effect=Exception("Network error")):
         scraper = RssScraper(outlet)
         results = scraper.scrape()
     assert results == []
@@ -84,7 +94,8 @@ def test_rss_extracts_tags_and_categories():
     entry.authors = [{"name": "Jane Doe", "href": "https://test.com/jane"}]
     mock_feed.entries = [entry]
 
-    with patch("app.scrapers.generic_rss.feedparser.parse", return_value=mock_feed):
+    with patch("app.scrapers.generic_rss.requests.get", return_value=_mock_rss_response()), \
+         patch("app.scrapers.generic_rss.feedparser.parse", return_value=mock_feed):
         results = RssScraper(outlet).scrape()
 
     assert results[0]["tags"] == ["PS5"]

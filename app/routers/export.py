@@ -141,7 +141,7 @@ def export_rss(
 
     for a in articles:
         item = SubElement(channel, "item")
-        SubElement(item, "title").text = a.title
+        SubElement(item, "title").text = a.title or "Untitled"
         SubElement(item, "link").text = a.url
         SubElement(item, "guid", isPermaLink="true").text = a.url
 
@@ -150,16 +150,19 @@ def export_rss(
         if a.author:
             SubElement(item, "dc:creator").text = a.author
         if a.published_at:
-            SubElement(item, "pubDate").text = a.published_at.strftime(
-                "%a, %d %b %Y %H:%M:%S GMT"
-            )
+            try:
+                SubElement(item, "pubDate").text = a.published_at.strftime(
+                    "%a, %d %b %Y %H:%M:%S GMT"
+                )
+            except Exception:
+                pass
         if a.featured_image_url:
-            media = SubElement(item, "media:content", url=a.featured_image_url, medium="image")
+            SubElement(item, "media:content", url=a.featured_image_url, medium="image")
         if a.categories:
-            for cat in a.categories[:5]:
+            for cat in (a.categories or [])[:5]:
                 SubElement(item, "category").text = cat
         if a.tags:
-            for tag in a.tags[:10]:
+            for tag in (a.tags or [])[:10]:
                 SubElement(item, "category").text = tag
 
     xml_bytes = tostring(rss, encoding="unicode", xml_declaration=False)
