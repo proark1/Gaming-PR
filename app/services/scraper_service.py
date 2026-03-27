@@ -1,9 +1,14 @@
-import hashlib
+"""
+Core scraping engine - async, concurrent, with robots.txt compliance,
+sitemap discovery, content dedup, ETag caching, and full content extraction.
+"""
+import asyncio
 import logging
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
 
+import aiohttp
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -14,6 +19,9 @@ from app.scrapers.base import BaseScraper
 from app.scrapers.generic_rss import RssScraper
 from app.scrapers.site_specific.generic_html import GenericHtmlScraper
 from app.scrapers.content_extractor import extract_full_article
+from app.scrapers.dedup import compute_simhash, is_duplicate
+from app.scrapers.robots import can_fetch
+from app.scrapers.sitemap import discover_sitemap_urls, parse_sitemap
 
 logger = logging.getLogger(__name__)
 
@@ -24,155 +32,15 @@ def get_scraper(outlet: GamingOutlet) -> BaseScraper:
     return GenericHtmlScraper(outlet)
 
 
-def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = True) -> dict:
-    """Scrape a single outlet: discover articles, extract full content, save everything."""
-    result = {
-        "outlet_id": outlet.id,
-        "outlet_name": outlet.name,
-        "language": outlet.language,
-        "articles_found": 0,
-        "new_articles": 0,
-        "updated_articles": 0,
-        "full_content_extracted": 0,
-        "errors": [],
-        "status": "success",
-    }
-
-    scraper = get_scraper(outlet)
-
-    try:
-        raw_articles = scraper.scrape()
-    except Exception as e:
-        logger.error(f"Scraper failed for {outlet.name}: {e}")
-        result["status"] = f"error: {e}"
-        result["errors"].append(str(e))
-        _update_outlet_failure(db, outlet)
-        return result
-
-    result["articles_found"] = len(raw_articles)
-
-    for article_data in raw_articles:
-        url = article_data.get("url", "")
-        if not url:
-            continue
-
-        try:
-            existing = db.query(ScrapedArticle).filter(ScrapedArticle.url == url).first()
-
-            if existing:
-                # Update existing article if we now have better data
-                updated = _update_existing_article(db, existing, article_data, extract_content)
-                if updated:
-                    result["updated_articles"] += 1
-                continue
-
-            # New article - create it
-            scraped = _create_scraped_article(outlet, article_data)
-            db.add(scraped)
-            db.flush()  # get ID
-
-            # Extract full content if enabled
-            if extract_content and settings.FULL_CONTENT_EXTRACTION:
-                try:
-                    time.sleep(settings.SCRAPE_RATE_LIMIT_DELAY)
-                    full_data = extract_full_article(url, timeout=settings.SCRAPE_REQUEST_TIMEOUT)
-                    _apply_full_content(scraped, full_data)
-                    if scraped.is_full_content:
-                        result["full_content_extracted"] += 1
-                except Exception as e:
-                    logger.warning(f"Content extraction failed for {url}: {e}")
-                    if scraped.extraction_errors is None:
-                        scraped.extraction_errors = []
-                    scraped.extraction_errors.append(f"Full extraction failed: {e}")
-
-            result["new_articles"] += 1
-
-        except Exception as e:
-            logger.error(f"Error processing article {url}: {e}")
-            result["errors"].append(f"{url}: {e}")
-
-    db.commit()
-    _update_outlet_success(db, outlet, result)
-    return result
+# ═══════════════════════════════════════════
+# Public API (sync wrappers around async)
+# ═══════════════════════════════════════════
 
 
 def scrape_all(db: Session, extract_content: bool = True) -> dict:
-    """Scrape all active outlets concurrently. Returns a ScrapeJob summary."""
-    job = ScrapeJob(
-        job_type="manual",
-        status="running",
-        started_at=datetime.now(timezone.utc),
-    )
-    db.add(job)
-    db.commit()
-    db.refresh(job)
-
-    outlets = (
-        db.query(GamingOutlet)
-        .filter(GamingOutlet.is_active == True)
-        .order_by(GamingOutlet.priority.asc())
-        .all()
-    )
-
-    all_results = []
-    total_errors = []
-
-    # Use thread pool for concurrent scraping with rate limiting
-    with ThreadPoolExecutor(max_workers=settings.SCRAPE_CONCURRENCY) as executor:
-        future_to_outlet = {}
-        for outlet in outlets:
-            future = executor.submit(_scrape_outlet_thread, outlet.id, extract_content)
-            future_to_outlet[future] = outlet
-
-        for future in as_completed(future_to_outlet):
-            outlet = future_to_outlet[future]
-            try:
-                result = future.result(timeout=300)
-                all_results.append(result)
-                if result.get("errors"):
-                    total_errors.extend(result["errors"])
-            except Exception as e:
-                logger.error(f"Thread failed for {outlet.name}: {e}")
-                all_results.append({
-                    "outlet_id": outlet.id,
-                    "outlet_name": outlet.name,
-                    "articles_found": 0,
-                    "new_articles": 0,
-                    "updated_articles": 0,
-                    "full_content_extracted": 0,
-                    "errors": [str(e)],
-                    "status": "error",
-                })
-                total_errors.append(f"{outlet.name}: {e}")
-
-    # Update job record
-    job.status = "completed" if not total_errors else "partial"
-    job.completed_at = datetime.now(timezone.utc)
-    job.duration_seconds = (job.completed_at - job.started_at).total_seconds()
-    job.total_outlets_scraped = len(all_results)
-    job.total_articles_found = sum(r.get("articles_found", 0) for r in all_results)
-    job.total_new_articles = sum(r.get("new_articles", 0) for r in all_results)
-    job.total_articles_updated = sum(r.get("updated_articles", 0) for r in all_results)
-    job.total_full_content_extracted = sum(r.get("full_content_extracted", 0) for r in all_results)
-    job.total_errors = len(total_errors)
-    job.outlet_results = all_results
-    job.errors = total_errors[:100]
-
-    db.commit()
-    db.refresh(job)
-
-    return {
-        "job_id": job.id,
-        "status": job.status,
-        "duration_seconds": job.duration_seconds,
-        "total_outlets_scraped": job.total_outlets_scraped,
-        "total_articles_found": job.total_articles_found,
-        "total_new_articles": job.total_new_articles,
-        "total_articles_updated": job.total_articles_updated,
-        "total_full_content_extracted": job.total_full_content_extracted,
-        "total_errors": job.total_errors,
-        "outlet_results": all_results,
-    }
+    """Scrape all active outlets concurrently."""
+    loop = _get_or_create_event_loop()
+    return loop.run_until_complete(_scrape_all_async(db, extract_content))
 
 
 def scrape_single_outlet(db: Session, outlet_id: int, extract_content: bool = True) -> dict:
@@ -209,8 +77,210 @@ def scrape_single_outlet(db: Session, outlet_id: int, extract_content: bool = Tr
     return result
 
 
+def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = True) -> dict:
+    """Scrape a single outlet: discover articles, extract full content, save everything."""
+    start = time.monotonic()
+
+    result = {
+        "outlet_id": outlet.id,
+        "outlet_name": outlet.name,
+        "language": outlet.language,
+        "articles_found": 0,
+        "new_articles": 0,
+        "updated_articles": 0,
+        "full_content_extracted": 0,
+        "duplicates_skipped": 0,
+        "robots_blocked": 0,
+        "sitemap_articles": 0,
+        "cached_responses": 0,
+        "errors": [],
+        "status": "success",
+        "duration_seconds": 0,
+    }
+
+    # Phase 1: Discover articles from RSS/HTML
+    scraper = get_scraper(outlet)
+    try:
+        raw_articles = scraper.scrape()
+    except Exception as e:
+        logger.error(f"Scraper failed for {outlet.name}: {e}")
+        result["status"] = f"error: {e}"
+        result["errors"].append(str(e))
+        _update_outlet_failure(db, outlet)
+        return result
+
+    # Phase 2: Discover articles from sitemaps
+    if settings.ENABLE_SITEMAP_DISCOVERY:
+        sitemap_articles = _discover_from_sitemaps(outlet)
+        result["sitemap_articles"] = len(sitemap_articles)
+        # Merge sitemap articles (avoid duplicates with RSS)
+        existing_urls = {a.get("url") for a in raw_articles}
+        for sa in sitemap_articles:
+            if sa.get("url") and sa["url"] not in existing_urls:
+                raw_articles.append(sa)
+                existing_urls.add(sa["url"])
+
+    result["articles_found"] = len(raw_articles)
+
+    # Phase 3: Process articles
+    for article_data in raw_articles:
+        url = article_data.get("url", "")
+        if not url:
+            continue
+
+        # robots.txt check
+        if settings.RESPECT_ROBOTS_TXT and not can_fetch(url):
+            result["robots_blocked"] += 1
+            continue
+
+        try:
+            existing = db.query(ScrapedArticle).filter(ScrapedArticle.url == url).first()
+
+            if existing:
+                updated = _update_existing_article(db, existing, article_data, extract_content)
+                if updated:
+                    result["updated_articles"] += 1
+                continue
+
+            # New article - create it
+            scraped = _create_scraped_article(outlet, article_data)
+            db.add(scraped)
+            db.flush()
+
+            # Extract full content
+            if extract_content and settings.FULL_CONTENT_EXTRACTION:
+                try:
+                    time.sleep(settings.SCRAPE_RATE_LIMIT_DELAY)
+                    full_data = extract_full_article(url, timeout=settings.SCRAPE_REQUEST_TIMEOUT)
+                    _apply_full_content(scraped, full_data)
+                    if scraped.is_full_content:
+                        result["full_content_extracted"] += 1
+
+                    # SimHash dedup check
+                    if scraped.full_body_text:
+                        simhash = compute_simhash(scraped.full_body_text)
+                        scraped.content_hash = str(simhash)
+                        if _is_near_duplicate(db, simhash, scraped.id):
+                            result["duplicates_skipped"] += 1
+                except Exception as e:
+                    logger.warning(f"Content extraction failed for {url}: {e}")
+                    if scraped.extraction_errors is None:
+                        scraped.extraction_errors = []
+                    scraped.extraction_errors.append(f"Full extraction failed: {e}")
+
+            result["new_articles"] += 1
+
+        except Exception as e:
+            logger.error(f"Error processing article {url}: {e}")
+            result["errors"].append(f"{url}: {e}")
+
+    db.commit()
+    result["duration_seconds"] = round(time.monotonic() - start, 2)
+    _update_outlet_success(db, outlet, result)
+    return result
+
+
+# ═══════════════════════════════════════════
+# Async scraping engine
+# ═══════════════════════════════════════════
+
+
+async def _scrape_all_async(db: Session, extract_content: bool) -> dict:
+    """Async scrape of all active outlets with bounded concurrency."""
+    job = ScrapeJob(
+        job_type="manual",
+        status="running",
+        started_at=datetime.now(timezone.utc),
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    outlets = (
+        db.query(GamingOutlet)
+        .filter(GamingOutlet.is_active == True)
+        .order_by(GamingOutlet.priority.asc())
+        .all()
+    )
+
+    outlet_ids = [o.id for o in outlets]
+
+    # Run outlet scraping concurrently in a thread pool
+    # Each outlet gets its own DB session for thread safety
+    semaphore = asyncio.Semaphore(settings.SCRAPE_CONCURRENCY)
+
+    async def _bounded_scrape(outlet_id: int) -> dict:
+        async with semaphore:
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(
+                None, _scrape_outlet_thread, outlet_id, extract_content
+            )
+
+    tasks = [_bounded_scrape(oid) for oid in outlet_ids]
+    all_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Process results
+    outlet_results = []
+    total_errors = []
+
+    for i, result in enumerate(all_results):
+        if isinstance(result, Exception):
+            outlet = outlets[i] if i < len(outlets) else None
+            name = outlet.name if outlet else f"outlet_{outlet_ids[i]}"
+            logger.error(f"Async scrape failed for {name}: {result}")
+            error_result = {
+                "outlet_id": outlet_ids[i],
+                "outlet_name": name,
+                "articles_found": 0,
+                "new_articles": 0,
+                "updated_articles": 0,
+                "full_content_extracted": 0,
+                "errors": [str(result)],
+                "status": "error",
+            }
+            outlet_results.append(error_result)
+            total_errors.append(f"{name}: {result}")
+        else:
+            outlet_results.append(result)
+            if result.get("errors"):
+                total_errors.extend(result["errors"])
+
+    # Update job
+    job.status = "completed" if not total_errors else "partial"
+    job.completed_at = datetime.now(timezone.utc)
+    job.duration_seconds = (job.completed_at - job.started_at).total_seconds()
+    job.total_outlets_scraped = len(outlet_results)
+    job.total_articles_found = sum(r.get("articles_found", 0) for r in outlet_results)
+    job.total_new_articles = sum(r.get("new_articles", 0) for r in outlet_results)
+    job.total_articles_updated = sum(r.get("updated_articles", 0) for r in outlet_results)
+    job.total_full_content_extracted = sum(r.get("full_content_extracted", 0) for r in outlet_results)
+    job.total_errors = len(total_errors)
+    job.outlet_results = outlet_results
+    job.errors = total_errors[:100]
+    db.commit()
+    db.refresh(job)
+
+    return {
+        "job_id": job.id,
+        "status": job.status,
+        "duration_seconds": job.duration_seconds,
+        "total_outlets_scraped": job.total_outlets_scraped,
+        "total_articles_found": job.total_articles_found,
+        "total_new_articles": job.total_new_articles,
+        "total_articles_updated": job.total_articles_updated,
+        "total_full_content_extracted": job.total_full_content_extracted,
+        "total_errors": job.total_errors,
+        "outlet_results": outlet_results,
+    }
+
+
+# ═══════════════════════════════════════════
+# Helpers
+# ═══════════════════════════════════════════
+
+
 def _scrape_outlet_thread(outlet_id: int, extract_content: bool) -> dict:
-    """Run outlet scraping in its own DB session (for thread safety)."""
+    """Run outlet scraping in its own DB session (thread safety)."""
     from app.database import SessionLocal
     db = SessionLocal()
     try:
@@ -220,6 +290,58 @@ def _scrape_outlet_thread(outlet_id: int, extract_content: bool) -> dict:
         return scrape_outlet(db, outlet, extract_content=extract_content)
     finally:
         db.close()
+
+
+def _discover_from_sitemaps(outlet: GamingOutlet) -> list[dict]:
+    """Discover articles from the outlet's sitemaps."""
+    try:
+        # Check if we have cached sitemap URLs
+        config = outlet.scraper_config or {}
+        sitemap_urls = config.get("sitemap_urls")
+
+        if not sitemap_urls:
+            sitemap_urls = discover_sitemap_urls(outlet.url)
+            # We can't easily update the outlet config here without
+            # making the function impure, so just use what we find
+
+        articles = []
+        for sm_url in sitemap_urls[:3]:  # max 3 sitemaps
+            try:
+                sm_articles = parse_sitemap(sm_url, max_age_days=3, max_urls=50)
+                articles.extend(sm_articles)
+            except Exception as e:
+                logger.debug(f"Sitemap parse failed for {sm_url}: {e}")
+
+        return articles[:100]
+
+    except Exception as e:
+        logger.debug(f"Sitemap discovery failed for {outlet.name}: {e}")
+        return []
+
+
+def _is_near_duplicate(db: Session, simhash: int, exclude_id: int) -> bool:
+    """Check if a SimHash is near-duplicate of any recent article."""
+    # Check against the most recent 500 articles for dedup
+    recent = (
+        db.query(ScrapedArticle.content_hash)
+        .filter(
+            ScrapedArticle.content_hash.isnot(None),
+            ScrapedArticle.id != exclude_id,
+        )
+        .order_by(ScrapedArticle.scraped_at.desc())
+        .limit(500)
+        .all()
+    )
+
+    for (existing_hash,) in recent:
+        try:
+            existing_simhash = int(existing_hash)
+            if is_duplicate(simhash, existing_simhash):
+                return True
+        except (ValueError, TypeError):
+            continue
+
+    return False
 
 
 def _create_scraped_article(outlet: GamingOutlet, data: dict) -> ScrapedArticle:
@@ -257,7 +379,6 @@ def _apply_full_content(article: ScrapedArticle, data: dict):
         article.content_extracted_at = datetime.now(timezone.utc)
         article.content_hash = data.get("content_hash")
 
-    # Enrich with data from full extraction (only if not already set)
     if not article.summary and data.get("summary"):
         article.summary = data["summary"]
     if not article.author and data.get("author"):
@@ -280,7 +401,6 @@ def _apply_full_content(article: ScrapedArticle, data: dict):
     if not article.published_at and data.get("published_at"):
         article.published_at = _parse_dt(data["published_at"])
 
-    # SEO metadata
     article.canonical_url = data.get("canonical_url")
     article.meta_title = data.get("meta_title")
     article.meta_description = data.get("meta_description")
@@ -303,10 +423,9 @@ def _apply_full_content(article: ScrapedArticle, data: dict):
 
 
 def _update_existing_article(db: Session, existing: ScrapedArticle, new_data: dict, extract_content: bool) -> bool:
-    """Update an existing article if new data is better. Returns True if updated."""
+    """Update an existing article if new data is better."""
     updated = False
 
-    # Update if we have new content we didn't have before
     if not existing.full_body_text and extract_content and settings.FULL_CONTENT_EXTRACTION:
         try:
             time.sleep(settings.SCRAPE_RATE_LIMIT_DELAY)
@@ -317,15 +436,12 @@ def _update_existing_article(db: Session, existing: ScrapedArticle, new_data: di
         except Exception as e:
             logger.warning(f"Content extraction failed for existing article {existing.url}: {e}")
 
-    # Update summary if we have a better one now
     if not existing.summary and new_data.get("summary"):
         existing.summary = new_data["summary"]
         updated = True
-
     if not existing.author and new_data.get("author"):
         existing.author = new_data["author"]
         updated = True
-
     if not existing.featured_image_url and new_data.get("featured_image_url"):
         existing.featured_image_url = new_data["featured_image_url"]
         updated = True
@@ -334,15 +450,11 @@ def _update_existing_article(db: Session, existing: ScrapedArticle, new_data: di
 
 
 def _update_outlet_success(db: Session, outlet: GamingOutlet, result: dict):
-    """Update outlet metadata after a successful scrape."""
     now = datetime.now(timezone.utc)
     outlet.last_scraped_at = now
     outlet.last_successful_scrape_at = now
     outlet.consecutive_failures = 0
     outlet.total_articles_scraped = (outlet.total_articles_scraped or 0) + result["new_articles"]
-
-    # Update running average
-    total = outlet.total_articles_scraped or 1
     outlet.avg_articles_per_scrape = round(
         (outlet.avg_articles_per_scrape * 0.8 + result["articles_found"] * 0.2), 1
     )
@@ -350,20 +462,15 @@ def _update_outlet_success(db: Session, outlet: GamingOutlet, result: dict):
 
 
 def _update_outlet_failure(db: Session, outlet: GamingOutlet):
-    """Update outlet metadata after a failed scrape."""
     outlet.last_scraped_at = datetime.now(timezone.utc)
     outlet.consecutive_failures = (outlet.consecutive_failures or 0) + 1
-
-    # Auto-deactivate after 10 consecutive failures
     if outlet.consecutive_failures >= 10:
         outlet.is_active = False
         logger.warning(f"Deactivated outlet {outlet.name} after {outlet.consecutive_failures} failures")
-
     db.commit()
 
 
 def _parse_dt(val) -> datetime | None:
-    """Parse a datetime value that might be a string or datetime."""
     if val is None:
         return None
     if isinstance(val, datetime):
@@ -374,3 +481,23 @@ def _parse_dt(val) -> datetime | None:
         except ValueError:
             return None
     return None
+
+
+def _get_or_create_event_loop():
+    """Get the current event loop or create a new one."""
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_closed():
+            raise RuntimeError
+        if loop.is_running():
+            # We're inside an async context (e.g., FastAPI)
+            # Create a new loop in a thread
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(asyncio.new_event_loop)
+                loop = future.result()
+        return loop
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop

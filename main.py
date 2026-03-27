@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import SUPPORTED_LANGUAGES, settings
 from app.database import Base, engine, SessionLocal
 from app.routers import articles, outlets, scraper, translations
+from app.routers.monitoring import router as monitoring_router
 from app.seed.outlets import seed_outlets
 
 logging.basicConfig(level=logging.INFO)
@@ -24,8 +25,9 @@ def scheduled_scrape():
     try:
         result = scrape_all(db, extract_content=settings.FULL_CONTENT_EXTRACTION)
         logger.info(
-            f"Scheduled scrape complete: {result['total_new_articles']} new articles, "
-            f"{result['total_full_content_extracted']} with full content"
+            f"Scheduled scrape complete: {result['total_new_articles']} new, "
+            f"{result['total_full_content_extracted']} full content, "
+            f"{result['duration_seconds']}s"
         )
     except Exception as e:
         logger.error(f"Scheduled scrape failed: {e}")
@@ -43,7 +45,6 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
 
-    # Start scheduled scraping
     scheduler.add_job(
         scheduled_scrape,
         "interval",
@@ -62,9 +63,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Gaming PR Platform",
-    description="The world's best gaming news scraper. Scrapes 80+ gaming outlets across 10 languages, "
-                "extracts full article content, and auto-translates your articles.",
-    version="2.0.0",
+    description="The world's best gaming news scraper. Scrapes 80+ outlets across 10 languages, "
+                "extracts full article content with async concurrency, robots.txt compliance, "
+                "sitemap discovery, content deduplication, and auto-translates your press releases.",
+    version="3.0.0",
     lifespan=lifespan,
 )
 
@@ -80,11 +82,12 @@ app.include_router(articles.router)
 app.include_router(translations.router)
 app.include_router(outlets.router)
 app.include_router(scraper.router)
+app.include_router(monitoring_router)
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "version": "2.0.0"}
+    return {"status": "ok", "version": "3.0.0"}
 
 
 @app.get("/api/languages")
@@ -94,4 +97,4 @@ def languages():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=True)
