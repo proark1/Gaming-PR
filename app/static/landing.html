@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaming PR Platform — The World's Most Advanced Gaming News Engine</title>
+    <meta name="description" content="Scrape 80+ gaming outlets across 10 languages. Full content extraction, auto-translation, WebSocket live feed, and powerful APIs.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-card: #16161f;
+            --bg-card-hover: #1c1c28;
+            --border: #2a2a3a;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #5a5a72;
+            --accent: #7c5cff;
+            --accent-light: #9b7fff;
+            --accent-glow: rgba(124, 92, 255, 0.3);
+            --green: #22c55e;
+            --green-glow: rgba(34, 197, 94, 0.2);
+            --orange: #f59e0b;
+            --pink: #ec4899;
+            --cyan: #06b6d4;
+            --radius: 12px;
+            --radius-lg: 20px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ─── Animated Background ─── */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(124, 92, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(124, 92, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow-1 { top: -200px; left: -100px; background: var(--accent); }
+        .bg-glow-2 { top: 40%; right: -200px; background: var(--pink); opacity: 0.1; }
+        .bg-glow-3 { bottom: -200px; left: 30%; background: var(--cyan); opacity: 0.08; }
+
+        /* ─── Layout ─── */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+        section { padding: 100px 0; }
+
+        /* ─── Navigation ─── */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 16px 0;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(42, 42, 58, 0.5);
+        }
+
+        nav .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--pink));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav-links { display: flex; align-items: center; gap: 32px; }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--text-primary); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #6344e0);
+            color: white;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+        }
+
+        /* ─── Hero ─── */
+        .hero {
+            padding: 180px 0 120px;
+            text-align: center;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(124, 92, 255, 0.1);
+            border: 1px solid rgba(124, 92, 255, 0.2);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--accent-light);
+            margin-bottom: 28px;
+        }
+
+        .hero-badge .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--green-glow); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 8px transparent; }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.8rem, 6vw, 4.5rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--accent-light), var(--pink), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 640px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+        }
+
+        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+        .hero-terminal {
+            margin-top: 64px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            text-align: left;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 20px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff5f57; }
+        .terminal-dot.yellow { background: #febc2e; }
+        .terminal-dot.green { background: #28c840; }
+
+        .terminal-body {
+            padding: 20px 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .terminal-body .prompt { color: var(--green); }
+        .terminal-body .cmd { color: var(--text-primary); }
+        .terminal-body .comment { color: var(--text-muted); }
+        .terminal-body .output { color: var(--text-secondary); }
+        .terminal-body .highlight { color: var(--accent-light); }
+        .terminal-body .number { color: var(--orange); }
+
+        /* ─── Stats ─── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(124, 92, 255, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--accent-light), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* ─── Features ─── */
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .section-header .tag {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-light);
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 {
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 36px 28px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(124, 92, 255, 0.08);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon.purple { background: rgba(124, 92, 255, 0.15); }
+        .feature-icon.green { background: rgba(34, 197, 94, 0.15); }
+        .feature-icon.orange { background: rgba(245, 158, 11, 0.15); }
+        .feature-icon.pink { background: rgba(236, 72, 153, 0.15); }
+        .feature-icon.cyan { background: rgba(6, 182, 212, 0.15); }
+        .feature-icon.blue { background: rgba(59, 130, 246, 0.15); }
+
+        .feature-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        /* ─── Languages ─── */
+        .languages-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+        }
+
+        .lang-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 18px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .lang-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .lang-flag { font-size: 2rem; margin-bottom: 10px; }
+
+        .lang-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .lang-code {
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        .lang-outlets {
+            color: var(--accent-light);
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* ─── Data Extraction ─── */
+        .extraction-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .extraction-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+        }
+
+        .extraction-card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .extraction-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .extraction-list li {
+            background: rgba(124, 92, 255, 0.08);
+            border: 1px solid rgba(124, 92, 255, 0.15);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ─── API Section ─── */
+        .api-endpoints {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .api-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            transition: all 0.3s;
+        }
+
+        .api-card:hover {
+            border-color: var(--accent);
+        }
+
+        .api-method {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .api-method.get { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+        .api-method.post { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+        .api-method.ws { background: rgba(236, 72, 153, 0.15); color: var(--pink); }
+
+        .api-info h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .api-info p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .api-info code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* ─── CTA ─── */
+        .cta {
+            text-align: center;
+            padding: 120px 0;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(124, 92, 255, 0.1), rgba(236, 72, 153, 0.05));
+            border: 1px solid rgba(124, 92, 255, 0.2);
+            border-radius: 24px;
+            padding: 80px 40px;
+        }
+
+        .cta h2 {
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .cta p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+        /* ─── Footer ─── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 0;
+        }
+
+        footer .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-links { display: flex; gap: 24px; }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--accent-light); }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 1024px) {
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .languages-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .features-grid { grid-template-columns: 1fr; }
+            .languages-grid { grid-template-columns: repeat(2, 1fr); }
+            .extraction-grid { grid-template-columns: 1fr; }
+            .api-endpoints { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+            section { padding: 64px 0; }
+            .hero { padding: 140px 0 80px; }
+            footer .container { flex-direction: column; gap: 16px; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .languages-grid { grid-template-columns: 1fr 1fr; }
+            .hero-buttons { flex-direction: column; align-items: center; }
+            .cta-buttons { flex-direction: column; align-items: center; }
+        }
+
+        /* ─── Animations ─── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate { opacity: 0; animation: fadeUp 0.6s ease-out forwards; }
+        .animate.d1 { animation-delay: 0.1s; }
+        .animate.d2 { animation-delay: 0.2s; }
+        .animate.d3 { animation-delay: 0.3s; }
+        .animate.d4 { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+<div class="bg-glow bg-glow-3"></div>
+
+<!-- Navigation -->
+<nav>
+    <div class="container">
+        <a href="#" class="logo">
+            <div class="logo-icon">GP</div>
+            Gaming PR
+        </a>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#languages">Languages</a>
+            <a href="#extraction">Data</a>
+            <a href="#api">API</a>
+            <a href="/docs" class="btn btn-primary">API Docs</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-badge animate">
+            <span class="pulse"></span>
+            Live scraping &mdash; v4.0
+        </div>
+        <h1 class="animate d1">
+            The world's most advanced<br>
+            <span class="gradient-text">gaming news engine</span>
+        </h1>
+        <p class="animate d2">
+            Scrape 80+ gaming outlets across 10 languages in real-time. Full content extraction,
+            auto-translation, WebSocket live feed, and a powerful REST API &mdash; all in one platform.
+        </p>
+        <div class="hero-buttons animate d3">
+            <a href="/docs" class="btn btn-primary">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                Explore API
+            </a>
+            <a href="#features" class="btn btn-secondary">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 16 16 12 12 8"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                Learn More
+            </a>
+        </div>
+
+        <div class="hero-terminal animate d4">
+            <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+            </div>
+            <div class="terminal-body">
+                <div><span class="prompt">$</span> <span class="cmd">curl</span> <span class="output">/api/scraper/stats</span></div>
+                <div class="comment"># Response</div>
+                <div><span class="output">{</span></div>
+                <div>&nbsp;&nbsp;<span class="highlight">"total_outlets"</span>: <span class="number">85</span>,</div>
+                <div>&nbsp;&nbsp;<span class="highlight">"languages"</span>: <span class="number">10</span>,</div>
+                <div>&nbsp;&nbsp;<span class="highlight">"articles_scraped"</span>: <span class="number">142,847</span>,</div>
+                <div>&nbsp;&nbsp;<span class="highlight">"full_content_extracted"</span>: <span class="number">98,201</span>,</div>
+                <div>&nbsp;&nbsp;<span class="highlight">"auto_translations"</span>: <span class="number">883,809</span></div>
+                <div><span class="output">}</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section>
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card animate">
+                <div class="stat-number">80+</div>
+                <div class="stat-label">Gaming Outlets</div>
+            </div>
+            <div class="stat-card animate d1">
+                <div class="stat-number">10</div>
+                <div class="stat-label">Languages</div>
+            </div>
+            <div class="stat-card animate d2">
+                <div class="stat-number">40+</div>
+                <div class="stat-label">Fields Per Article</div>
+            </div>
+            <div class="stat-card animate d3">
+                <div class="stat-number">30m</div>
+                <div class="stat-label">Scrape Interval</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+    <div class="container">
+        <div class="section-header">
+            <div class="tag">Features</div>
+            <h2>Everything you need to dominate<br>gaming news coverage</h2>
+            <p>Built for PR teams, publishers, and developers who need comprehensive, real-time gaming media intelligence.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon purple">&#9889;</div>
+                <h3>Async Concurrent Scraping</h3>
+                <p>Parallel scraping with configurable concurrency, rate limiting per outlet, and circuit breakers to handle failures gracefully.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon green">&#127760;</div>
+                <h3>Full Content Extraction</h3>
+                <p>Goes beyond headlines. Extracts full article body, images, videos, author info, structured data, review scores, and more.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon orange">&#127468;&#127473;</div>
+                <h3>Auto-Translation</h3>
+                <p>Create an article in any language and it gets automatically translated to 9 other languages with Google Translate.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon pink">&#128225;</div>
+                <h3>WebSocket Live Feed</h3>
+                <p>Real-time article feed via WebSocket connections. Get notified the instant new gaming articles are scraped.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon cyan">&#128268;</div>
+                <h3>Webhook Notifications</h3>
+                <p>Push notifications to your systems when new articles arrive. Configure custom webhook endpoints with retry logic.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon blue">&#128737;</div>
+                <h3>Smart Scheduling</h3>
+                <p>Adaptive scheduling adjusts scrape frequency per outlet based on publishing patterns. Retry queue handles transient failures.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Languages -->
+<section id="languages">
+    <div class="container">
+        <div class="section-header">
+            <div class="tag">Global Coverage</div>
+            <h2>10 languages, 80+ outlets</h2>
+            <p>Comprehensive coverage of the world's biggest gaming media markets.</p>
+        </div>
+
+        <div class="languages-grid">
+            <div class="lang-card">
+                <div class="lang-flag">&#127468;&#127463;</div>
+                <div class="lang-name">English</div>
+                <div class="lang-code">en</div>
+                <div class="lang-outlets">20 outlets</div>
+            </div>
+            <div class="lang-card">
+                <div class="lang-flag">&#127464;&#127475;</div>
+                <div class="lang-name">Chinese</div>
+                <div class="lang-code">zh-CN</div>
+                <div class="lang-outlets">9 outlets</div>
+            </div>
+            <div class="lang-card">
+                <div class="lang-flag">&#127470;&#127475;</div>
+                <div class="lang-name">Hindi</div>
+                <div class="lang-code">hi</div>
+                <div class="lang-outlets">6 outlets</div>
+            </div>
+            <div class="lang-card">
+                <div class="lang-flag">&#127466;&#127480;</div>
+                <div class="lang-name">Spanish</div>
+                <div class="lang-code">es</div>
+                <div class="lang-outlets">9 outlets</div>
+            </div>
+            <div class="lang-card">
+                <div class="lang-flag">&#127467;&#127479;</div>
+                <div class="lang-name">French</div>
+                <div class="lang-code">fr</div>
+                <div class="lang-outlets">8 outlets</div>
+            </div>
+            <div class="lang-card">
+                <div class="lang-flag">&#127480;&#127462;</div>
+                <div class="lang-name">Arabic</div>
+                <div class="lang-code">ar</div>
+                <div class="lang-outlets">5 outlets</div>
+            </div>
+            <div class="lang-card">
+                <div class="lang-flag">&#127463;&#127465;</div>
+                <div class="lang-name">Bengali</div>
+                <div class="lang-code">bn</div>
+                <div class="lang-outlets">4 outlets</div>
+            </div>
+            <div class="lang-card">
+                <div class="lang-flag">&#127463;&#127479;</div>
+                <div class="lang-name">Portuguese</div>
+                <div class="lang-code">pt</div>
+                <div class="lang-outlets">8 outlets</div>
+            </div>
+            <div class="lang-card">
+                <div class="lang-flag">&#127479;&#127482;</div>
+                <div class="lang-name">Russian</div>
+                <div class="lang-code">ru</div>
+                <div class="lang-outlets">7 outlets</div>
+            </div>
+            <div class="lang-card">
+                <div class="lang-flag">&#127471;&#127477;</div>
+                <div class="lang-name">Japanese</div>
+                <div class="lang-code">ja</div>
+                <div class="lang-outlets">9 outlets</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Data Extraction -->
+<section id="extraction">
+    <div class="container">
+        <div class="section-header">
+            <div class="tag">Data Extraction</div>
+            <h2>40+ fields per article</h2>
+            <p>The most comprehensive article extraction in the gaming industry.</p>
+        </div>
+
+        <div class="extraction-grid">
+            <div class="extraction-card">
+                <h3>&#128196; Core &amp; Content</h3>
+                <ul class="extraction-list">
+                    <li>Title</li>
+                    <li>Full Body HTML</li>
+                    <li>Plain Text</li>
+                    <li>Word Count</li>
+                    <li>Reading Time</li>
+                    <li>Canonical URL</li>
+                    <li>Slug</li>
+                </ul>
+            </div>
+            <div class="extraction-card">
+                <h3>&#127909; Media</h3>
+                <ul class="extraction-list">
+                    <li>Featured Image</li>
+                    <li>Thumbnail</li>
+                    <li>All Images</li>
+                    <li>Alt Text</li>
+                    <li>Dimensions</li>
+                    <li>Videos</li>
+                    <li>YouTube / Twitch / Vimeo</li>
+                </ul>
+            </div>
+            <div class="extraction-card">
+                <h3>&#127991;&#65039; Classification</h3>
+                <ul class="extraction-list">
+                    <li>Categories</li>
+                    <li>Tags</li>
+                    <li>Article Type</li>
+                    <li>Gaming Platforms</li>
+                    <li>Game Titles</li>
+                    <li>Review Score</li>
+                    <li>Comment Count</li>
+                </ul>
+            </div>
+            <div class="extraction-card">
+                <h3>&#128270; SEO &amp; Structured Data</h3>
+                <ul class="extraction-list">
+                    <li>Meta Title</li>
+                    <li>Meta Description</li>
+                    <li>OpenGraph</li>
+                    <li>Twitter Card</li>
+                    <li>JSON-LD</li>
+                    <li>Schema.org</li>
+                    <li>Author Info</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- API -->
+<section id="api">
+    <div class="container">
+        <div class="section-header">
+            <div class="tag">REST API</div>
+            <h2>Powerful, developer-friendly API</h2>
+            <p>Full CRUD operations, real-time feeds, bulk export, and comprehensive filtering.</p>
+        </div>
+
+        <div class="api-endpoints">
+            <div class="api-card">
+                <span class="api-method post">POST</span>
+                <div class="api-info">
+                    <h4>Scrape All Outlets</h4>
+                    <code>/api/scraper/run</code>
+                    <p>Trigger a full scrape across 80+ outlets</p>
+                </div>
+            </div>
+            <div class="api-card">
+                <span class="api-method get">GET</span>
+                <div class="api-info">
+                    <h4>List Articles</h4>
+                    <code>/api/scraper/articles</code>
+                    <p>Filter by language, outlet, type, content</p>
+                </div>
+            </div>
+            <div class="api-card">
+                <span class="api-method post">POST</span>
+                <div class="api-info">
+                    <h4>Create &amp; Auto-Translate</h4>
+                    <code>/api/articles/</code>
+                    <p>Create article, auto-translate to 9 languages</p>
+                </div>
+            </div>
+            <div class="api-card">
+                <span class="api-method get">GET</span>
+                <div class="api-info">
+                    <h4>Outlet Management</h4>
+                    <code>/api/outlets/</code>
+                    <p>List, add, update outlets with stats</p>
+                </div>
+            </div>
+            <div class="api-card">
+                <span class="api-method ws">WS</span>
+                <div class="api-info">
+                    <h4>Live Feed</h4>
+                    <code>/ws/articles</code>
+                    <p>Real-time WebSocket article stream</p>
+                </div>
+            </div>
+            <div class="api-card">
+                <span class="api-method get">GET</span>
+                <div class="api-info">
+                    <h4>Bulk Export</h4>
+                    <code>/api/export/</code>
+                    <p>Export articles in bulk with filters</p>
+                </div>
+            </div>
+            <div class="api-card">
+                <span class="api-method post">POST</span>
+                <div class="api-info">
+                    <h4>Webhooks</h4>
+                    <code>/api/webhooks/</code>
+                    <p>Configure push notifications for new articles</p>
+                </div>
+            </div>
+            <div class="api-card">
+                <span class="api-method get">GET</span>
+                <div class="api-info">
+                    <h4>Monitoring</h4>
+                    <code>/api/monitoring/</code>
+                    <p>Health checks, scraper stats, job tracking</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <div class="container">
+        <div class="cta-box">
+            <h2>Ready to get started?</h2>
+            <p>Dive into the interactive API docs and start scraping gaming news in seconds.</p>
+            <div class="cta-buttons">
+                <a href="/docs" class="btn btn-primary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                    Open API Docs
+                </a>
+                <a href="/health" class="btn btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    Health Check
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <p>&copy; 2026 Gaming PR Platform. Built for the gaming industry.</p>
+        <div class="footer-links">
+            <a href="/docs">API Docs</a>
+            <a href="/health">Status</a>
+            <a href="#features">Features</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Intersection Observer for scroll animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animationPlayState = 'running';
+                entry.target.classList.add('animate');
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.stat-card, .feature-card, .lang-card, .extraction-card, .api-card').forEach(el => {
+        el.style.opacity = '0';
+        el.style.animation = 'fadeUp 0.5s ease-out forwards';
+        el.style.animationPlayState = 'paused';
+        observer.observe(el);
+    });
+
+    // Smooth nav background
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+        const nav = document.querySelector('nav');
+        const scrollY = window.scrollY;
+        nav.style.background = scrollY > 50
+            ? 'rgba(10, 10, 15, 0.95)'
+            : 'rgba(10, 10, 15, 0.8)';
+        lastScroll = scrollY;
+    });
+</script>
+</body>
+</html>

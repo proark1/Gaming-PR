@@ -1,9 +1,11 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from app.config import SUPPORTED_LANGUAGES, settings
 from app.database import Base, engine, SessionLocal
@@ -128,6 +130,12 @@ app.include_router(monitoring_router)
 app.include_router(webhooks_router)
 app.include_router(export_router)
 app.include_router(websocket_router)
+
+
+@app.get("/", response_class=HTMLResponse)
+def landing_page():
+    html_path = Path(__file__).parent / "app" / "static" / "landing.html"
+    return HTMLResponse(content=html_path.read_text(), status_code=200)
 
 
 @app.get("/health")
