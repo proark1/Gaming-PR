@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-card: #16161f;
+            --bg-card-hover: #1c1c28;
+            --border: #2a2a3a;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #5a5a72;
+            --accent: #7c5cff;
+            --accent-light: #9b7fff;
+            --green: #22c55e;
+            --green-dim: rgba(34,197,94,0.15);
+            --orange: #f59e0b;
+            --orange-dim: rgba(245,158,11,0.15);
+            --red: #ef4444;
+            --red-dim: rgba(239,68,68,0.15);
+            --pink: #ec4899;
+            --cyan: #06b6d4;
+            --cyan-dim: rgba(6,182,212,0.15);
+            --radius: 12px;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .bg-grid {
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(124,92,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(124,92,255,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0; pointer-events: none;
+        }
+
+        /* Nav */
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            padding: 14px 0;
+            background: rgba(10,10,15,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(42,42,58,0.5);
+        }
+        nav .inner { max-width: 1400px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-primary); }
+        .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--pink)); border-radius: 8px; display: grid; place-items: center; font-size: 14px; }
+        .nav-links { display: flex; gap: 24px; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color .2s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
+        .status-badge { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 500; padding: 6px 14px; border-radius: 20px; }
+        .status-healthy { background: var(--green-dim); color: var(--green); }
+        .status-degraded { background: var(--orange-dim); color: var(--orange); }
+        .status-unhealthy { background: var(--red-dim); color: var(--red); }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* Layout */
+        .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; position: relative; z-index: 1; }
+        h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+        .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 32px; }
+
+        /* Stat Cards */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px; transition: border-color .2s, background .2s;
+        }
+        .stat-card:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+        .stat-label { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px; }
+        .stat-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+        .stat-sub { font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px; }
+        .stat-value.accent { color: var(--accent-light); }
+        .stat-value.green { color: var(--green); }
+        .stat-value.cyan { color: var(--cyan); }
+        .stat-value.orange { color: var(--orange); }
+
+        /* Sections */
+        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title .icon { font-size: 1.2rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+        @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        /* Tables */
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.95rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: left; padding: 10px 16px; color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        td { padding: 10px 16px; border-bottom: 1px solid rgba(42,42,58,0.3); color: var(--text-secondary); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(124,92,255,0.03); }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .badge-green { background: var(--green-dim); color: var(--green); }
+        .badge-orange { background: var(--orange-dim); color: var(--orange); }
+        .badge-red { background: var(--red-dim); color: var(--red); }
+        .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
+        .badge-accent { background: rgba(124,92,255,0.15); color: var(--accent-light); }
+
+        /* Bar chart */
+        .bar-chart { padding: 16px 20px; }
+        .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .bar-label { width: 80px; font-size: 0.8rem; color: var(--text-secondary); text-align: right; flex-shrink: 0; }
+        .bar-track { flex: 1; height: 24px; background: rgba(42,42,58,0.4); border-radius: 6px; overflow: hidden; position: relative; }
+        .bar-fill { height: 100%; border-radius: 6px; transition: width .8s ease; display: flex; align-items: center; padding-left: 8px; font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.9); min-width: fit-content; }
+        .bar-count { font-size: 0.78rem; color: var(--text-muted); flex-shrink: 0; width: 50px; }
+
+        /* System config */
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; padding: 16px 20px; }
+        .config-item { display: flex; flex-direction: column; gap: 4px; }
+        .config-key { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
+        .config-val { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-primary); }
+
+        /* Loading */
+        .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--text-muted); font-size: 0.9rem; }
+        .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-right: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Refresh button */
+        .refresh-btn {
+            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+            padding: 8px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 500; cursor: pointer;
+            transition: all .2s; font-family: inherit;
+        }
+        .refresh-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+        .last-updated { font-size: 0.78rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <nav>
+        <div class="inner">
+            <a class="logo" href="/"><div class="logo-icon">G</div> Gaming PR</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="/dashboard" class="active">Dashboard</a>
+                <a href="/articles">Articles</a>
+            </div>
+            <div id="health-badge" class="status-badge status-healthy">
+                <span class="status-dot"></span> <span id="health-text">Loading...</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header-row">
+            <div>
+                <h1>Monitoring Dashboard</h1>
+                <div class="subtitle">Real-time platform health, scraping metrics, and language coverage</div>
+            </div>
+            <div style="text-align:right">
+                <button class="refresh-btn" onclick="loadDashboard()">Refresh</button>
+                <div class="last-updated" id="last-updated"></div>
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="loading"><div class="spinner"></div> Loading dashboard data...</div>
+        </div>
+    </div>
+
+    <script>
+        const COLORS = ['#7c5cff','#ec4899','#06b6d4','#22c55e','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#f97316','#6366f1'];
+
+        function fmt(n) {
+            if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+            return n.toString();
+        }
+
+        function timeAgo(iso) {
+            if (!iso) return 'Never';
+            const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+            if (diff < 60) return Math.round(diff) + 's ago';
+            if (diff < 3600) return Math.round(diff/60) + 'm ago';
+            if (diff < 86400) return Math.round(diff/3600) + 'h ago';
+            return Math.round(diff/86400) + 'd ago';
+        }
+
+        function statusBadge(status) {
+            const map = { completed: 'green', running: 'cyan', failed: 'red', queued: 'orange' };
+            return `<span class="badge badge-${map[status]||'accent'}">${status}</span>`;
+        }
+
+        async function loadDashboard() {
+            try {
+                const [dashRes, healthRes] = await Promise.all([
+                    fetch('/api/monitoring/dashboard'),
+                    fetch('/api/monitoring/health')
+                ]);
+                const dash = await dashRes.json();
+                const health = await healthRes.json();
+
+                // Health badge
+                const badge = document.getElementById('health-badge');
+                const text = document.getElementById('health-text');
+                badge.className = `status-badge status-${health.status}`;
+                text.textContent = health.status.charAt(0).toUpperCase() + health.status.slice(1);
+
+                document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+                const o = dash.overview;
+                const s = dash.system;
+                const langKeys = Object.keys(dash.language_coverage);
+                const maxLangArticles = Math.max(...langKeys.map(k => dash.language_coverage[k].total_articles), 1);
+
+                // Article type bars
+                const typeKeys = Object.keys(dash.article_types || {});
+                const maxTypeCount = Math.max(...typeKeys.map(k => dash.article_types[k]), 1);
+
+                document.getElementById('content').innerHTML = `
+                    <!-- Stat cards -->
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Articles</div>
+                            <div class="stat-value accent">${fmt(o.total_articles)}</div>
+                            <div class="stat-sub">${fmt(o.full_content_articles)} full content (${o.extraction_rate_pct}%)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Last 24 Hours</div>
+                            <div class="stat-value green">${fmt(o.articles_last_24h)}</div>
+                            <div class="stat-sub">${fmt(o.articles_last_7d)} in last 7 days</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Active Outlets</div>
+                            <div class="stat-value cyan">${o.active_outlets}</div>
+                            <div class="stat-sub">${o.inactive_outlets} inactive of ${o.total_outlets} total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Failing Outlets</div>
+                            <div class="stat-value ${dash.failing_outlets.length > 5 ? 'orange' : 'green'}">${dash.failing_outlets.length}</div>
+                            <div class="stat-sub">${health.issues.length ? health.issues[0] : 'No issues'}</div>
+                        </div>
+                    </div>
+
+                    <!-- System config -->
+                    <div class="card" style="margin-bottom:32px">
+                        <div class="card-header">System Configuration</div>
+                        <div class="config-grid">
+                            <div class="config-item"><span class="config-key">Scrape Interval</span><span class="config-val">${s.scrape_interval_minutes} min</span></div>
+                            <div class="config-item"><span class="config-key">Concurrency</span><span class="config-val">${s.concurrency} threads</span></div>
+                            <div class="config-item"><span class="config-key">Full Extraction</span><span class="config-val">${s.full_content_extraction ? 'ON' : 'OFF'}</span></div>
+                            <div class="config-item"><span class="config-key">Robots.txt</span><span class="config-val">${s.robots_txt_compliance ? 'Enforced' : 'OFF'}</span></div>
+                            <div class="config-item"><span class="config-key">Sitemap Discovery</span><span class="config-val">${s.sitemap_discovery ? 'ON' : 'OFF'}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <!-- Language coverage -->
+                        <div class="card">
+                            <div class="card-header">Language Coverage</div>
+                            <div class="bar-chart">
+                                ${langKeys.map((k, i) => {
+                                    const lc = dash.language_coverage[k];
+                                    const pct = Math.max((lc.total_articles / maxLangArticles) * 100, 2);
+                                    return `<div class="bar-row">
+                                        <span class="bar-label">${lc.name}</span>
+                                        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}">${lc.active_outlets} outlets</div></div>
+                                        <span class="bar-count">${fmt(lc.total_articles)}</span>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Article types -->
+                        <div class="card">
+                            <div class="card-header">Article Types</div>
+                            <div class="bar-chart">
+                                ${typeKeys.length ? typeKeys.map((k, i) => {
+                                    const pct = Math.max((dash.article_types[k] / maxTypeCount) * 100, 2);
+                                    return `<div class="bar-row">
+                                        <span class="bar-label">${k}</span>
+                                        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${COLORS[(i+3)%COLORS.length]}">${fmt(dash.article_types[k])}</div></div>
+                                        <span class="bar-count">${fmt(dash.article_types[k])}</span>
+                                    </div>`;
+                                }).join('') : '<div style="padding:20px;color:var(--text-muted)">No article type data yet</div>'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <!-- Top outlets -->
+                        <div class="card">
+                            <div class="card-header">Top Outlets by Articles</div>
+                            <table>
+                                <thead><tr><th>Outlet</th><th>Lang</th><th>Total</th><th>Avg/Scrape</th><th>Last Scraped</th></tr></thead>
+                                <tbody>
+                                    ${dash.top_outlets.slice(0,10).map(o => `<tr>
+                                        <td style="color:var(--text-primary);font-weight:500">${o.name}</td>
+                                        <td><span class="badge badge-accent">${o.language}</span></td>
+                                        <td>${fmt(o.total_scraped)}</td>
+                                        <td>${o.avg_per_scrape ? o.avg_per_scrape.toFixed(1) : '-'}</td>
+                                        <td>${timeAgo(o.last_scraped)}</td>
+                                    </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Failing outlets -->
+                        <div class="card">
+                            <div class="card-header">Failing Outlets</div>
+                            ${dash.failing_outlets.length ? `<table>
+                                <thead><tr><th>Outlet</th><th>Lang</th><th>Failures</th><th>Status</th><th>Last Scraped</th></tr></thead>
+                                <tbody>
+                                    ${dash.failing_outlets.map(o => `<tr>
+                                        <td style="color:var(--text-primary);font-weight:500">${o.name}</td>
+                                        <td><span class="badge badge-accent">${o.language}</span></td>
+                                        <td style="color:var(--red);font-weight:600">${o.failures}</td>
+                                        <td>${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}</td>
+                                        <td>${timeAgo(o.last_scraped)}</td>
+                                    </tr>`).join('')}
+                                </tbody>
+                            </table>` : '<div style="padding:24px;text-align:center;color:var(--green)">All outlets healthy</div>'}
+                        </div>
+                    </div>
+
+                    <!-- Recent jobs -->
+                    <div class="card" style="margin-top:8px">
+                        <div class="card-header">Recent Scrape Jobs</div>
+                        <table>
+                            <thead><tr><th>Job ID</th><th>Type</th><th>Status</th><th>Started</th><th>Duration</th><th>Found</th><th>New</th><th>Errors</th></tr></thead>
+                            <tbody>
+                                ${dash.recent_jobs.map(j => `<tr>
+                                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem">#${j.id}</td>
+                                    <td>${j.type}</td>
+                                    <td>${statusBadge(j.status)}</td>
+                                    <td>${timeAgo(j.started)}</td>
+                                    <td>${j.duration_s ? j.duration_s.toFixed(1) + 's' : '-'}</td>
+                                    <td>${j.found ?? '-'}</td>
+                                    <td style="color:var(--green);font-weight:600">${j.new ?? '-'}</td>
+                                    <td style="color:${j.errors > 0 ? 'var(--red)' : 'var(--text-muted)'}">${j.errors ?? 0}</td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (err) {
+                document.getElementById('content').innerHTML = `
+                    <div class="card" style="padding:40px;text-align:center">
+                        <div style="color:var(--red);font-weight:600;margin-bottom:8px">Failed to load dashboard</div>
+                        <div style="color:var(--text-muted);font-size:0.85rem">${err.message}</div>
+                        <button class="refresh-btn" style="margin-top:16px" onclick="loadDashboard()">Retry</button>
+                    </div>`;
+            }
+        }
+
+        loadDashboard();
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>
