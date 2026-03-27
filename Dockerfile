@@ -15,5 +15,5 @@ COPY . .
 ENV PORT=8000
 EXPOSE 8000
 
-# Use shell form so $PORT is expanded at runtime
-CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+# Use python main.py so PORT is read from env by pydantic-settings (no shell expansion needed)
+CMD ["python", "main.py"]

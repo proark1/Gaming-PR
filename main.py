@@ -142,4 +142,6 @@ def languages():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=True)
+    import os
+    reload = os.getenv("ENV", "production") != "production"
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=reload)
