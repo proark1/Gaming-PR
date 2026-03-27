@@ -1,9 +1,6 @@
 /**
- * Shared navigation bar with auth for all app pages.
- * Include this script on every page. It renders the nav, auth modals, and handles login state.
- *
- * Usage: <script src="/static/nav.js" data-active="dashboard"></script>
- * data-active: which nav link to highlight (dashboard | articles | outlets | webhooks | export)
+ * Shared left sidebar navigation with auth for all app pages.
+ * Include on every page: <script src="/static/nav.js" data-active="dashboard"></script>
  */
 (function () {
     const activePage = document.currentScript.getAttribute('data-active') || '';
@@ -11,59 +8,143 @@
     function injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
-            /* ─── Nav ─── */
-            .gpr-nav {
-                position: sticky; top: 0; z-index: 100;
-                padding: 14px 0;
-                background: rgba(10,10,15,0.85);
-                backdrop-filter: blur(20px);
-                border-bottom: 1px solid rgba(42,42,58,0.5);
+            /* ─── Sidebar ─── */
+            .gpr-sidebar {
+                position: fixed; top: 0; left: 0; bottom: 0; width: 240px;
+                background: #0d0d14; border-right: 1px solid #1e1e2e;
+                z-index: 100; display: flex; flex-direction: column;
+                overflow-y: auto; overflow-x: hidden;
+                scrollbar-width: thin; scrollbar-color: #2a2a3a transparent;
             }
-            .gpr-nav .nav-inner { max-width: 1400px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-            .gpr-nav .logo { font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; text-decoration: none; color: #f0f0f5; flex-shrink: 0; }
-            .gpr-nav .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, #7c5cff, #ec4899); border-radius: 8px; display: grid; place-items: center; font-size: 14px; color: #fff; font-weight: 700; }
-            .gpr-nav .nav-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-            .gpr-nav .nav-links a {
-                color: #8888a0; text-decoration: none; font-size: 0.84rem; font-weight: 500;
-                padding: 6px 12px; border-radius: 8px; transition: all .2s;
+            .gpr-sidebar::-webkit-scrollbar { width: 4px; }
+            .gpr-sidebar::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 4px; }
+
+            .gpr-sidebar .sb-header {
+                padding: 20px 18px 16px; border-bottom: 1px solid #1e1e2e;
+                flex-shrink: 0;
             }
-            .gpr-nav .nav-links a:hover { color: #f0f0f5; background: rgba(124,92,255,0.08); }
-            .gpr-nav .nav-links a.active { color: #f0f0f5; background: rgba(124,92,255,0.15); }
-            .gpr-nav .nav-auth { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-            .gpr-nav .btn-ghost {
-                padding: 7px 16px; border-radius: 8px; font-weight: 600; font-size: 0.84rem;
-                border: 1px solid #2a2a3a; cursor: pointer; background: transparent; color: #8888a0;
-                font-family: inherit; transition: all .2s;
+            .gpr-sidebar .logo {
+                font-weight: 800; font-size: 1.05rem; display: flex; align-items: center;
+                gap: 10px; text-decoration: none; color: #f0f0f5;
             }
-            .gpr-nav .btn-ghost:hover { color: #f0f0f5; border-color: #7c5cff; }
-            .gpr-nav .btn-primary {
-                padding: 7px 16px; border-radius: 8px; font-weight: 600; font-size: 0.84rem;
-                border: none; cursor: pointer; background: linear-gradient(135deg, #7c5cff, #6344e0);
-                color: #fff; font-family: inherit; transition: all .2s;
-                box-shadow: 0 4px 16px rgba(124,92,255,0.3);
+            .gpr-sidebar .logo-icon {
+                width: 32px; height: 32px; background: linear-gradient(135deg, #7c5cff, #ec4899);
+                border-radius: 10px; display: grid; place-items: center;
+                font-size: 14px; color: #fff; font-weight: 700; flex-shrink: 0;
             }
-            .gpr-nav .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,92,255,0.4); }
-            .gpr-nav .user-pill {
-                display: inline-flex; align-items: center; gap: 10px;
-                padding: 5px 8px 5px 14px; background: #16161f; border: 1px solid #2a2a3a;
-                border-radius: 10px; font-size: 0.84rem; color: #f0f0f5; font-weight: 500;
+
+            .gpr-sidebar .sb-nav { flex: 1; padding: 12px 10px; }
+            .gpr-sidebar .sb-group { margin-bottom: 20px; }
+            .gpr-sidebar .sb-group-label {
+                font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 1px; color: #5a5a72; padding: 0 10px; margin-bottom: 6px;
             }
-            .gpr-nav .user-pill .avatar {
-                width: 26px; height: 26px; background: linear-gradient(135deg, #7c5cff, #ec4899);
-                border-radius: 6px; display: flex; align-items: center; justify-content: center;
-                font-size: 0.72rem; font-weight: 700; color: #fff;
+            .gpr-sidebar .sb-link {
+                display: flex; align-items: center; gap: 10px;
+                padding: 8px 10px; border-radius: 8px; font-size: 0.84rem; font-weight: 500;
+                color: #8888a0; text-decoration: none; transition: all .15s;
+                margin-bottom: 1px;
             }
-            .gpr-nav .user-pill .logout-btn {
+            .gpr-sidebar .sb-link:hover { color: #f0f0f5; background: rgba(124,92,255,0.08); }
+            .gpr-sidebar .sb-link.active { color: #f0f0f5; background: rgba(124,92,255,0.15); }
+            .gpr-sidebar .sb-link .sb-icon {
+                width: 20px; text-align: center; font-size: 0.9rem; flex-shrink: 0;
+                opacity: 0.7;
+            }
+            .gpr-sidebar .sb-link.active .sb-icon { opacity: 1; }
+            .gpr-sidebar .sb-link .sb-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+            .gpr-sidebar .sb-divider { height: 1px; background: #1e1e2e; margin: 8px 10px; }
+
+            /* User section at bottom */
+            .gpr-sidebar .sb-footer {
+                padding: 14px 14px; border-top: 1px solid #1e1e2e;
+                flex-shrink: 0;
+            }
+            .gpr-sidebar .sb-user {
+                display: flex; align-items: center; gap: 10px;
+                padding: 8px 6px; border-radius: 8px;
+                transition: background .15s;
+            }
+            .gpr-sidebar .sb-user:hover { background: rgba(124,92,255,0.06); }
+            .gpr-sidebar .sb-avatar {
+                width: 32px; height: 32px; background: linear-gradient(135deg, #7c5cff, #ec4899);
+                border-radius: 8px; display: flex; align-items: center; justify-content: center;
+                font-size: 0.72rem; font-weight: 700; color: #fff; flex-shrink: 0;
+                text-decoration: none;
+            }
+            .gpr-sidebar .sb-user-info { flex: 1; min-width: 0; }
+            .gpr-sidebar .sb-user-name {
+                font-size: 0.82rem; font-weight: 600; color: #f0f0f5;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
+            .gpr-sidebar .sb-user-name a { color: inherit; text-decoration: none; }
+            .gpr-sidebar .sb-user-role { font-size: 0.68rem; color: #5a5a72; }
+            .gpr-sidebar .sb-logout {
                 background: none; border: none; color: #5a5a72; cursor: pointer;
-                font-size: 0.78rem; font-family: inherit; padding: 2px 6px; border-radius: 4px; transition: color .2s;
+                font-size: 0.72rem; font-family: inherit; padding: 4px 6px;
+                border-radius: 4px; transition: color .2s; flex-shrink: 0;
             }
-            .gpr-nav .user-pill .logout-btn:hover { color: #f87171; }
+            .gpr-sidebar .sb-logout:hover { color: #f87171; }
+            .gpr-sidebar .sb-auth-btns { display: flex; flex-direction: column; gap: 6px; }
+            .gpr-sidebar .sb-btn {
+                display: block; text-align: center; padding: 9px 14px; border-radius: 8px;
+                font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit;
+                border: none; transition: all .2s;
+            }
+            .gpr-sidebar .sb-btn-primary {
+                background: linear-gradient(135deg, #7c5cff, #6344e0); color: #fff;
+                box-shadow: 0 3px 12px rgba(124,92,255,0.25);
+            }
+            .gpr-sidebar .sb-btn-primary:hover { box-shadow: 0 4px 16px rgba(124,92,255,0.35); }
+            .gpr-sidebar .sb-btn-ghost {
+                background: transparent; color: #8888a0;
+                border: 1px solid #2a2a3a;
+            }
+            .gpr-sidebar .sb-btn-ghost:hover { color: #f0f0f5; border-color: #7c5cff; }
+
+            /* ─── Mobile hamburger ─── */
+            .gpr-hamburger {
+                display: none; position: fixed; top: 14px; left: 14px; z-index: 101;
+                width: 40px; height: 40px; border-radius: 10px;
+                background: #16161f; border: 1px solid #2a2a3a;
+                cursor: pointer; align-items: center; justify-content: center;
+            }
+            .gpr-hamburger span {
+                display: block; width: 18px; height: 2px; background: #f0f0f5;
+                border-radius: 2px; transition: all .2s; position: relative;
+            }
+            .gpr-hamburger span::before, .gpr-hamburger span::after {
+                content: ''; position: absolute; left: 0; width: 100%; height: 2px;
+                background: #f0f0f5; border-radius: 2px; transition: all .2s;
+            }
+            .gpr-hamburger span::before { top: -6px; }
+            .gpr-hamburger span::after { top: 6px; }
+            .gpr-hamburger.open span { background: transparent; }
+            .gpr-hamburger.open span::before { top: 0; transform: rotate(45deg); }
+            .gpr-hamburger.open span::after { top: 0; transform: rotate(-45deg); }
+
+            .gpr-sidebar-overlay {
+                display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+                z-index: 99;
+            }
+
+            /* ─── Body offset ─── */
+            body { padding-left: 240px; }
+
+            @media (max-width: 768px) {
+                body { padding-left: 0; }
+                .gpr-sidebar { transform: translateX(-100%); transition: transform .25s ease; }
+                .gpr-sidebar.open { transform: translateX(0); }
+                .gpr-hamburger { display: flex; }
+                .gpr-sidebar-overlay.open { display: block; }
+            }
 
             /* ─── Auth Modal ─── */
             .auth-overlay {
                 display: none; position: fixed; inset: 0;
                 background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-                z-index: 200; align-items: center; justify-content: center;
+                z-index: 300; align-items: center; justify-content: center;
             }
             .auth-overlay.active { display: flex; }
             .auth-modal {
@@ -107,34 +188,66 @@
         document.head.appendChild(style);
     }
 
-    function link(href, label, id) {
-        const cls = id === activePage ? ' class="active"' : '';
-        return `<a href="${href}"${cls}>${label}</a>`;
+    function slink(href, icon, label, id) {
+        const cls = id === activePage ? ' active' : '';
+        return `<a href="${href}" class="sb-link${cls}"><span class="sb-icon">${icon}</span><span class="sb-text">${label}</span></a>`;
     }
 
-    function renderNav() {
-        const nav = document.createElement('nav');
-        nav.className = 'gpr-nav';
-        nav.innerHTML = `
-            <div class="nav-inner">
+    function renderSidebar() {
+        // Hamburger button
+        const hamburger = document.createElement('button');
+        hamburger.className = 'gpr-hamburger';
+        hamburger.innerHTML = '<span></span>';
+        hamburger.onclick = toggleMobileMenu;
+        document.body.prepend(hamburger);
+
+        // Overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'gpr-sidebar-overlay';
+        overlay.onclick = toggleMobileMenu;
+        document.body.prepend(overlay);
+
+        // Sidebar
+        const sidebar = document.createElement('aside');
+        sidebar.className = 'gpr-sidebar';
+        sidebar.innerHTML = `
+            <div class="sb-header">
                 <a class="logo" href="/"><div class="logo-icon">G</div> Gaming PR</a>
-                <div class="nav-links">
-                    ${link('/dashboard', 'Dashboard', 'dashboard')}
-                    ${link('/articles', 'Articles', 'articles')}
-                    ${link('/manage/articles', 'My Articles', 'manage-articles')}
-                    ${link('/translations', 'Translations', 'translations')}
-                    ${link('/outlets', 'Outlets', 'outlets')}
-                    ${link('/scraper', 'Scraper', 'scraper')}
-                    ${link('/feed', 'Live Feed', 'feed')}
-                    ${link('/emails', 'Email', 'emails')}
-                    ${link('/webhooks', 'Webhooks', 'webhooks')}
-                    ${link('/export', 'Export', 'export')}
-                    ${link('/docs', 'API Docs', 'docs')}
-                </div>
-                <div class="nav-auth" id="gprNavAuth"></div>
             </div>
+            <div class="sb-nav">
+                <div class="sb-group">
+                    ${slink('/dashboard', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>', 'Dashboard', 'dashboard')}
+                </div>
+                <div class="sb-group">
+                    <div class="sb-group-label">Content</div>
+                    ${slink('/articles', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>', 'Scraped Articles', 'articles')}
+                    ${slink('/manage/articles', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', 'My Articles', 'manage-articles')}
+                    ${slink('/translations', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>', 'Translations', 'translations')}
+                </div>
+                <div class="sb-group">
+                    <div class="sb-group-label">Sources</div>
+                    ${slink('/outlets', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>', 'Outlets', 'outlets')}
+                    ${slink('/scraper', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>', 'Scraper', 'scraper')}
+                    ${slink('/feed', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>', 'Live Feed', 'feed')}
+                </div>
+                <div class="sb-group">
+                    <div class="sb-group-label">Integrations</div>
+                    ${slink('/emails', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>', 'Email', 'emails')}
+                    ${slink('/webhooks', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>', 'Webhooks', 'webhooks')}
+                    ${slink('/export', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>', 'Export', 'export')}
+                </div>
+                <div class="sb-divider"></div>
+                ${slink('/docs', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', 'API Docs', 'docs')}
+            </div>
+            <div class="sb-footer" id="gprNavAuth"></div>
         `;
-        document.body.prepend(nav);
+        document.body.prepend(sidebar);
+    }
+
+    function toggleMobileMenu() {
+        document.querySelector('.gpr-sidebar').classList.toggle('open');
+        document.querySelector('.gpr-hamburger').classList.toggle('open');
+        document.querySelector('.gpr-sidebar-overlay').classList.toggle('open');
     }
 
     function renderModals() {
@@ -171,8 +284,6 @@
             </div>
         `;
         document.body.appendChild(div);
-
-        // Close on overlay click
         document.querySelectorAll('.auth-overlay').forEach(o => {
             o.addEventListener('click', e => { if (e.target === o) gprCloseModals(); });
         });
@@ -188,15 +299,22 @@
         if (user) {
             const initials = user.username.slice(0, 2).toUpperCase();
             container.innerHTML =
-                '<div class="user-pill">' +
-                    '<a href="/profile" class="avatar" style="text-decoration:none;color:#fff" title="Profile">' + initials + '</a>' +
-                    '<a href="/profile" style="text-decoration:none;color:inherit">' + user.username + '</a>' +
-                    '<button class="logout-btn" onclick="gprLogout()">Log out</button>' +
+                '<div class="sb-user">' +
+                    '<a href="/profile" class="sb-avatar" title="Profile">' + initials + '</a>' +
+                    '<div class="sb-user-info">' +
+                        '<div class="sb-user-name"><a href="/profile">' + user.username + '</a></div>' +
+                        '<div class="sb-user-role">' + (user.is_admin ? 'Admin' : 'User') + '</div>' +
+                    '</div>' +
+                    '<button class="sb-logout" onclick="gprLogout()" title="Log out">' +
+                        '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
+                    '</button>' +
                 '</div>';
         } else {
             container.innerHTML =
-                '<button class="btn-ghost" onclick="gprOpenModal(\'login\')">Log in</button>' +
-                '<button class="btn-primary" onclick="gprOpenModal(\'register\')">Sign up</button>';
+                '<div class="sb-auth-btns">' +
+                    '<button class="sb-btn sb-btn-primary" onclick="gprOpenModal(\'login\')">Log in</button>' +
+                    '<button class="sb-btn sb-btn-ghost" onclick="gprOpenModal(\'register\')">Sign up</button>' +
+                '</div>';
         }
     }
 
@@ -278,7 +396,7 @@
 
     // ─── Init ───
     injectStyles();
-    renderNav();
+    renderSidebar();
     renderModals();
     renderAuthState();
 })();
