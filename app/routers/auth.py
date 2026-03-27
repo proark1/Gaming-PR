@@ -34,6 +34,13 @@ def get_current_user(db: Session = Depends(get_db), authorization: str = Header(
     return user
 
 
+def get_admin_user(user=Depends(get_current_user)):
+    """Dependency that requires the current user to be an admin."""
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
 @router.post("/register", response_model=TokenResponse, status_code=201)
 def register(data: UserRegister, db: Session = Depends(get_db)):
     if get_user_by_username(db, data.username):

@@ -102,3 +102,25 @@ def get_user_by_email(db: Session, email: str) -> User | None:
 
 def get_user_by_id(db: Session, user_id: int) -> User | None:
     return db.query(User).filter(User.id == user_id).first()
+
+
+def seed_admin_user(db: Session, email: str, username: str | None = None, password: str = "admin12345") -> User | None:
+    """Create an admin user if one with this email doesn't already exist."""
+    existing = get_user_by_email(db, email.lower())
+    if existing:
+        if not existing.is_admin:
+            existing.is_admin = True
+            db.commit()
+            db.refresh(existing)
+        return existing
+    uname = username or email.split("@")[0].replace(".", "_")
+    user = User(
+        username=uname,
+        email=email.lower(),
+        hashed_password=hash_password(password),
+        is_admin=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user

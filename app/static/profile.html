@@ -163,7 +163,10 @@
                         <div class="profile-avatar">${esc(initials)}</div>
                         <div>
                             <div class="profile-name">${esc(user.username)}</div>
-                            <div class="profile-role">${user.is_active !== false ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}</div>
+                            <div class="profile-role">
+                                ${user.is_admin ? '<span class="badge badge-accent" style="background:linear-gradient(135deg,rgba(124,92,255,0.2),rgba(236,72,153,0.2));color:#d8b4fe;margin-right:6px">admin</span>' : ''}
+                                ${user.is_active !== false ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}
+                            </div>
                         </div>
                     </div>
                     <div class="info-grid">
@@ -178,6 +181,10 @@
                         <div class="info-item">
                             <div class="info-label">User ID</div>
                             <div class="info-value mono">#${user.id}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Role</div>
+                            <div class="info-value">${user.is_admin ? 'Administrator' : 'User'}</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">Account Created</div>

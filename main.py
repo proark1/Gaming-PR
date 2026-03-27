@@ -18,6 +18,7 @@ from app.routers.websocket import router as websocket_router
 from app.routers.email import router as email_router
 from app.routers.auth import router as auth_router
 from app.seed.outlets import seed_outlets
+from app.services.auth_service import seed_admin_user
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -69,6 +70,9 @@ async def lifespan(app: FastAPI):
     try:
         added = seed_outlets(db)
         logger.info(f"Database initialized. {added} new outlets seeded.")
+        admin = seed_admin_user(db, email="assad.dar@gmail.com", username="assad_dar")
+        if admin:
+            logger.info(f"Admin user ready: {admin.email} (id={admin.id})")
     finally:
         db.close()
 
