@@ -30,14 +30,14 @@ def test_seed_outlets(db):
     assert added_again == 0
 
 
-def test_outlet_crud(client):
+def test_outlet_crud(client, auth_header):
     response = client.post("/api/outlets/", json={
         "name": "Test Outlet",
         "url": "https://testoutlet.example.com",
         "language": "en",
         "region": "US",
         "scraper_type": "generic",
-    })
+    }, headers=auth_header)
     assert response.status_code == 201
     outlet_id = response.json()["id"]
 
@@ -45,34 +45,34 @@ def test_outlet_crud(client):
     assert response.status_code == 200
     assert response.json()["name"] == "Test Outlet"
 
-    response = client.patch(f"/api/outlets/{outlet_id}", json={"priority": 1})
+    response = client.patch(f"/api/outlets/{outlet_id}", json={"priority": 1}, headers=auth_header)
     assert response.status_code == 200
 
-    response = client.delete(f"/api/outlets/{outlet_id}")
+    response = client.delete(f"/api/outlets/{outlet_id}", headers=auth_header)
     assert response.status_code == 204
 
 
-def test_outlet_duplicate_rejected(client):
+def test_outlet_duplicate_rejected(client, auth_header):
     client.post("/api/outlets/", json={
         "name": "Outlet A",
         "url": "https://unique-outlet.example.com",
         "language": "en",
         "region": "US",
-    })
+    }, headers=auth_header)
     response = client.post("/api/outlets/", json={
         "name": "Outlet B",
         "url": "https://unique-outlet.example.com",
         "language": "en",
         "region": "US",
-    })
+    }, headers=auth_header)
     assert response.status_code == 409
 
 
-def test_outlet_invalid_language(client):
+def test_outlet_invalid_language(client, auth_header):
     response = client.post("/api/outlets/", json={
         "name": "Bad Lang",
         "url": "https://badlang.example.com",
         "language": "xx",
         "region": "XX",
-    })
+    }, headers=auth_header)
     assert response.status_code == 400

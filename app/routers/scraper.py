@@ -17,6 +17,7 @@ from app.schemas.scraped_article import (
     ScrapeJobDetailResponse,
 )
 from app.services.scraper_service import scrape_all, scrape_single_outlet
+from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/scraper", tags=["scraper"])
 
@@ -45,6 +46,7 @@ def run_all(
     extract_content: bool = True,
     run_async: bool = False,
     db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
 ):
     """Scrape all active outlets. Set run_async=true to run in background."""
     if run_async:
@@ -65,6 +67,7 @@ def run_one(
     extract_content: bool = True,
     run_async: bool = False,
     db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
 ):
     """Scrape a single outlet."""
     outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
@@ -204,7 +207,7 @@ def circuit_breaker_status():
 
 
 @router.post("/circuit-breakers/{outlet_id}/reset")
-def reset_circuit_breaker(outlet_id: int):
+def reset_circuit_breaker(outlet_id: int, _user=Depends(get_current_user)):
     """Manually reset a circuit breaker for an outlet."""
     from app.scrapers.circuit_breaker import circuit_breaker
     circuit_breaker.reset(outlet_id)
@@ -222,7 +225,7 @@ def retry_queue_stats():
 
 
 @router.post("/retry-queue/process")
-def process_retries(db: Session = Depends(get_db)):
+def process_retries(db: Session = Depends(get_db), _user=Depends(get_current_user)):
     """Manually process the retry queue."""
     from app.services.scraper_service import process_retry_queue
     return process_retry_queue(db)

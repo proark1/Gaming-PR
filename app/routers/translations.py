@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models.article import Article, ArticleTranslation
 from app.schemas.article import TranslationResponse
 from app.services.translation_service import translate_article
+from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/articles/{article_id}/translations", tags=["translations"])
 
@@ -39,7 +40,7 @@ def get_translation(article_id: int, language: str, db: Session = Depends(get_db
 
 
 @router.post("/retry", response_model=list[TranslationResponse])
-def retry_translations(article_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def retry_translations(article_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     article = db.query(Article).filter(Article.id == article_id).first()
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")

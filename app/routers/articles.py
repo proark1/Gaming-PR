@@ -16,6 +16,7 @@ from app.services.article_service import (
     delete_article,
 )
 from app.services.translation_service import translate_article
+from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/articles", tags=["articles"])
 
@@ -30,7 +31,7 @@ def _run_translation(article_id: int):
 
 
 @router.post("/", response_model=ArticleResponse, status_code=201)
-def create(data: ArticleCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def create(data: ArticleCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     article = create_article(db, data)
     background_tasks.add_task(_run_translation, article.id)
     return article
@@ -52,7 +53,7 @@ def get_one(article_id: int, include_translations: bool = True, db: Session = De
 
 
 @router.put("/{article_id}", response_model=ArticleResponse)
-def update(article_id: int, data: ArticleUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def update(article_id: int, data: ArticleUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     article = update_article(db, article_id, data)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
@@ -62,6 +63,6 @@ def update(article_id: int, data: ArticleUpdate, background_tasks: BackgroundTas
 
 
 @router.delete("/{article_id}", status_code=204)
-def delete(article_id: int, db: Session = Depends(get_db)):
+def delete(article_id: int, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     if not delete_article(db, article_id):
         raise HTTPException(status_code=404, detail="Article not found")
