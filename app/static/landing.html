@@ -948,7 +948,7 @@
             <div class="logo-icon">GP</div>
             Gaming PR
         </a>
-        <div class="nav-links">
+        <div class="nav-links" id="navLinks">
             <a href="#features">Features</a>
             <a href="#email">Email</a>
             <a href="#languages">Languages</a>
@@ -1502,6 +1502,7 @@
 
     function renderAuthState() {
         const container = document.getElementById('navAuth');
+        const navLinks = document.getElementById('navLinks');
         const user = JSON.parse(localStorage.getItem('gpr_user') || 'null');
         if (user) {
             const initials = user.username.slice(0, 2).toUpperCase();
@@ -1511,10 +1512,23 @@
                     '<span>' + user.username + '</span>' +
                     '<button class="logout-btn" onclick="logout()">Log out</button>' +
                 '</div>';
+            navLinks.innerHTML =
+                '<a href="/dashboard">Dashboard</a>' +
+                '<a href="/articles">Articles</a>' +
+                '<a href="/outlets">Outlets</a>' +
+                '<a href="/webhooks">Webhooks</a>' +
+                '<a href="/export">Export</a>' +
+                '<a href="/docs" class="btn btn-primary">API Docs</a>';
         } else {
             container.innerHTML =
                 '<button class="btn-ghost" onclick="openModal(\'login\')">Log in</button>' +
                 '<button class="btn-nav-primary" onclick="openModal(\'register\')">Sign up</button>';
+            navLinks.innerHTML =
+                '<a href="#features">Features</a>' +
+                '<a href="#email">Email</a>' +
+                '<a href="#languages">Languages</a>' +
+                '<a href="#api">API</a>' +
+                '<a href="/docs" class="btn btn-primary">API Docs</a>';
         }
     }
 

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhooks — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0a0a0f; --bg-secondary: #111118; --bg-card: #16161f; --bg-card-hover: #1c1c28;
+            --border: #2a2a3a; --text-primary: #f0f0f5; --text-secondary: #8888a0; --text-muted: #5a5a72;
+            --accent: #7c5cff; --accent-light: #9b7fff; --green: #22c55e; --green-dim: rgba(34,197,94,0.15);
+            --orange: #f59e0b; --orange-dim: rgba(245,158,11,0.15); --red: #ef4444; --red-dim: rgba(239,68,68,0.15);
+            --cyan: #06b6d4; --cyan-dim: rgba(6,182,212,0.15); --radius: 12px;
+        }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
+        .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(124,92,255,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(124,92,255,0.03) 1px,transparent 1px); background-size: 60px 60px; z-index: 0; pointer-events: none; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; position: relative; z-index: 1; }
+        h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+        .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 28px; }
+
+        /* Header row */
+        .header-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+        .add-btn {
+            background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none;
+            padding: 10px 22px; border-radius: 10px; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+            font-family: inherit; transition: all .2s; box-shadow: 0 4px 16px rgba(124,92,255,0.3); flex-shrink: 0;
+        }
+        .add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,92,255,0.4); }
+
+        /* Webhook cards */
+        .webhook-list { display: flex; flex-direction: column; gap: 14px; }
+        .wh-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px 24px; transition: border-color .2s, background .2s;
+        }
+        .wh-card:hover { border-color: rgba(124,92,255,0.3); background: var(--bg-card-hover); }
+        .wh-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+        .wh-name { font-size: 1.05rem; font-weight: 600; }
+        .wh-url { font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; word-break: break-all; margin-bottom: 12px; }
+        .wh-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .badge-green { background: var(--green-dim); color: var(--green); }
+        .badge-red { background: var(--red-dim); color: var(--red); }
+        .badge-accent { background: rgba(124,92,255,0.15); color: var(--accent-light); }
+        .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
+        .badge-orange { background: var(--orange-dim); color: var(--orange); }
+        .wh-stats { display: flex; gap: 24px; font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; }
+        .wh-stats strong { color: var(--text-primary); }
+        .wh-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .act-btn {
+            background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary);
+            padding: 6px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 500;
+            cursor: pointer; font-family: inherit; transition: all .2s;
+        }
+        .act-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .act-btn.danger:hover { border-color: var(--red); color: var(--red); }
+        .act-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Create form modal */
+        .form-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
+        .form-overlay.active { display: flex; }
+        .form-modal {
+            background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px;
+            padding: 32px; width: 100%; max-width: 520px; position: relative;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;
+        }
+        .form-modal h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 20px; }
+        .form-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; transition: color .2s; }
+        .form-modal .close-btn:hover { color: var(--text-primary); }
+        .fg { margin-bottom: 16px; }
+        .fg label { display: block; font-size: 0.82rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 5px; }
+        .fg input, .fg select { width: 100%; padding: 10px 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.88rem; font-family: inherit; outline: none; transition: border-color .2s; }
+        .fg input:focus, .fg select:focus { border-color: var(--accent); }
+        .fg input::placeholder { color: var(--text-muted); }
+        .fg .hint { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+        .checkbox-row { display: flex; flex-wrap: wrap; gap: 10px; }
+        .checkbox-row label { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-secondary); cursor: pointer; }
+        .checkbox-row input[type="checkbox"] { width: auto; accent-color: var(--accent); }
+        .submit-btn {
+            width: 100%; padding: 11px; border-radius: 10px; font-weight: 600; font-size: 0.92rem;
+            border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0);
+            color: #fff; font-family: inherit; margin-top: 8px; transition: all .2s;
+            box-shadow: 0 4px 16px rgba(124,92,255,0.3);
+        }
+        .submit-btn:hover { transform: translateY(-1px); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .form-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .form-error.visible { display: block; }
+        .form-success { background: var(--green-dim); border: 1px solid rgba(34,197,94,0.3); color: var(--green); padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .form-success.visible { display: block; }
+
+        .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--text-muted); font-size: 0.9rem; }
+        .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-right: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .login-notice { text-align: center; padding: 14px; background: var(--orange-dim); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; color: var(--orange); font-size: 0.85rem; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="webhooks"></script>
+
+    <div class="container">
+        <div class="header-row">
+            <div>
+                <h1>Webhooks</h1>
+                <div class="subtitle">Receive real-time notifications when new articles are scraped</div>
+            </div>
+            <button class="add-btn" onclick="openCreateForm()">+ New Webhook</button>
+        </div>
+
+        <div id="login-notice" class="login-notice" style="display:none">Log in to create, toggle, test, or delete webhooks.</div>
+
+        <div id="webhook-list" class="webhook-list">
+            <div class="loading"><div class="spinner"></div> Loading webhooks...</div>
+        </div>
+    </div>
+
+    <!-- Create form -->
+    <div class="form-overlay" id="createOverlay" onclick="if(event.target===this)closeCreateForm()">
+        <div class="form-modal">
+            <button class="close-btn" onclick="closeCreateForm()">&times;</button>
+            <h2>Create Webhook</h2>
+            <div class="form-error" id="createError"></div>
+            <div class="form-success" id="createSuccess"></div>
+            <form onsubmit="handleCreate(event)">
+                <div class="fg"><label>Name</label><input type="text" id="wh-name" placeholder="My webhook" required></div>
+                <div class="fg"><label>URL</label><input type="url" id="wh-url" placeholder="https://example.com/webhook" required><div class="hint">Must be a valid HTTPS endpoint</div></div>
+                <div class="fg"><label>Secret (optional)</label><input type="text" id="wh-secret" placeholder="HMAC signing secret"><div class="hint">Used to sign payloads for verification</div></div>
+                <div class="fg">
+                    <label>Events</label>
+                    <div class="checkbox-row">
+                        <label><input type="checkbox" value="new_article" checked> new_article</label>
+                        <label><input type="checkbox" value="scrape_complete" checked> scrape_complete</label>
+                        <label><input type="checkbox" value="outlet_failure"> outlet_failure</label>
+                        <label><input type="checkbox" value="content_updated"> content_updated</label>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn" id="createBtn">Create Webhook</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function authHeaders() {
+            const token = gprGetToken();
+            return token ? { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } : null;
+        }
+
+        function isLoggedIn() { return !!gprGetToken(); }
+
+        function checkLoginNotice() {
+            document.getElementById('login-notice').style.display = isLoggedIn() ? 'none' : 'block';
+        }
+
+        async function loadWebhooks() {
+            const list = document.getElementById('webhook-list');
+            list.innerHTML = '<div class="loading"><div class="spinner"></div> Loading webhooks...</div>';
+            checkLoginNotice();
+
+            try {
+                const res = await fetch('/api/webhooks');
+                const webhooks = await res.json();
+
+                if (webhooks.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><div style="font-size:2rem;margin-bottom:12px">&#128279;</div><div style="font-size:1.1rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px">No webhooks configured</div><div>Create one to start receiving real-time notifications</div></div>';
+                    return;
+                }
+
+                list.innerHTML = webhooks.map(w => `
+                    <div class="wh-card" id="wh-${w.id}">
+                        <div class="wh-top">
+                            <span class="wh-name">${esc(w.name)}</span>
+                            ${w.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}
+                        </div>
+                        <div class="wh-url">${esc(w.url)}</div>
+                        <div class="wh-meta">
+                            ${(w.events || []).map(e => `<span class="badge badge-accent">${esc(e)}</span>`).join('')}
+                            ${(w.language_filter || []).map(l => `<span class="badge badge-cyan">${l}</span>`).join('')}
+                        </div>
+                        <div class="wh-stats">
+                            <span>Deliveries: <strong>${w.total_deliveries}</strong></span>
+                            <span>Failures: <strong style="color:${w.total_failures > 0 ? 'var(--red)' : 'inherit'}">${w.total_failures}</strong></span>
+                            ${w.last_delivery_at ? `<span>Last delivery: <strong>${timeAgo(w.last_delivery_at)}</strong></span>` : ''}
+                            ${w.last_response_code ? `<span>Last status: <strong>${w.last_response_code}</strong></span>` : ''}
+                        </div>
+                        <div class="wh-actions">
+                            <button class="act-btn" onclick="toggleWebhook(${w.id})" ${!isLoggedIn()?'disabled':''}>${w.is_active ? 'Disable' : 'Enable'}</button>
+                            <button class="act-btn" onclick="testWebhook(${w.id})" ${!isLoggedIn()?'disabled':''}>Send Test</button>
+                            <button class="act-btn danger" onclick="deleteWebhook(${w.id})" ${!isLoggedIn()?'disabled':''}>Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                list.innerHTML = `<div class="empty-state"><div style="color:var(--red);font-weight:600;margin-bottom:8px">Failed to load webhooks</div><div>${err.message}</div></div>`;
+            }
+        }
+
+        async function toggleWebhook(id) {
+            const hdrs = authHeaders();
+            if (!hdrs) return gprOpenModal('login');
+            try {
+                await fetch(`/api/webhooks/${id}/toggle`, { method: 'POST', headers: hdrs });
+                loadWebhooks();
+            } catch (e) { alert('Failed: ' + e.message); }
+        }
+
+        async function testWebhook(id) {
+            const hdrs = authHeaders();
+            if (!hdrs) return gprOpenModal('login');
+            const btn = event.target;
+            btn.disabled = true; btn.textContent = 'Sending...';
+            try {
+                const res = await fetch(`/api/webhooks/${id}/test`, { method: 'POST', headers: hdrs });
+                if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Failed'); }
+                btn.textContent = 'Sent!';
+                setTimeout(() => { btn.disabled = false; btn.textContent = 'Send Test'; }, 2000);
+            } catch (e) {
+                btn.disabled = false; btn.textContent = 'Send Test';
+                alert('Failed: ' + e.message);
+            }
+        }
+
+        async function deleteWebhook(id) {
+            const hdrs = authHeaders();
+            if (!hdrs) return gprOpenModal('login');
+            if (!confirm('Delete this webhook?')) return;
+            try {
+                await fetch(`/api/webhooks/${id}`, { method: 'DELETE', headers: hdrs });
+                loadWebhooks();
+            } catch (e) { alert('Failed: ' + e.message); }
+        }
+
+        function openCreateForm() {
+            if (!isLoggedIn()) return gprOpenModal('login');
+            document.getElementById('createOverlay').classList.add('active');
+            document.getElementById('createError').classList.remove('visible');
+            document.getElementById('createSuccess').classList.remove('visible');
+        }
+
+        function closeCreateForm() {
+            document.getElementById('createOverlay').classList.remove('active');
+        }
+
+        async function handleCreate(e) {
+            e.preventDefault();
+            const hdrs = authHeaders();
+            if (!hdrs) return gprOpenModal('login');
+
+            const btn = document.getElementById('createBtn');
+            btn.disabled = true; btn.textContent = 'Creating...';
+            document.getElementById('createError').classList.remove('visible');
+            document.getElementById('createSuccess').classList.remove('visible');
+
+            const events = [];
+            document.querySelectorAll('.checkbox-row input[type="checkbox"]:checked').forEach(cb => events.push(cb.value));
+
+            try {
+                const res = await fetch('/api/webhooks', {
+                    method: 'POST',
+                    headers: hdrs,
+                    body: JSON.stringify({
+                        name: document.getElementById('wh-name').value,
+                        url: document.getElementById('wh-url').value,
+                        secret: document.getElementById('wh-secret').value || null,
+                        events: events,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed');
+                const suc = document.getElementById('createSuccess');
+                suc.textContent = 'Webhook created successfully!';
+                suc.classList.add('visible');
+                setTimeout(() => { closeCreateForm(); loadWebhooks(); }, 1000);
+            } catch (err) {
+                const el = document.getElementById('createError');
+                el.textContent = err.message;
+                el.classList.add('visible');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Create Webhook';
+            }
+        }
+
+        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function timeAgo(iso) {
+            if (!iso) return 'Never';
+            const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+            if (diff < 60) return Math.round(diff) + 's ago';
+            if (diff < 3600) return Math.round(diff/60) + 'm ago';
+            if (diff < 86400) return Math.round(diff/3600) + 'h ago';
+            return Math.round(diff/86400) + 'd ago';
+        }
+
+        loadWebhooks();
+    </script>
+</body>
+</html>

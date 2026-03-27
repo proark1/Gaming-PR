@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outlets — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0a0a0f; --bg-secondary: #111118; --bg-card: #16161f; --bg-card-hover: #1c1c28;
+            --border: #2a2a3a; --text-primary: #f0f0f5; --text-secondary: #8888a0; --text-muted: #5a5a72;
+            --accent: #7c5cff; --accent-light: #9b7fff; --green: #22c55e; --green-dim: rgba(34,197,94,0.15);
+            --orange: #f59e0b; --orange-dim: rgba(245,158,11,0.15); --red: #ef4444; --red-dim: rgba(239,68,68,0.15);
+            --cyan: #06b6d4; --cyan-dim: rgba(6,182,212,0.15); --radius: 12px;
+        }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
+        .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(124,92,255,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(124,92,255,0.03) 1px,transparent 1px); background-size: 60px 60px; z-index: 0; pointer-events: none; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; position: relative; z-index: 1; }
+        h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+        .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; }
+
+        /* Stats bar */
+        .stats-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+        .stat-pill { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; display: flex; flex-direction: column; gap: 2px; min-width: 140px; }
+        .stat-pill .label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-pill .value { font-size: 1.4rem; font-weight: 800; }
+        .stat-pill .value.accent { color: var(--accent-light); }
+        .stat-pill .value.green { color: var(--green); }
+        .stat-pill .value.orange { color: var(--orange); }
+
+        /* Filters */
+        .filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        .filter-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .filter-input, .filter-select {
+            background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary);
+            padding: 8px 12px; border-radius: 8px; font-size: 0.84rem; font-family: inherit; outline: none; transition: border-color .2s;
+        }
+        .filter-input:focus, .filter-select:focus { border-color: var(--accent); }
+        .filter-input { width: 220px; }
+        .filter-select { min-width: 140px; cursor: pointer; }
+        .filter-select option { background: var(--bg-primary); color: var(--text-primary); }
+        .filter-btn { align-self: flex-end; background: var(--accent); color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity .2s; }
+        .filter-btn:hover { opacity: 0.85; }
+        .filter-btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .filter-btn.secondary:hover { border-color: var(--accent); color: var(--text-primary); }
+
+        /* Outlet grid */
+        .outlet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+        .outlet-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px; transition: border-color .2s, background .2s;
+        }
+        .outlet-card:hover { border-color: rgba(124,92,255,0.4); background: var(--bg-card-hover); }
+        .outlet-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .outlet-favicon { width: 36px; height: 36px; border-radius: 8px; background: var(--bg-secondary); object-fit: contain; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; color: var(--accent-light); flex-shrink: 0; overflow: hidden; }
+        .outlet-favicon img { width: 100%; height: 100%; object-fit: contain; }
+        .outlet-name { font-size: 1rem; font-weight: 600; line-height: 1.3; }
+        .outlet-url { font-size: 0.78rem; color: var(--text-muted); word-break: break-all; }
+        .outlet-url a { color: var(--text-muted); text-decoration: none; }
+        .outlet-url a:hover { color: var(--accent-light); }
+        .outlet-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .badge-green { background: var(--green-dim); color: var(--green); }
+        .badge-red { background: var(--red-dim); color: var(--red); }
+        .badge-accent { background: rgba(124,92,255,0.15); color: var(--accent-light); }
+        .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
+        .badge-orange { background: var(--orange-dim); color: var(--orange); }
+        .outlet-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .outlet-stat { text-align: center; }
+        .outlet-stat .val { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+        .outlet-stat .lbl { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; }
+
+        /* Loading */
+        .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--text-muted); font-size: 0.9rem; }
+        .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-right: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="outlets"></script>
+
+    <div class="container">
+        <h1>Gaming Outlets</h1>
+        <div class="subtitle">Manage and monitor the 80+ gaming news outlets being scraped</div>
+
+        <div class="stats-bar" id="stats-bar"></div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <span class="filter-label">Search</span>
+                <input class="filter-input" id="f-search" type="text" placeholder="Search outlet name...">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Language</span>
+                <select class="filter-select" id="f-language"><option value="">All Languages</option></select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Status</span>
+                <select class="filter-select" id="f-active">
+                    <option value="">All</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+            </div>
+            <button class="filter-btn" onclick="loadOutlets()">Search</button>
+            <button class="filter-btn secondary" onclick="clearFilters()">Clear</button>
+        </div>
+
+        <div id="outlet-list" class="outlet-grid">
+            <div class="loading" style="grid-column:1/-1"><div class="spinner"></div> Loading outlets...</div>
+        </div>
+    </div>
+
+    <script>
+        function timeAgo(iso) {
+            if (!iso) return 'Never';
+            const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+            if (diff < 60) return Math.round(diff) + 's ago';
+            if (diff < 3600) return Math.round(diff/60) + 'm ago';
+            if (diff < 86400) return Math.round(diff/3600) + 'h ago';
+            return Math.round(diff/86400) + 'd ago';
+        }
+
+        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        async function loadLanguages() {
+            try {
+                const res = await fetch('/api/languages');
+                const langs = await res.json();
+                const sel = document.getElementById('f-language');
+                for (const [code, name] of Object.entries(langs)) {
+                    const opt = document.createElement('option');
+                    opt.value = code; opt.textContent = name;
+                    sel.appendChild(opt);
+                }
+            } catch (e) {}
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/outlets/stats');
+                const s = await res.json();
+                document.getElementById('stats-bar').innerHTML = `
+                    <div class="stat-pill"><span class="label">Total Outlets</span><span class="value accent">${s.total_outlets}</span></div>
+                    <div class="stat-pill"><span class="label">Active</span><span class="value green">${s.active_outlets}</span></div>
+                    <div class="stat-pill"><span class="label">With Failures</span><span class="value orange">${s.outlets_with_failures}</span></div>
+                    <div class="stat-pill"><span class="label">Total Scraped</span><span class="value accent">${(s.total_articles_scraped || 0).toLocaleString()}</span></div>
+                `;
+            } catch (e) {}
+        }
+
+        async function loadOutlets() {
+            const list = document.getElementById('outlet-list');
+            list.innerHTML = '<div class="loading" style="grid-column:1/-1"><div class="spinner"></div> Loading outlets...</div>';
+
+            const params = new URLSearchParams();
+            const search = document.getElementById('f-search').value.trim();
+            const language = document.getElementById('f-language').value;
+            const active = document.getElementById('f-active').value;
+            if (search) params.set('search', search);
+            if (language) params.set('language', language);
+            if (active) params.set('is_active', active);
+
+            try {
+                const res = await fetch('/api/outlets?' + params.toString());
+                const outlets = await res.json();
+
+                if (outlets.length === 0) {
+                    list.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div style="font-size:1.1rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px">No outlets found</div><div>Try adjusting your filters</div></div>';
+                    return;
+                }
+
+                list.innerHTML = outlets.map(o => `
+                    <div class="outlet-card">
+                        <div class="outlet-header">
+                            <div class="outlet-favicon">
+                                ${o.favicon_url ? `<img src="${esc(o.favicon_url)}" alt="" onerror="this.parentElement.textContent='${esc(o.name).charAt(0)}'">` : esc(o.name).charAt(0)}
+                            </div>
+                            <div>
+                                <div class="outlet-name">${esc(o.name)}</div>
+                                <div class="outlet-url"><a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.url)}</a></div>
+                            </div>
+                        </div>
+                        <div class="outlet-meta">
+                            ${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}
+                            <span class="badge badge-accent">${o.language || '?'}</span>
+                            ${o.category ? `<span class="badge badge-cyan">${esc(o.category)}</span>` : ''}
+                            ${o.scraper_type ? `<span class="badge badge-orange">${esc(o.scraper_type)}</span>` : ''}
+                            ${o.consecutive_failures > 0 ? `<span class="badge badge-red">${o.consecutive_failures} failures</span>` : ''}
+                        </div>
+                        <div class="outlet-stats">
+                            <div class="outlet-stat">
+                                <div class="val">${(o.total_articles_scraped || 0).toLocaleString()}</div>
+                                <div class="lbl">Scraped</div>
+                            </div>
+                            <div class="outlet-stat">
+                                <div class="val">${o.avg_articles_per_scrape ? o.avg_articles_per_scrape.toFixed(1) : '0'}</div>
+                                <div class="lbl">Avg/Run</div>
+                            </div>
+                            <div class="outlet-stat">
+                                <div class="val">${timeAgo(o.last_scraped_at)}</div>
+                                <div class="lbl">Last Scraped</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                list.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div style="color:var(--red);font-weight:600;margin-bottom:8px">Failed to load outlets</div><div>${err.message}</div></div>`;
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('f-search').value = '';
+            document.getElementById('f-language').value = '';
+            document.getElementById('f-active').value = '';
+            loadOutlets();
+        }
+
+        document.getElementById('f-search').addEventListener('keydown', e => { if (e.key === 'Enter') loadOutlets(); });
+
+        loadLanguages();
+        loadStats();
+        loadOutlets();
+    </script>
+</body>
+</html>

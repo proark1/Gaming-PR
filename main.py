@@ -6,6 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import SUPPORTED_LANGUAGES, settings
 from app.database import Base, engine, SessionLocal
@@ -135,23 +136,44 @@ app.include_router(websocket_router)
 app.include_router(email_router)
 app.include_router(auth_router)
 
+# Serve shared static assets (nav.js, etc.)
+_static_dir = Path(__file__).parent / "app" / "static"
+app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+
+
+def _serve_page(filename: str):
+    html_path = _static_dir / filename
+    return HTMLResponse(content=html_path.read_text(), status_code=200)
+
 
 @app.get("/", response_class=HTMLResponse)
 def landing_page():
-    html_path = Path(__file__).parent / "app" / "static" / "landing.html"
-    return HTMLResponse(content=html_path.read_text(), status_code=200)
+    return _serve_page("landing.html")
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard_page():
-    html_path = Path(__file__).parent / "app" / "static" / "dashboard.html"
-    return HTMLResponse(content=html_path.read_text(), status_code=200)
+    return _serve_page("dashboard.html")
 
 
 @app.get("/articles", response_class=HTMLResponse)
 def articles_page():
-    html_path = Path(__file__).parent / "app" / "static" / "articles.html"
-    return HTMLResponse(content=html_path.read_text(), status_code=200)
+    return _serve_page("articles.html")
+
+
+@app.get("/outlets", response_class=HTMLResponse)
+def outlets_page():
+    return _serve_page("outlets.html")
+
+
+@app.get("/webhooks", response_class=HTMLResponse)
+def webhooks_page():
+    return _serve_page("webhooks.html")
+
+
+@app.get("/export", response_class=HTMLResponse)
+def export_page():
+    return _serve_page("export.html")
 
 
 @app.get("/health")

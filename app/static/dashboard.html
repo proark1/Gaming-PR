@@ -48,20 +48,7 @@
             z-index: 0; pointer-events: none;
         }
 
-        /* Nav */
-        nav {
-            position: sticky; top: 0; z-index: 100;
-            padding: 14px 0;
-            background: rgba(10,10,15,0.85);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(42,42,58,0.5);
-        }
-        nav .inner { max-width: 1400px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
-        .logo { font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-primary); }
-        .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--pink)); border-radius: 8px; display: grid; place-items: center; font-size: 14px; }
-        .nav-links { display: flex; gap: 24px; }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color .2s; }
-        .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
+        /* Health badge (dashboard-specific) */
         .status-badge { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 500; padding: 6px 14px; border-radius: 20px; }
         .status-healthy { background: var(--green-dim); color: var(--green); }
         .status-degraded { background: var(--orange-dim); color: var(--orange); }
@@ -144,20 +131,7 @@
 </head>
 <body>
     <div class="bg-grid"></div>
-
-    <nav>
-        <div class="inner">
-            <a class="logo" href="/"><div class="logo-icon">G</div> Gaming PR</a>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/dashboard" class="active">Dashboard</a>
-                <a href="/articles">Articles</a>
-            </div>
-            <div id="health-badge" class="status-badge status-healthy">
-                <span class="status-dot"></span> <span id="health-text">Loading...</span>
-            </div>
-        </div>
-    </nav>
+    <script src="/static/nav.js" data-active="dashboard"></script>
 
     <div class="container">
         <div class="header-row">
@@ -165,9 +139,11 @@
                 <h1>Monitoring Dashboard</h1>
                 <div class="subtitle">Real-time platform health, scraping metrics, and language coverage</div>
             </div>
-            <div style="text-align:right">
+            <div style="display:flex;align-items:center;gap:12px">
+                <div id="health-badge" class="status-badge status-healthy">
+                    <span class="status-dot"></span> <span id="health-text">Loading...</span>
+                </div>
                 <button class="refresh-btn" onclick="loadDashboard()">Refresh</button>
-                <div class="last-updated" id="last-updated"></div>
             </div>
         </div>
 

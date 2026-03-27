@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0a0a0f; --bg-secondary: #111118; --bg-card: #16161f; --bg-card-hover: #1c1c28;
+            --border: #2a2a3a; --text-primary: #f0f0f5; --text-secondary: #8888a0; --text-muted: #5a5a72;
+            --accent: #7c5cff; --accent-light: #9b7fff; --green: #22c55e; --green-dim: rgba(34,197,94,0.15);
+            --orange: #f59e0b; --orange-dim: rgba(245,158,11,0.15); --red: #ef4444; --red-dim: rgba(239,68,68,0.15);
+            --cyan: #06b6d4; --cyan-dim: rgba(6,182,212,0.15); --radius: 12px;
+        }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
+        .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(124,92,255,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(124,92,255,0.03) 1px,transparent 1px); background-size: 60px 60px; z-index: 0; pointer-events: none; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 32px 24px; position: relative; z-index: 1; }
+        h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+        .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 32px; }
+
+        /* Format cards */
+        .format-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 36px; }
+        .format-card {
+            background: var(--bg-card); border: 2px solid var(--border); border-radius: 16px;
+            padding: 28px; cursor: pointer; transition: all .25s; position: relative;
+        }
+        .format-card:hover { border-color: rgba(124,92,255,0.4); background: var(--bg-card-hover); }
+        .format-card.selected { border-color: var(--accent); box-shadow: 0 0 24px rgba(124,92,255,0.15); }
+        .format-icon { font-size: 2rem; margin-bottom: 14px; }
+        .format-name { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+        .format-desc { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; }
+        .format-badge { position: absolute; top: 14px; right: 14px; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .badge-accent { background: rgba(124,92,255,0.15); color: var(--accent-light); }
+        .badge-green { background: var(--green-dim); color: var(--green); }
+        .badge-orange { background: var(--orange-dim); color: var(--orange); }
+        .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
+
+        /* Filters section */
+        .config-section {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 24px; margin-bottom: 28px;
+        }
+        .config-title { font-size: 1rem; font-weight: 700; margin-bottom: 18px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .fg { display: flex; flex-direction: column; gap: 5px; }
+        .fg label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+        .fg input, .fg select {
+            padding: 10px 12px; background: var(--bg-primary); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-primary); font-size: 0.88rem; font-family: inherit;
+            outline: none; transition: border-color .2s;
+        }
+        .fg input:focus, .fg select:focus { border-color: var(--accent); }
+        .fg select { cursor: pointer; }
+        .fg select option { background: var(--bg-primary); color: var(--text-primary); }
+        .fg .hint { font-size: 0.7rem; color: var(--text-muted); }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; margin-top: 8px; }
+        .checkbox-label input { accent-color: var(--accent); }
+
+        /* Download button */
+        .download-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .download-btn {
+            background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none;
+            padding: 14px 36px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer;
+            font-family: inherit; transition: all .25s; box-shadow: 0 4px 20px rgba(124,92,255,0.3);
+        }
+        .download-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(124,92,255,0.4); }
+        .download-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .download-hint { font-size: 0.82rem; color: var(--text-muted); }
+
+        /* Preview */
+        .preview-section { margin-top: 32px; }
+        .preview-title { font-size: 1rem; font-weight: 700; margin-bottom: 12px; }
+        .preview-box {
+            background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+            color: var(--text-secondary); line-height: 1.6; max-height: 300px; overflow-y: auto;
+            white-space: pre-wrap; word-break: break-all;
+        }
+        .preview-box .key { color: var(--accent-light); }
+        .preview-box .str { color: var(--green); }
+        .preview-box .num { color: var(--orange); }
+
+        /* URL display */
+        .url-display {
+            background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px;
+            padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+            color: var(--cyan); word-break: break-all; margin-top: 16px;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .copy-btn {
+            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+            padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;
+            font-family: inherit; transition: all .2s; white-space: nowrap;
+        }
+        .copy-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+
+        .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; }
+        .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-right: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="export"></script>
+
+    <div class="container">
+        <h1>Export Data</h1>
+        <div class="subtitle">Download scraped articles as JSON, CSV, or subscribe via RSS feed</div>
+
+        <!-- Format selection -->
+        <div class="format-grid">
+            <div class="format-card selected" onclick="selectFormat('json')" id="card-json">
+                <div class="format-badge"><span class="badge badge-accent">Download</span></div>
+                <div class="format-icon">{ }</div>
+                <div class="format-name">JSON</div>
+                <div class="format-desc">Structured data with all article fields. Ideal for programmatic use and data pipelines.</div>
+            </div>
+            <div class="format-card" onclick="selectFormat('csv')" id="card-csv">
+                <div class="format-badge"><span class="badge badge-green">Download</span></div>
+                <div class="format-icon">&#128202;</div>
+                <div class="format-name">CSV</div>
+                <div class="format-desc">Spreadsheet-compatible format. Great for Excel, Google Sheets, and data analysis.</div>
+            </div>
+            <div class="format-card" onclick="selectFormat('rss')" id="card-rss">
+                <div class="format-badge"><span class="badge badge-orange">Feed</span></div>
+                <div class="format-icon">&#128225;</div>
+                <div class="format-name">RSS Feed</div>
+                <div class="format-desc">RSS 2.0 feed with media extensions. Subscribe in any feed reader for live updates.</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="config-section">
+            <div class="config-title">Export Options</div>
+            <div class="config-grid">
+                <div class="fg">
+                    <label>Language</label>
+                    <select id="f-language"><option value="">All Languages</option></select>
+                </div>
+                <div class="fg">
+                    <label>Article Type</label>
+                    <select id="f-type">
+                        <option value="">All Types</option>
+                        <option value="news">News</option>
+                        <option value="review">Review</option>
+                        <option value="preview">Preview</option>
+                        <option value="guide">Guide</option>
+                        <option value="opinion">Opinion</option>
+                        <option value="interview">Interview</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label>Time Range (days)</label>
+                    <input type="number" id="f-days" placeholder="All time" min="1" max="365">
+                    <span class="hint">Leave empty for all time</span>
+                </div>
+                <div class="fg">
+                    <label>Limit</label>
+                    <input type="number" id="f-limit" value="500" min="1" max="5000">
+                    <span class="hint">Max 5,000 articles</span>
+                </div>
+            </div>
+            <label class="checkbox-label" id="body-toggle">
+                <input type="checkbox" id="f-body"> Include full article body (JSON only, larger file)
+            </label>
+        </div>
+
+        <!-- Download -->
+        <div class="download-row">
+            <button class="download-btn" id="download-btn" onclick="doExport()">Download JSON</button>
+            <span class="download-hint" id="download-hint">File will download directly to your device</span>
+        </div>
+
+        <!-- API URL -->
+        <div class="url-display" id="api-url-box">
+            <span id="api-url"></span>
+            <button class="copy-btn" onclick="copyUrl()">Copy URL</button>
+        </div>
+
+        <!-- Preview -->
+        <div class="preview-section">
+            <div class="preview-title">Preview (first 3 records)</div>
+            <div class="preview-box" id="preview">Select a format and click Download to see a preview</div>
+        </div>
+    </div>
+
+    <script>
+        let currentFormat = 'json';
+
+        async function loadLanguages() {
+            try {
+                const res = await fetch('/api/languages');
+                const langs = await res.json();
+                const sel = document.getElementById('f-language');
+                for (const [code, name] of Object.entries(langs)) {
+                    const opt = document.createElement('option');
+                    opt.value = code; opt.textContent = name;
+                    sel.appendChild(opt);
+                }
+            } catch (e) {}
+        }
+
+        function selectFormat(fmt) {
+            currentFormat = fmt;
+            document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('card-' + fmt).classList.add('selected');
+
+            const btn = document.getElementById('download-btn');
+            const hint = document.getElementById('download-hint');
+            const bodyToggle = document.getElementById('body-toggle');
+
+            if (fmt === 'json') {
+                btn.textContent = 'Download JSON';
+                hint.textContent = 'File will download directly to your device';
+                bodyToggle.style.display = 'flex';
+            } else if (fmt === 'csv') {
+                btn.textContent = 'Download CSV';
+                hint.textContent = 'File will download directly to your device';
+                bodyToggle.style.display = 'none';
+            } else {
+                btn.textContent = 'Open RSS Feed';
+                hint.textContent = 'Opens the feed URL — copy it into your RSS reader';
+                bodyToggle.style.display = 'none';
+            }
+            updateUrl();
+        }
+
+        function buildParams() {
+            const params = new URLSearchParams();
+            const lang = document.getElementById('f-language').value;
+            const type = document.getElementById('f-type').value;
+            const days = document.getElementById('f-days').value;
+            const limit = document.getElementById('f-limit').value;
+            const body = document.getElementById('f-body').checked;
+            if (lang) params.set('language', lang);
+            if (type) params.set('article_type', type);
+            if (days) params.set('days', days);
+            if (limit && currentFormat !== 'rss') params.set('limit', limit);
+            if (currentFormat === 'rss' && limit) params.set('limit', Math.min(parseInt(limit), 200));
+            if (body && currentFormat === 'json') params.set('include_body', 'true');
+            return params;
+        }
+
+        function getExportUrl() {
+            const params = buildParams();
+            const qs = params.toString();
+            return `/api/export/${currentFormat}${qs ? '?' + qs : ''}`;
+        }
+
+        function updateUrl() {
+            const url = window.location.origin + getExportUrl();
+            document.getElementById('api-url').textContent = url;
+        }
+
+        function copyUrl() {
+            const url = window.location.origin + getExportUrl();
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy URL'; }, 1500);
+            });
+        }
+
+        async function doExport() {
+            const url = getExportUrl();
+
+            if (currentFormat === 'rss') {
+                window.open(url, '_blank');
+                loadPreview(url);
+                return;
+            }
+
+            // Download file
+            const btn = document.getElementById('download-btn');
+            btn.disabled = true;
+            const origText = btn.textContent;
+            btn.textContent = 'Preparing...';
+
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Export failed');
+                const blob = await res.blob();
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `gaming_articles.${currentFormat}`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                btn.textContent = 'Downloaded!';
+                setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 2000);
+            } catch (err) {
+                btn.textContent = 'Error: ' + err.message;
+                setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 3000);
+            }
+
+            // Load preview
+            loadPreview(url);
+        }
+
+        async function loadPreview(url) {
+            const box = document.getElementById('preview');
+            box.textContent = 'Loading preview...';
+
+            try {
+                // For preview, request limited data
+                const previewParams = buildParams();
+                previewParams.set('limit', '3');
+                const previewUrl = `/api/export/${currentFormat}?${previewParams.toString()}`;
+                const res = await fetch(previewUrl);
+                const text = await res.text();
+
+                if (currentFormat === 'json') {
+                    try {
+                        const data = JSON.parse(text);
+                        box.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+                    } catch (e) {
+                        box.textContent = text.substring(0, 3000);
+                    }
+                } else if (currentFormat === 'csv') {
+                    box.textContent = text.substring(0, 3000);
+                } else {
+                    // XML: just show raw
+                    box.textContent = text.substring(0, 3000);
+                }
+            } catch (err) {
+                box.textContent = 'Failed to load preview: ' + err.message;
+            }
+        }
+
+        function syntaxHighlight(json) {
+            return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"([^"]+)":/g, '<span class="key">"$1"</span>:')
+                .replace(/: "([^"]*)"/g, ': <span class="str">"$1"</span>')
+                .replace(/: (\d+\.?\d*)/g, ': <span class="num">$1</span>')
+                .replace(/: (null)/g, ': <span class="num">$1</span>');
+        }
+
+        // Update URL on filter change
+        document.querySelectorAll('#f-language, #f-type, #f-days, #f-limit, #f-body').forEach(el => {
+            el.addEventListener('change', updateUrl);
+            el.addEventListener('input', updateUrl);
+        });
+
+        loadLanguages();
+        updateUrl();
+    </script>
+</body>
+</html>

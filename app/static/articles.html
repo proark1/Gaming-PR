@@ -48,20 +48,7 @@
             z-index: 0; pointer-events: none;
         }
 
-        /* Nav */
-        nav {
-            position: sticky; top: 0; z-index: 100;
-            padding: 14px 0;
-            background: rgba(10,10,15,0.85);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(42,42,58,0.5);
-        }
-        nav .inner { max-width: 1400px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
-        .logo { font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-primary); }
-        .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--pink)); border-radius: 8px; display: grid; place-items: center; font-size: 14px; }
-        .nav-links { display: flex; gap: 24px; }
-        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color .2s; }
-        .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
+        /* Nav styles handled by nav.js */
 
         /* Layout */
         .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; position: relative; z-index: 1; }
@@ -185,17 +172,7 @@
 </head>
 <body>
     <div class="bg-grid"></div>
-
-    <nav>
-        <div class="inner">
-            <a class="logo" href="/"><div class="logo-icon">G</div> Gaming PR</a>
-            <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/dashboard">Dashboard</a>
-                <a href="/articles" class="active">Articles</a>
-            </div>
-        </div>
-    </nav>
+    <script src="/static/nav.js" data-active="articles"></script>
 
     <div class="container">
         <h1>Scraped Articles</h1>
