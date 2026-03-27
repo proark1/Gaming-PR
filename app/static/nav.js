@@ -121,6 +121,8 @@
                 <div class="nav-links">
                     ${link('/dashboard', 'Dashboard', 'dashboard')}
                     ${link('/articles', 'Articles', 'articles')}
+                    ${link('/manage/articles', 'My Articles', 'manage-articles')}
+                    ${link('/translations', 'Translations', 'translations')}
                     ${link('/outlets', 'Outlets', 'outlets')}
                     ${link('/scraper', 'Scraper', 'scraper')}
                     ${link('/feed', 'Live Feed', 'feed')}
@@ -187,8 +189,8 @@
             const initials = user.username.slice(0, 2).toUpperCase();
             container.innerHTML =
                 '<div class="user-pill">' +
-                    '<span class="avatar">' + initials + '</span>' +
-                    '<span>' + user.username + '</span>' +
+                    '<a href="/profile" class="avatar" style="text-decoration:none;color:#fff" title="Profile">' + initials + '</a>' +
+                    '<a href="/profile" style="text-decoration:none;color:inherit">' + user.username + '</a>' +
                     '<button class="logout-btn" onclick="gprLogout()">Log out</button>' +
                 '</div>';
         } else {

@@ -191,6 +191,21 @@ def feed_page():
     return _serve_page("feed.html")
 
 
+@app.get("/manage/articles", response_class=HTMLResponse)
+def manage_articles_page():
+    return _serve_page("manage-articles.html")
+
+
+@app.get("/translations", response_class=HTMLResponse)
+def translations_page():
+    return _serve_page("translations.html")
+
+
+@app.get("/profile", response_class=HTMLResponse)
+def profile_page():
+    return _serve_page("profile.html")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "version": "4.0.0"}
