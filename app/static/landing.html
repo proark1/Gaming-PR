@@ -385,6 +385,102 @@
             line-height: 1.6;
         }
 
+        /* ─── Email Flow ─── */
+        .email-flow {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .email-step {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px 24px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .email-step:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(124, 92, 255, 0.08);
+        }
+
+        .email-step-number {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), #6344e0);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+            margin-bottom: 18px;
+        }
+
+        .email-step-content h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .email-step-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .email-code {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.8;
+        }
+
+        .email-features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .email-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            transition: all 0.3s;
+        }
+
+        .email-feature:hover { border-color: var(--accent); }
+
+        .email-feature-icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+
+        .email-feature h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .email-feature p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .email-flow { grid-template-columns: 1fr; }
+            .email-features-grid { grid-template-columns: 1fr; }
+        }
+
         /* ─── Languages ─── */
         .languages-grid {
             display: grid;
@@ -633,8 +729,8 @@
         </a>
         <div class="nav-links">
             <a href="#features">Features</a>
+            <a href="#email">Email</a>
             <a href="#languages">Languages</a>
-            <a href="#extraction">Data</a>
             <a href="#api">API</a>
             <a href="/docs" class="btn btn-primary">API Docs</a>
         </div>
@@ -654,7 +750,8 @@
         </h1>
         <p class="animate d2">
             Scrape 80+ gaming outlets across 10 languages in real-time. Full content extraction,
-            auto-translation, WebSocket live feed, and a powerful REST API &mdash; all in one platform.
+            auto-translation, WebSocket live feed, integrated email sending from your own domain,
+            and a powerful REST API &mdash; all in one platform.
         </p>
         <div class="hero-buttons animate d3">
             <a href="/docs" class="btn btn-primary">
@@ -751,6 +848,84 @@
                 <div class="feature-icon blue">&#128737;</div>
                 <h3>Smart Scheduling</h3>
                 <p>Adaptive scheduling adjusts scrape frequency per outlet based on publishing patterns. Retry queue handles transient failures.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Email Service -->
+<section id="email">
+    <div class="container">
+        <div class="section-header">
+            <div class="tag">Email Service</div>
+            <h2>Send emails directly from<br>your own domain</h2>
+            <p>Connect your domain, verify DNS, and send transactional or bulk emails — all managed from one platform.</p>
+        </div>
+
+        <div class="email-flow">
+            <div class="email-step">
+                <div class="email-step-number">1</div>
+                <div class="email-step-content">
+                    <h3>Connect Your Domain</h3>
+                    <p>Add your domain via the API. We generate SPF, DKIM, and DMARC records for you to configure.</p>
+                    <div class="email-code">
+                        <span class="prompt">POST</span> /api/email/domains<br>
+                        <span class="output">{ "domain": "yourstudio.com" }</span>
+                    </div>
+                </div>
+            </div>
+            <div class="email-step">
+                <div class="email-step-number">2</div>
+                <div class="email-step-content">
+                    <h3>Verify DNS Records</h3>
+                    <p>Add the returned DNS records to your domain provider. Trigger verification when ready.</p>
+                    <div class="email-code">
+                        <span class="prompt">POST</span> /api/email/domains/:id/verify<br>
+                        <span class="highlight">&#10003; SPF &#10003; DKIM &#10003; DMARC</span>
+                    </div>
+                </div>
+            </div>
+            <div class="email-step">
+                <div class="email-step-number">3</div>
+                <div class="email-step-content">
+                    <h3>Send Emails</h3>
+                    <p>Send single or batch emails (up to 100) with full HTML support, tracking, and delivery status.</p>
+                    <div class="email-code">
+                        <span class="prompt">POST</span> /api/email/send<br>
+                        <span class="output">{ "to": [...], "subject": "..." }</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="email-features-grid">
+            <div class="email-feature">
+                <span class="email-feature-icon">&#128272;</span>
+                <div>
+                    <h4>Domain Authentication</h4>
+                    <p>Auto-generated SPF, DKIM (RSA-2048), and DMARC records</p>
+                </div>
+            </div>
+            <div class="email-feature">
+                <span class="email-feature-icon">&#128232;</span>
+                <div>
+                    <h4>Batch Sending</h4>
+                    <p>Send up to 100 emails per request with full tracking</p>
+                </div>
+            </div>
+            <div class="email-feature">
+                <span class="email-feature-icon">&#128200;</span>
+                <div>
+                    <h4>Open &amp; Click Tracking</h4>
+                    <p>Monitor delivery, opens, and clicks in real-time</p>
+                </div>
+            </div>
+            <div class="email-feature">
+                <span class="email-feature-icon">&#128204;</span>
+                <div>
+                    <h4>Full Analytics</h4>
+                    <p>Dashboard stats for sent, delivered, bounced, and failed</p>
+                </div>
             </div>
         </div>
     </div>
@@ -966,6 +1141,22 @@
                     <p>Health checks, scraper stats, job tracking</p>
                 </div>
             </div>
+            <div class="api-card">
+                <span class="api-method post">POST</span>
+                <div class="api-info">
+                    <h4>Connect Domain</h4>
+                    <code>/api/email/domains</code>
+                    <p>Add domain with auto DNS record generation</p>
+                </div>
+            </div>
+            <div class="api-card">
+                <span class="api-method post">POST</span>
+                <div class="api-info">
+                    <h4>Send Email</h4>
+                    <code>/api/email/send</code>
+                    <p>Send emails from your verified domain</p>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -1013,7 +1204,7 @@
         });
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-    document.querySelectorAll('.stat-card, .feature-card, .lang-card, .extraction-card, .api-card').forEach(el => {
+    document.querySelectorAll('.stat-card, .feature-card, .lang-card, .extraction-card, .api-card, .email-step, .email-feature').forEach(el => {
         el.style.opacity = '0';
         el.style.animation = 'fadeUp 0.5s ease-out forwards';
         el.style.animationPlayState = 'paused';

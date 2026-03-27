@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     ENABLE_WEBHOOKS: bool = True
     ENABLE_CHANGE_TRACKING: bool = True
 
+    # Email service (external)
+    EMAIL_SERVICE_URL: str = "http://localhost:3000"
+    EMAIL_SERVICE_API_KEY: str = ""
+
     model_config = {"env_file": ".env"}
 
 

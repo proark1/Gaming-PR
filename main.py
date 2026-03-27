@@ -14,6 +14,7 @@ from app.routers.monitoring import router as monitoring_router
 from app.routers.webhooks import router as webhooks_router
 from app.routers.export import router as export_router
 from app.routers.websocket import router as websocket_router
+from app.routers.email import router as email_router
 from app.seed.outlets import seed_outlets
 
 logging.basicConfig(level=logging.INFO)
@@ -130,6 +131,7 @@ app.include_router(monitoring_router)
 app.include_router(webhooks_router)
 app.include_router(export_router)
 app.include_router(websocket_router)
+app.include_router(email_router)
 
 
 @app.get("/", response_class=HTMLResponse)
