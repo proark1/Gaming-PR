@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
 from app.models.outlet import GamingOutlet
 from app.models.scraped_article import ScrapedArticle
@@ -139,6 +140,17 @@ def get_scraped(article_id: int, db: Session = Depends(get_db)):
     return article
 
 
+@router.get("/articles/{article_id}/history")
+def get_article_history(article_id: int, db: Session = Depends(get_db)):
+    """Get content change history for an article."""
+    article = db.query(ScrapedArticle).filter(ScrapedArticle.id == article_id).first()
+    if not article:
+        raise HTTPException(status_code=404, detail="Scraped article not found")
+
+    from app.services.change_tracker import get_article_history
+    return get_article_history(db, article_id)
+
+
 @router.get("/stats")
 def scraper_stats(db: Session = Depends(get_db)):
     """Get scraper statistics."""
@@ -178,4 +190,49 @@ def scraper_stats(db: Session = Depends(get_db)):
             }
             for j in recent_jobs
         ],
+    }
+
+
+@router.get("/circuit-breakers")
+def circuit_breaker_status():
+    """Get circuit breaker status for all outlets."""
+    from app.scrapers.circuit_breaker import circuit_breaker
+    return {
+        "enabled": settings.ENABLE_CIRCUIT_BREAKER,
+        "circuits": circuit_breaker.get_all_statuses(),
+    }
+
+
+@router.post("/circuit-breakers/{outlet_id}/reset")
+def reset_circuit_breaker(outlet_id: int):
+    """Manually reset a circuit breaker for an outlet."""
+    from app.scrapers.circuit_breaker import circuit_breaker
+    circuit_breaker.reset(outlet_id)
+    return {"status": "reset", "outlet_id": outlet_id}
+
+
+@router.get("/retry-queue")
+def retry_queue_stats():
+    """Get retry queue statistics."""
+    from app.scrapers.retry_queue import retry_queue
+    return {
+        "enabled": settings.ENABLE_RETRY_QUEUE,
+        **retry_queue.stats,
+    }
+
+
+@router.post("/retry-queue/process")
+def process_retries(db: Session = Depends(get_db)):
+    """Manually process the retry queue."""
+    from app.services.scraper_service import process_retry_queue
+    return process_retry_queue(db)
+
+
+@router.get("/schedule")
+def scrape_schedule(db: Session = Depends(get_db)):
+    """Get adaptive scrape schedule for all outlets."""
+    from app.services.adaptive_scheduler import get_schedule_info
+    return {
+        "adaptive_scheduling_enabled": settings.ENABLE_ADAPTIVE_SCHEDULING,
+        "outlets": get_schedule_info(db),
     }

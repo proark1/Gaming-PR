@@ -16,8 +16,11 @@ from urllib.parse import urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup, Comment
 
+from app.scrapers.stealth import get_stealth_headers, get_session_headers
+
 logger = logging.getLogger(__name__)
 
+# Fallback headers (used when stealth is disabled)
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                   "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -88,12 +91,15 @@ STRIP_TAGS = [
 ]
 
 
-def extract_full_article(url: str, timeout: int = 20) -> dict:
+def extract_full_article(url: str, timeout: int = 20, language: str = "en",
+                         use_stealth: bool = True, use_browser_fallback: bool = True) -> dict:
     """
     Extract everything possible from an article URL.
 
     Returns a dict with all extracted data. Never raises - returns
     partial data with errors logged in the 'extraction_errors' field.
+
+    Features stealth headers and Playwright browser fallback for JS-heavy sites.
     """
     result = {
         "url": url,
@@ -134,20 +140,48 @@ def extract_full_article(url: str, timeout: int = 20) -> dict:
         "http_status_code": None,
         "is_full_content": False,
         "extraction_errors": [],
+        "rendered_by": "requests",  # Track which method got the content
     }
 
+    # Use stealth headers if enabled
+    headers = HEADERS
+    if use_stealth:
+        try:
+            domain = urlparse(url).netloc
+            headers = get_session_headers(domain, language=language)
+        except Exception:
+            pass  # Fall back to default headers
+
+    html_text = None
+
     try:
-        response = requests.get(url, headers=HEADERS, timeout=timeout, allow_redirects=True)
+        response = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
         result["http_status_code"] = response.status_code
         response.raise_for_status()
+        html_text = response.text
     except requests.RequestException as e:
         result["extraction_errors"].append(f"HTTP request failed: {e}")
+
+    # Browser fallback for JS-heavy sites or failed requests
+    if use_browser_fallback and (html_text is None or _needs_browser_check(url, html_text)):
+        try:
+            from app.scrapers.browser import fetch_with_browser, is_playwright_available
+            if is_playwright_available():
+                browser_result = fetch_with_browser(url, timeout=timeout * 1000)
+                if browser_result and browser_result.get("html"):
+                    html_text = browser_result["html"]
+                    result["http_status_code"] = browser_result.get("status_code", 200)
+                    result["rendered_by"] = "playwright"
+        except Exception as e:
+            result["extraction_errors"].append(f"Browser fallback failed: {e}")
+
+    if not html_text:
         return result
 
     try:
-        soup = BeautifulSoup(response.text, "lxml")
+        soup = BeautifulSoup(html_text, "lxml")
     except Exception:
-        soup = BeautifulSoup(response.text, "html.parser")
+        soup = BeautifulSoup(html_text, "html.parser")
 
     # Extract everything in parallel sections
     _extract_meta_tags(soup, url, result)
@@ -789,3 +823,12 @@ def _safe_float(val) -> Optional[float]:
         return float(val)
     except (ValueError, TypeError):
         return None
+
+
+def _needs_browser_check(url: str, html_text: str) -> bool:
+    """Check if the page likely needs browser rendering to get real content."""
+    try:
+        from app.scrapers.browser import needs_browser
+        return needs_browser(url, html_text)
+    except Exception:
+        return False

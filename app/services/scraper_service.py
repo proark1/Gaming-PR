@@ -1,6 +1,14 @@
 """
-Core scraping engine - async, concurrent, with robots.txt compliance,
-sitemap discovery, content dedup, ETag caching, and full content extraction.
+Core scraping engine v4 - async, concurrent, with:
+- Circuit breaker pattern per outlet
+- Stealth headers & User-Agent rotation
+- Playwright browser fallback for JS-heavy sites
+- Retry queue with exponential backoff
+- Content change tracking
+- Webhook notifications
+- WebSocket live feed broadcasting
+- Adaptive scheduling
+- robots.txt compliance, sitemap discovery, content dedup, ETag caching
 """
 import asyncio
 import logging
@@ -22,6 +30,9 @@ from app.scrapers.content_extractor import extract_full_article
 from app.scrapers.dedup import compute_simhash, is_duplicate
 from app.scrapers.robots import can_fetch
 from app.scrapers.sitemap import discover_sitemap_urls, parse_sitemap
+from app.scrapers.circuit_breaker import circuit_breaker
+from app.scrapers.retry_queue import retry_queue
+from app.scrapers.stealth import reset_sessions
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +50,18 @@ def get_scraper(outlet: GamingOutlet) -> BaseScraper:
 
 def scrape_all(db: Session, extract_content: bool = True) -> dict:
     """Scrape all active outlets concurrently."""
+    reset_sessions()  # Fresh stealth headers per run
     loop = _get_or_create_event_loop()
     return loop.run_until_complete(_scrape_all_async(db, extract_content))
+
+
+def scrape_all_adaptive(db: Session, extract_content: bool = True) -> dict:
+    """Scrape only outlets that are due based on adaptive scheduling."""
+    from app.services.adaptive_scheduler import get_outlets_due_for_scrape
+
+    reset_sessions()
+    loop = _get_or_create_event_loop()
+    return loop.run_until_complete(_scrape_all_async(db, extract_content, adaptive=True))
 
 
 def scrape_single_outlet(db: Session, outlet_id: int, extract_content: bool = True) -> dict:
@@ -77,8 +98,47 @@ def scrape_single_outlet(db: Session, outlet_id: int, extract_content: bool = Tr
     return result
 
 
+def process_retry_queue(db: Session) -> dict:
+    """Process pending items in the retry queue."""
+    if not settings.ENABLE_RETRY_QUEUE:
+        return {"processed": 0}
+
+    ready = retry_queue.get_ready_items()
+    succeeded = 0
+    failed = 0
+
+    for item in ready:
+        try:
+            article = db.query(ScrapedArticle).filter(ScrapedArticle.id == item.article_id).first()
+            if not article:
+                continue
+
+            full_data = extract_full_article(
+                item.url,
+                timeout=settings.SCRAPE_REQUEST_TIMEOUT,
+                language=article.language,
+                use_stealth=settings.ENABLE_STEALTH_HEADERS,
+                use_browser_fallback=settings.ENABLE_BROWSER_FALLBACK,
+            )
+
+            if full_data.get("full_body_text"):
+                _apply_full_content(article, full_data)
+                db.commit()
+                retry_queue.mark_success(item)
+                succeeded += 1
+            else:
+                retry_queue.requeue(item, error="No content extracted")
+                failed += 1
+
+        except Exception as e:
+            retry_queue.requeue(item, error=str(e))
+            failed += 1
+
+    return {"processed": len(ready), "succeeded": succeeded, "failed": failed}
+
+
 def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = True) -> dict:
-    """Scrape a single outlet: discover articles, extract full content, save everything."""
+    """Scrape a single outlet with all v4 features integrated."""
     start = time.monotonic()
 
     result = {
@@ -93,10 +153,19 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
         "robots_blocked": 0,
         "sitemap_articles": 0,
         "cached_responses": 0,
+        "browser_rendered": 0,
+        "retries_queued": 0,
+        "content_changes_detected": 0,
         "errors": [],
         "status": "success",
         "duration_seconds": 0,
     }
+
+    # Circuit breaker check
+    if settings.ENABLE_CIRCUIT_BREAKER and not circuit_breaker.can_execute(outlet.id):
+        result["status"] = "circuit_open"
+        result["errors"].append("Circuit breaker is open - outlet temporarily blocked")
+        return result
 
     # Phase 1: Discover articles from RSS/HTML
     scraper = get_scraper(outlet)
@@ -107,13 +176,14 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
         result["status"] = f"error: {e}"
         result["errors"].append(str(e))
         _update_outlet_failure(db, outlet)
+        if settings.ENABLE_CIRCUIT_BREAKER:
+            circuit_breaker.record_failure(outlet.id)
         return result
 
     # Phase 2: Discover articles from sitemaps
     if settings.ENABLE_SITEMAP_DISCOVERY:
         sitemap_articles = _discover_from_sitemaps(outlet)
         result["sitemap_articles"] = len(sitemap_articles)
-        # Merge sitemap articles (avoid duplicates with RSS)
         existing_urls = {a.get("url") for a in raw_articles}
         for sa in sitemap_articles:
             if sa.get("url") and sa["url"] not in existing_urls:
@@ -137,9 +207,18 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
             existing = db.query(ScrapedArticle).filter(ScrapedArticle.url == url).first()
 
             if existing:
-                updated = _update_existing_article(db, existing, article_data, extract_content)
+                updated = _update_existing_article(db, existing, article_data, extract_content, outlet.language)
                 if updated:
                     result["updated_articles"] += 1
+                    # Content change tracking
+                    if settings.ENABLE_CHANGE_TRACKING and existing.full_body_text:
+                        try:
+                            from app.services.change_tracker import track_change
+                            changed = track_change(db, existing, existing.full_body_text, existing.title)
+                            if changed:
+                                result["content_changes_detected"] += 1
+                        except Exception as e:
+                            logger.debug(f"Change tracking error: {e}")
                 continue
 
             # New article - create it
@@ -151,10 +230,19 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
             if extract_content and settings.FULL_CONTENT_EXTRACTION:
                 try:
                     time.sleep(settings.SCRAPE_RATE_LIMIT_DELAY)
-                    full_data = extract_full_article(url, timeout=settings.SCRAPE_REQUEST_TIMEOUT)
+                    full_data = extract_full_article(
+                        url,
+                        timeout=settings.SCRAPE_REQUEST_TIMEOUT,
+                        language=outlet.language,
+                        use_stealth=settings.ENABLE_STEALTH_HEADERS,
+                        use_browser_fallback=settings.ENABLE_BROWSER_FALLBACK,
+                    )
                     _apply_full_content(scraped, full_data)
+
                     if scraped.is_full_content:
                         result["full_content_extracted"] += 1
+                    if full_data.get("rendered_by") == "playwright":
+                        result["browser_rendered"] += 1
 
                     # SimHash dedup check
                     if scraped.full_body_text:
@@ -162,13 +250,63 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
                         scraped.content_hash = str(simhash)
                         if _is_near_duplicate(db, simhash, scraped.id):
                             result["duplicates_skipped"] += 1
+
+                    # Initial change tracking snapshot
+                    if settings.ENABLE_CHANGE_TRACKING and scraped.full_body_text:
+                        try:
+                            from app.services.change_tracker import track_change
+                            track_change(db, scraped, scraped.full_body_text, scraped.title)
+                        except Exception:
+                            pass
+
                 except Exception as e:
                     logger.warning(f"Content extraction failed for {url}: {e}")
                     if scraped.extraction_errors is None:
                         scraped.extraction_errors = []
                     scraped.extraction_errors.append(f"Full extraction failed: {e}")
 
+                    # Queue for retry
+                    if settings.ENABLE_RETRY_QUEUE:
+                        retry_queue.enqueue(scraped.id, url, outlet.id, str(e))
+                        result["retries_queued"] += 1
+
             result["new_articles"] += 1
+
+            # Notify webhooks about new article
+            if settings.ENABLE_WEBHOOKS:
+                try:
+                    from app.services.webhook_service import notify_new_article
+                    notify_new_article(db, {
+                        "article_id": scraped.id,
+                        "title": scraped.title,
+                        "url": scraped.url,
+                        "language": scraped.language,
+                        "article_type": scraped.article_type,
+                        "outlet_id": outlet.id,
+                        "outlet_name": outlet.name,
+                    })
+                except Exception as e:
+                    logger.debug(f"Webhook notification error: {e}")
+
+            # Broadcast to WebSocket clients
+            try:
+                from app.routers.websocket import ws_manager
+                import asyncio
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.ensure_future(ws_manager.broadcast_article({
+                        "article_id": scraped.id,
+                        "title": scraped.title,
+                        "url": scraped.url,
+                        "language": scraped.language,
+                        "article_type": scraped.article_type,
+                        "outlet_id": outlet.id,
+                        "outlet_name": outlet.name,
+                        "author": scraped.author,
+                        "featured_image_url": scraped.featured_image_url,
+                    }))
+            except Exception:
+                pass  # WebSocket is best-effort
 
         except Exception as e:
             logger.error(f"Error processing article {url}: {e}")
@@ -177,6 +315,11 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
     db.commit()
     result["duration_seconds"] = round(time.monotonic() - start, 2)
     _update_outlet_success(db, outlet, result)
+
+    # Record circuit breaker success
+    if settings.ENABLE_CIRCUIT_BREAKER:
+        circuit_breaker.record_success(outlet.id)
+
     return result
 
 
@@ -185,10 +328,10 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
 # ═══════════════════════════════════════════
 
 
-async def _scrape_all_async(db: Session, extract_content: bool) -> dict:
+async def _scrape_all_async(db: Session, extract_content: bool, adaptive: bool = False) -> dict:
     """Async scrape of all active outlets with bounded concurrency."""
     job = ScrapeJob(
-        job_type="manual",
+        job_type="adaptive" if adaptive else "manual",
         status="running",
         started_at=datetime.now(timezone.utc),
     )
@@ -196,17 +339,20 @@ async def _scrape_all_async(db: Session, extract_content: bool) -> dict:
     db.commit()
     db.refresh(job)
 
-    outlets = (
-        db.query(GamingOutlet)
-        .filter(GamingOutlet.is_active == True)
-        .order_by(GamingOutlet.priority.asc())
-        .all()
-    )
+    if adaptive and settings.ENABLE_ADAPTIVE_SCHEDULING:
+        from app.services.adaptive_scheduler import get_outlets_due_for_scrape
+        outlets = get_outlets_due_for_scrape(db)
+    else:
+        outlets = (
+            db.query(GamingOutlet)
+            .filter(GamingOutlet.is_active == True)
+            .order_by(GamingOutlet.priority.asc())
+            .all()
+        )
 
     outlet_ids = [o.id for o in outlets]
 
     # Run outlet scraping concurrently in a thread pool
-    # Each outlet gets its own DB session for thread safety
     semaphore = asyncio.Semaphore(settings.SCRAPE_CONCURRENCY)
 
     async def _bounded_scrape(outlet_id: int) -> dict:
@@ -260,6 +406,28 @@ async def _scrape_all_async(db: Session, extract_content: bool) -> dict:
     db.commit()
     db.refresh(job)
 
+    # Notify webhooks about scrape completion
+    if settings.ENABLE_WEBHOOKS:
+        try:
+            from app.services.webhook_service import notify_scrape_complete
+            notify_scrape_complete(db, {
+                "job_id": job.id,
+                "status": job.status,
+                "duration_seconds": job.duration_seconds,
+                "total_new_articles": job.total_new_articles,
+                "total_outlets_scraped": job.total_outlets_scraped,
+            })
+        except Exception:
+            pass
+
+    # Process retry queue
+    if settings.ENABLE_RETRY_QUEUE:
+        try:
+            retry_result = process_retry_queue(db)
+            logger.info(f"Retry queue: {retry_result}")
+        except Exception as e:
+            logger.warning(f"Retry queue processing error: {e}")
+
     return {
         "job_id": job.id,
         "status": job.status,
@@ -295,17 +463,14 @@ def _scrape_outlet_thread(outlet_id: int, extract_content: bool) -> dict:
 def _discover_from_sitemaps(outlet: GamingOutlet) -> list[dict]:
     """Discover articles from the outlet's sitemaps."""
     try:
-        # Check if we have cached sitemap URLs
         config = outlet.scraper_config or {}
         sitemap_urls = config.get("sitemap_urls")
 
         if not sitemap_urls:
             sitemap_urls = discover_sitemap_urls(outlet.url)
-            # We can't easily update the outlet config here without
-            # making the function impure, so just use what we find
 
         articles = []
-        for sm_url in sitemap_urls[:3]:  # max 3 sitemaps
+        for sm_url in sitemap_urls[:3]:
             try:
                 sm_articles = parse_sitemap(sm_url, max_age_days=3, max_urls=50)
                 articles.extend(sm_articles)
@@ -321,7 +486,6 @@ def _discover_from_sitemaps(outlet: GamingOutlet) -> list[dict]:
 
 def _is_near_duplicate(db: Session, simhash: int, exclude_id: int) -> bool:
     """Check if a SimHash is near-duplicate of any recent article."""
-    # Check against the most recent 500 articles for dedup
     recent = (
         db.query(ScrapedArticle.content_hash)
         .filter(
@@ -422,14 +586,21 @@ def _apply_full_content(article: ScrapedArticle, data: dict):
         article.extraction_errors = data["extraction_errors"]
 
 
-def _update_existing_article(db: Session, existing: ScrapedArticle, new_data: dict, extract_content: bool) -> bool:
+def _update_existing_article(db: Session, existing: ScrapedArticle, new_data: dict,
+                              extract_content: bool, language: str = "en") -> bool:
     """Update an existing article if new data is better."""
     updated = False
 
     if not existing.full_body_text and extract_content and settings.FULL_CONTENT_EXTRACTION:
         try:
             time.sleep(settings.SCRAPE_RATE_LIMIT_DELAY)
-            full_data = extract_full_article(existing.url, timeout=settings.SCRAPE_REQUEST_TIMEOUT)
+            full_data = extract_full_article(
+                existing.url,
+                timeout=settings.SCRAPE_REQUEST_TIMEOUT,
+                language=language,
+                use_stealth=settings.ENABLE_STEALTH_HEADERS,
+                use_browser_fallback=settings.ENABLE_BROWSER_FALLBACK,
+            )
             if full_data.get("full_body_text"):
                 _apply_full_content(existing, full_data)
                 updated = True
@@ -467,6 +638,20 @@ def _update_outlet_failure(db: Session, outlet: GamingOutlet):
     if outlet.consecutive_failures >= 10:
         outlet.is_active = False
         logger.warning(f"Deactivated outlet {outlet.name} after {outlet.consecutive_failures} failures")
+
+    # Notify webhooks about persistent failures
+    if settings.ENABLE_WEBHOOKS and outlet.consecutive_failures >= 5:
+        try:
+            from app.services.webhook_service import notify_outlet_failed
+            notify_outlet_failed(db, {
+                "outlet_id": outlet.id,
+                "outlet_name": outlet.name,
+                "consecutive_failures": outlet.consecutive_failures,
+                "is_active": outlet.is_active,
+            })
+        except Exception:
+            pass
+
     db.commit()
 
 
@@ -490,8 +675,6 @@ def _get_or_create_event_loop():
         if loop.is_closed():
             raise RuntimeError
         if loop.is_running():
-            # We're inside an async context (e.g., FastAPI)
-            # Create a new loop in a thread
             import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                 future = pool.submit(asyncio.new_event_loop)

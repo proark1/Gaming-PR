@@ -28,6 +28,18 @@ class Settings(BaseSettings):
     DEDUP_SIMILARITY_THRESHOLD: float = 0.85
     PORT: int = 8000
 
+    # v4: Advanced features
+    ENABLE_BROWSER_FALLBACK: bool = True
+    ENABLE_STEALTH_HEADERS: bool = True
+    ENABLE_CIRCUIT_BREAKER: bool = True
+    CIRCUIT_BREAKER_THRESHOLD: int = 5
+    CIRCUIT_BREAKER_RECOVERY_SECONDS: float = 300.0
+    ENABLE_RETRY_QUEUE: bool = True
+    RETRY_MAX_ATTEMPTS: int = 3
+    ENABLE_ADAPTIVE_SCHEDULING: bool = True
+    ENABLE_WEBHOOKS: bool = True
+    ENABLE_CHANGE_TRACKING: bool = True
+
     model_config = {"env_file": ".env"}
 
 
