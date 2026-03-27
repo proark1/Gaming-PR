@@ -16,9 +16,13 @@ SUPPORTED_LANGUAGES = {
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "sqlite:///./gaming_pr.db"
-    SCRAPE_INTERVAL_MINUTES: int = 60
+    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/gaming_pr"
+    SCRAPE_INTERVAL_MINUTES: int = 30
     TRANSLATION_PROVIDER: str = "google"
+    SCRAPE_CONCURRENCY: int = 5
+    SCRAPE_REQUEST_TIMEOUT: int = 20
+    SCRAPE_RATE_LIMIT_DELAY: float = 1.0
+    FULL_CONTENT_EXTRACTION: bool = True
 
     model_config = {"env_file": ".env"}
 

@@ -1,101 +1,127 @@
-# Gaming PR Platform
+# Gaming PR Platform v2.0
 
-A service that scrapes the biggest gaming news outlets across the top 10 most spoken languages, lets users create articles, and automatically translates them into all supported languages.
+The world's best gaming news scraper. Extracts **everything** from 80+ gaming outlets across 10 languages, stores it all in PostgreSQL, and auto-translates your press releases.
 
-## Supported Languages
+## What It Does
 
-| Code | Language |
-|------|----------|
-| en | English |
-| zh-CN | Mandarin Chinese |
-| hi | Hindi |
-| es | Spanish |
-| fr | French |
-| ar | Arabic |
-| bn | Bengali |
-| pt | Portuguese |
-| ru | Russian |
-| ja | Japanese |
+1. **Scrapes 80+ gaming outlets** across 10 languages with full content extraction
+2. **Extracts everything**: full article body, images, videos, author info, tags, categories, OpenGraph, JSON-LD structured data, SEO metadata, review scores, comment counts, gaming platforms mentioned, and more
+3. **Users create articles** that get automatically translated into 9 other languages
+4. **Scheduled scraping** runs automatically every 30 minutes
 
-## Features
+## Supported Languages & Outlets
 
-- **Gaming Outlet Database**: 40+ pre-seeded gaming news outlets across all 10 languages
-- **News Scraping**: RSS and HTML-based scrapers to pull latest gaming news
-- **Article CRUD**: Create, read, update, and delete your own articles
-- **Auto-Translation**: Articles are automatically translated into all 9 other languages on creation
-- **REST API**: Full JSON API built with FastAPI
+| Language | Code | Outlets | Examples |
+|----------|------|---------|----------|
+| English | en | 20 | IGN, GameSpot, Kotaku, PC Gamer, Polygon, Eurogamer |
+| Mandarin Chinese | zh-CN | 9 | GamerSky, 17173, GameLook, Bahamut, VGtime |
+| Hindi | hi | 6 | IGN India, Sportskeeda, AFK Gaming |
+| Spanish | es | 9 | Vandal, 3DJuegos, MeriStation, HobbyConsolas |
+| French | fr | 8 | Jeuxvideo.com, Gamekult, JeuxActu, Millenium |
+| Arabic | ar | 5 | Saudi Gamer, ArabHardware, TRUE Gaming |
+| Bengali | bn | 4 | TechShhor, GameBangla, Potaka Gaming |
+| Portuguese | pt | 8 | IGN Brasil, The Enemy, Techtudo, Voxel |
+| Russian | ru | 7 | DTF, Igromania, StopGame, PlayGround |
+| Japanese | ja | 9 | 4Gamer, Famitsu, Game Watch, Automaton |
 
 ## Setup
 
+### With Railway PostgreSQL
+
 ```bash
-# Install dependencies
 pip install -r requirements.txt
-
-# Copy env config
-cp .env.example .env
-
-# Run the server
+export DATABASE_URL="postgresql://user:pass@host:port/dbname"  # from Railway
 python main.py
 ```
 
-The server starts at `http://localhost:8000`. Interactive API docs at `http://localhost:8000/docs`.
+### Local Development
+
+```bash
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with your DATABASE_URL
+python main.py
+```
+
+Server runs at `http://localhost:8000`. API docs at `/docs`.
+
+## What Gets Extracted Per Article
+
+Every scraped article stores:
+
+- **Core**: title, URL, canonical URL, slug
+- **Content**: full body HTML, full body plain text, word count, reading time
+- **Authors**: name, URL, multiple authors support
+- **Dates**: published, updated (from meta tags, JSON-LD, time elements)
+- **Media**: featured image, thumbnail, all images (URL/alt/dimensions), videos (with platform detection for YouTube/Twitch/Vimeo)
+- **Classification**: categories, tags, article type (news/review/preview/guide/opinion/interview), gaming platforms (PS5/Xbox/PC/Switch), game titles
+- **SEO**: meta title, meta description, OpenGraph (title/desc/image/type), Twitter Card
+- **Structured Data**: full JSON-LD (Schema.org) extraction
+- **Engagement**: comment count, review score/max rating
+- **Tracking**: content hash (change detection), HTTP status, scrape timestamps, extraction errors
 
 ## API Endpoints
 
-### Articles
-- `POST /api/articles/` - Create an article (triggers auto-translation)
+### Articles (CRUD + Auto-Translation)
+- `POST /api/articles/` - Create article (auto-translates to 9 languages)
 - `GET /api/articles/` - List articles
 - `GET /api/articles/{id}` - Get article with translations
-- `PUT /api/articles/{id}` - Update article
-- `DELETE /api/articles/{id}` - Delete article
+- `PUT /api/articles/{id}` - Update (re-translates)
+- `DELETE /api/articles/{id}` - Delete
 
 ### Translations
-- `GET /api/articles/{id}/translations` - List translations for an article
-- `GET /api/articles/{id}/translations/{language}` - Get specific translation
-- `POST /api/articles/{id}/translations/retry` - Retry failed translations
-
-### Gaming Outlets
-- `GET /api/outlets/` - List outlets (filter by `?language=en`)
-- `GET /api/outlets/{id}` - Get outlet details
-- `POST /api/outlets/` - Add a new outlet
-- `PATCH /api/outlets/{id}` - Update outlet
+- `GET /api/articles/{id}/translations` - All translations
+- `GET /api/articles/{id}/translations/{lang}` - Specific language
+- `POST /api/articles/{id}/translations/retry` - Retry failed
 
 ### Scraper
-- `POST /api/scraper/run` - Scrape all active outlets
-- `POST /api/scraper/run/{outlet_id}` - Scrape a single outlet
-- `GET /api/scraper/articles` - List scraped articles (filter by `?language=en`)
+- `POST /api/scraper/run` - Scrape all outlets (with full content extraction)
+- `POST /api/scraper/run?run_async=true` - Run in background
+- `POST /api/scraper/run/{outlet_id}` - Scrape single outlet
+- `GET /api/scraper/articles` - List scraped articles (filter by language, outlet, type, full_content)
+- `GET /api/scraper/articles/{id}` - Full article detail
+- `GET /api/scraper/jobs` - List scrape jobs
+- `GET /api/scraper/jobs/{id}` - Job detail
+- `GET /api/scraper/stats` - Scraper statistics
 
-### Utilities
-- `GET /health` - Health check
-- `GET /api/languages` - List supported languages
+### Outlets
+- `GET /api/outlets/` - List outlets (filter by language, active status, category)
+- `GET /api/outlets/stats` - Aggregate stats
+- `POST /api/outlets/` - Add outlet
+- `PATCH /api/outlets/{id}` - Update outlet
+- `DELETE /api/outlets/{id}` - Remove outlet
 
-## Example: Create & Translate an Article
+## Configuration
 
-```bash
-curl -X POST http://localhost:8000/api/articles/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "New RPG Announced at E3",
-    "body": "A major studio has revealed their latest open-world RPG...",
-    "source_language": "en",
-    "author_name": "Jane Doe"
-  }'
-```
-
-The article is created instantly and translations into all 9 other languages begin in the background.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | `postgresql://...` | PostgreSQL connection string |
+| `SCRAPE_INTERVAL_MINUTES` | 30 | Auto-scrape interval |
+| `SCRAPE_CONCURRENCY` | 5 | Parallel outlet scraping threads |
+| `SCRAPE_REQUEST_TIMEOUT` | 20 | HTTP timeout per request (seconds) |
+| `SCRAPE_RATE_LIMIT_DELAY` | 1.0 | Delay between requests to same outlet |
+| `FULL_CONTENT_EXTRACTION` | true | Fetch and parse full article pages |
 
 ## Architecture
 
 ```
 app/
-├── models/          # SQLAlchemy models (Article, Outlet, ScrapedArticle)
-├── schemas/         # Pydantic request/response schemas
-├── routers/         # FastAPI route handlers
-├── services/        # Business logic (scraping, translation, article mgmt)
-├── scrapers/        # RSS and HTML scraper implementations
-└── seed/            # Pre-seeded gaming outlet data
+├── models/              # SQLAlchemy models (PostgreSQL with JSON columns)
+│   ├── article.py       # User articles + translations
+│   ├── outlet.py        # Gaming outlets with scrape tracking
+│   ├── scraped_article.py  # 40+ fields per article
+│   └── scrape_job.py    # Job tracking with per-outlet results
+├── scrapers/
+│   ├── base.py          # Abstract scraper interface
+│   ├── generic_rss.py   # RSS/Atom with media, tags, enclosures
+│   ├── content_extractor.py  # Full page content extraction engine
+│   └── site_specific/
+│       └── generic_html.py   # Smart HTML article discovery
+├── services/
+│   ├── scraper_service.py    # Concurrent engine with rate limiting
+│   ├── translation_service.py # Google Translate with chunking
+│   └── article_service.py    # Article CRUD
+├── routers/             # FastAPI endpoints
+├── schemas/             # Pydantic request/response models
+└── seed/                # 80+ pre-seeded outlets
 ```
-
-- **Database**: SQLite (via SQLAlchemy, easily swappable to PostgreSQL)
-- **Translation**: Google Translate via `deep-translator`
-- **Scraping**: `feedparser` for RSS, `BeautifulSoup` for HTML fallback

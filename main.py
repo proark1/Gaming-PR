@@ -1,16 +1,36 @@
 import logging
 from contextlib import asynccontextmanager
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import SUPPORTED_LANGUAGES
+from app.config import SUPPORTED_LANGUAGES, settings
 from app.database import Base, engine, SessionLocal
 from app.routers import articles, outlets, scraper, translations
 from app.seed.outlets import seed_outlets
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+scheduler = BackgroundScheduler()
+
+
+def scheduled_scrape():
+    """Background scrape job triggered by APScheduler."""
+    from app.services.scraper_service import scrape_all
+    logger.info("Starting scheduled scrape...")
+    db = SessionLocal()
+    try:
+        result = scrape_all(db, extract_content=settings.FULL_CONTENT_EXTRACTION)
+        logger.info(
+            f"Scheduled scrape complete: {result['total_new_articles']} new articles, "
+            f"{result['total_full_content_extracted']} with full content"
+        )
+    except Exception as e:
+        logger.error(f"Scheduled scrape failed: {e}")
+    finally:
+        db.close()
 
 
 @asynccontextmanager
@@ -22,13 +42,29 @@ async def lifespan(app: FastAPI):
         logger.info(f"Database initialized. {added} new outlets seeded.")
     finally:
         db.close()
+
+    # Start scheduled scraping
+    scheduler.add_job(
+        scheduled_scrape,
+        "interval",
+        minutes=settings.SCRAPE_INTERVAL_MINUTES,
+        id="auto_scrape",
+        replace_existing=True,
+    )
+    scheduler.start()
+    logger.info(f"Scheduler started. Scraping every {settings.SCRAPE_INTERVAL_MINUTES} minutes.")
+
     yield
+
+    scheduler.shutdown(wait=False)
+    logger.info("Scheduler shut down.")
 
 
 app = FastAPI(
     title="Gaming PR Platform",
-    description="Scrape gaming news outlets across 10 languages, create articles, and auto-translate them.",
-    version="1.0.0",
+    description="The world's best gaming news scraper. Scrapes 80+ gaming outlets across 10 languages, "
+                "extracts full article content, and auto-translates your articles.",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -48,7 +84,7 @@ app.include_router(scraper.router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "version": "2.0.0"}
 
 
 @app.get("/api/languages")

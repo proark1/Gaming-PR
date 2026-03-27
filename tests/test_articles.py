@@ -18,14 +18,8 @@ def test_create_article(client):
 
 def test_list_articles(client):
     with patch("app.routers.articles._run_translation"):
-        client.post("/api/articles/", json={
-            "title": "Article 1",
-            "body": "Body 1",
-        })
-        client.post("/api/articles/", json={
-            "title": "Article 2",
-            "body": "Body 2",
-        })
+        client.post("/api/articles/", json={"title": "Article 1", "body": "Body 1"})
+        client.post("/api/articles/", json={"title": "Article 2", "body": "Body 2"})
     response = client.get("/api/articles/")
     assert response.status_code == 200
     assert len(response.json()) == 2
