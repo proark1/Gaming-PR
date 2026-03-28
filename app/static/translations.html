@@ -174,7 +174,7 @@
                 // Fetch article with translations
                 const [artRes, transRes] = await Promise.all([
                     fetch(`/api/articles/${articleId}?include_translations=true`),
-                    fetch(`/api/articles/${articleId}/translations`),
+                    fetch(`/api/articles/${articleId}/translations/`),
                 ]);
                 const article = await artRes.json();
                 const translations = await transRes.json();
