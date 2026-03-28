@@ -647,14 +647,14 @@
         document.getElementById('f-search').addEventListener('keydown', e => { if (e.key === 'Enter') loadOutlets(); });
         document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDetail(); closeEmailModal(); } });
 
-        // ─── Bulk Scrape (background, button spinner) ───
+        // ─── Bulk Scrape (background with notifications) ───
         let bulkRunning = false;
 
         function setBtnLoading(id, loading, text) {
             const btn = document.getElementById(id);
             if (loading) {
                 btn.disabled = true;
-                btn.dataset.origText = btn.textContent;
+                btn.dataset.origText = btn.dataset.origText || btn.textContent;
                 btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></span>' + text;
             } else {
                 btn.disabled = false;
@@ -669,21 +669,28 @@
             if (!ids.length) return;
             const outlets = ids.map(id => allOutlets.find(o => o.id === id)).filter(Boolean);
             const total = outlets.length;
+            const jobIdx = JSON.parse(localStorage.getItem('gpr_bg_jobs') || '[]').length;
+
+            gprTrackJob(`Scraping ${total} outlet${total > 1 ? 's' : ''}`, ids, 'articles');
+            gprToast('Scrape Started', `Scraping articles from ${total} outlet${total > 1 ? 's' : ''} in background`, 'info', 4000);
 
             bulkRunning = true;
-            let done = 0;
-            setBtnLoading('scrape-articles-btn', true, `0/${total} scraping...`);
+            let done = 0, totalNew = 0, totalFound = 0;
+            setBtnLoading('scrape-articles-btn', true, `0/${total}`);
 
             for (const o of outlets) {
                 try {
-                    await fetch(`/api/scraper/run/${o.id}?extract_content=true&run_async=false`, { method: 'POST', headers: h });
+                    const res = await fetch(`/api/scraper/run/${o.id}?extract_content=true&run_async=false`, { method: 'POST', headers: h });
+                    if (res.ok) { const d = await res.json(); totalFound += d.articles_found || 0; totalNew += d.new_articles || 0; }
                 } catch (e) { /* continue */ }
                 done++;
-                setBtnLoading('scrape-articles-btn', true, `${done}/${total} scraping...`);
+                gprUpdateJobProgress(jobIdx, done);
+                setBtnLoading('scrape-articles-btn', true, `${done}/${total}`);
             }
 
             setBtnLoading('scrape-articles-btn', false, 'Scrape Articles');
             bulkRunning = false;
+            gprCompleteJob(jobIdx, `${totalFound} found, ${totalNew} new across ${total} outlets`);
             loadOutlets();
         }
 
@@ -694,21 +701,28 @@
             if (!ids.length) return;
             const outlets = ids.map(id => allOutlets.find(o => o.id === id)).filter(Boolean);
             const total = outlets.length;
+            const jobIdx = JSON.parse(localStorage.getItem('gpr_bg_jobs') || '[]').length;
+
+            gprTrackJob(`Scanning ${total} outlet${total > 1 ? 's' : ''}`, ids, 'contacts');
+            gprToast('Contact Scan Started', `Scanning ${total} outlet${total > 1 ? 's' : ''} for contact data`, 'info', 4000);
 
             bulkRunning = true;
-            let done = 0;
-            setBtnLoading('scrape-contacts-btn', true, `0/${total} scanning...`);
+            let done = 0, found = 0;
+            setBtnLoading('scrape-contacts-btn', true, `0/${total}`);
 
             for (const o of outlets) {
                 try {
-                    await fetch(`/api/scraper/run/${o.id}?extract_content=false&run_async=false`, { method: 'POST', headers: h });
+                    const res = await fetch(`/api/scraper/run/${o.id}?extract_content=false&run_async=false`, { method: 'POST', headers: h });
+                    if (res.ok) found++;
                 } catch (e) { /* continue */ }
                 done++;
-                setBtnLoading('scrape-contacts-btn', true, `${done}/${total} scanning...`);
+                gprUpdateJobProgress(jobIdx, done);
+                setBtnLoading('scrape-contacts-btn', true, `${done}/${total}`);
             }
 
             setBtnLoading('scrape-contacts-btn', false, 'Scrape Contacts');
             bulkRunning = false;
+            gprCompleteJob(jobIdx, `${found}/${total} outlets scanned successfully`);
             loadOutlets();
         }
 

@@ -394,9 +394,124 @@
         }
     };
 
+    // ─── Toast notifications ───
+    function injectToastStyles() {
+        const s = document.createElement('style');
+        s.textContent = `
+            .gpr-toast-container { position: fixed; top: 16px; right: 16px; z-index: 400; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+            .gpr-toast {
+                pointer-events: auto; padding: 12px 18px; border-radius: 10px; font-size: 0.84rem; font-weight: 500;
+                font-family: 'Inter', sans-serif; box-shadow: 0 8px 30px rgba(0,0,0,0.4); animation: toastIn .3s ease;
+                display: flex; align-items: center; gap: 10px; max-width: 380px; cursor: pointer;
+                border: 1px solid #2a2a3a; background: #16161f; color: #f0f0f5;
+            }
+            .gpr-toast.success { border-color: rgba(34,197,94,0.4); }
+            .gpr-toast.success .toast-icon { color: #22c55e; }
+            .gpr-toast.error { border-color: rgba(239,68,68,0.4); }
+            .gpr-toast.error .toast-icon { color: #ef4444; }
+            .gpr-toast.info { border-color: rgba(124,92,255,0.4); }
+            .gpr-toast.info .toast-icon { color: #9b7fff; }
+            .toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+            .toast-body { flex: 1; }
+            .toast-title { font-weight: 700; font-size: 0.82rem; margin-bottom: 2px; }
+            .toast-msg { font-size: 0.78rem; color: #8888a0; }
+            .gpr-toast .toast-close { background: none; border: none; color: #5a5a72; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+            @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        `;
+        document.head.appendChild(s);
+    }
+
+    function renderToastContainer() {
+        const c = document.createElement('div');
+        c.className = 'gpr-toast-container';
+        c.id = 'gprToasts';
+        document.body.appendChild(c);
+    }
+
+    window.gprToast = function (title, msg, type = 'info', duration = 8000) {
+        const container = document.getElementById('gprToasts');
+        if (!container) return;
+        const t = document.createElement('div');
+        t.className = 'gpr-toast ' + type;
+        const icon = type === 'success' ? '&#10003;' : type === 'error' ? '&#10007;' : '&#9432;';
+        t.innerHTML = `<span class="toast-icon">${icon}</span><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div><button class="toast-close" onclick="this.parentElement.remove()">&#215;</button>`;
+        container.appendChild(t);
+        if (duration > 0) setTimeout(() => { if (t.parentElement) t.remove(); }, duration);
+    };
+
+    // ─── Background job tracker ───
+    // Stores running scrape jobs in localStorage so any page can track them.
+    // Polls /api/scraper/jobs to detect completion and shows a toast.
+    function initJobTracker() {
+        const POLL_INTERVAL = 5000;
+        const STORAGE_KEY = 'gpr_bg_jobs';
+
+        window.gprTrackJob = function (label, outletIds, type) {
+            const jobs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            jobs.push({ label, outletIds, type, startedAt: Date.now(), total: outletIds.length, done: 0 });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
+        };
+
+        window.gprUpdateJobProgress = function (index, done) {
+            const jobs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            if (jobs[index]) { jobs[index].done = done; localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs)); }
+        };
+
+        window.gprCompleteJob = function (index, summary) {
+            const jobs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            if (jobs[index]) {
+                const job = jobs[index];
+                jobs.splice(index, 1);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
+                gprToast(
+                    job.type === 'articles' ? 'Scrape Complete' : 'Contact Scan Complete',
+                    summary || `${job.total} outlet${job.total > 1 ? 's' : ''} processed`,
+                    'success', 12000
+                );
+            }
+        };
+
+        // On page load, check if there are stale jobs (older than 30min) and clean them
+        const jobs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const now = Date.now();
+        const fresh = jobs.filter(j => now - j.startedAt < 30 * 60 * 1000);
+        if (fresh.length !== jobs.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+
+        // Show indicator if jobs are running
+        function checkRunningJobs() {
+            const jobs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            if (jobs.length > 0) {
+                const j = jobs[0];
+                const pct = j.total > 0 ? Math.round((j.done / j.total) * 100) : 0;
+                // Update sidebar footer if element exists
+                let indicator = document.getElementById('gprJobIndicator');
+                if (!indicator) {
+                    const footer = document.querySelector('.gpr-sidebar .sb-footer');
+                    if (footer) {
+                        indicator = document.createElement('div');
+                        indicator.id = 'gprJobIndicator';
+                        indicator.style.cssText = 'padding:8px 0 4px;font-size:0.74rem;color:#06b6d4;display:flex;align-items:center;gap:6px';
+                        footer.prepend(indicator);
+                    }
+                }
+                if (indicator) {
+                    indicator.innerHTML = `<span style="width:12px;height:12px;border:2px solid #2a2a3a;border-top-color:#06b6d4;border-radius:50%;animation:spin .8s linear infinite;display:inline-block"></span> ${j.label} ${j.done}/${j.total}`;
+                }
+            } else {
+                const indicator = document.getElementById('gprJobIndicator');
+                if (indicator) indicator.remove();
+            }
+        }
+        setInterval(checkRunningJobs, 2000);
+        checkRunningJobs();
+    }
+
     // ─── Init ───
     injectStyles();
+    injectToastStyles();
     renderSidebar();
+    renderToastContainer();
     renderModals();
     renderAuthState();
+    initJobTracker();
 })();
