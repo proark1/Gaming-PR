@@ -360,6 +360,16 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
             outlet.contact_page_url = contact["contact_page_url"]
             changed = True
 
+        # Update social links (only if not already set)
+        social_fields = [
+            "social_twitter", "social_facebook", "social_youtube",
+            "social_linkedin", "social_instagram", "social_tiktok", "social_discord",
+        ]
+        for field in social_fields:
+            if contact.get(field) and not getattr(outlet, field, None):
+                setattr(outlet, field, contact[field])
+                changed = True
+
         if changed:
             db.commit()
             logger.info(f"Contact info updated for {outlet.name}: email={outlet.contact_email}, phone={outlet.contact_phone}")

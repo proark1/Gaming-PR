@@ -169,7 +169,39 @@ def _extract_from_html(html: str, base_url: str) -> dict:
             contact_url = urljoin(base_url, a["href"])
             break
 
-    return {"emails": emails, "phones": phones, "contact_url": contact_url}
+    # Extract social media links
+    socials = _extract_social_links(soup)
+
+    return {"emails": emails, "phones": phones, "contact_url": contact_url, "socials": socials}
+
+
+SOCIAL_PATTERNS = {
+    "linkedin": re.compile(r"https?://(?:www\.)?linkedin\.com/(?:company|in)/[a-zA-Z0-9\-_./%]+", re.IGNORECASE),
+    "instagram": re.compile(r"https?://(?:www\.)?instagram\.com/[a-zA-Z0-9_.]+/?", re.IGNORECASE),
+    "tiktok": re.compile(r"https?://(?:www\.)?tiktok\.com/@[a-zA-Z0-9_.]+/?", re.IGNORECASE),
+    "discord": re.compile(r"https?://(?:www\.)?discord(?:\.gg|\.com/invite|app\.com/invite)/[a-zA-Z0-9]+/?", re.IGNORECASE),
+    "twitter": re.compile(r"https?://(?:www\.)?(?:twitter\.com|x\.com)/[a-zA-Z0-9_]+/?", re.IGNORECASE),
+    "facebook": re.compile(r"https?://(?:www\.)?facebook\.com/[a-zA-Z0-9.\-]+/?", re.IGNORECASE),
+    "youtube": re.compile(r"https?://(?:www\.)?youtube\.com/(?:@|c/|channel/|user/)[a-zA-Z0-9\-_.]+/?", re.IGNORECASE),
+    "twitch": re.compile(r"https?://(?:www\.)?twitch\.tv/[a-zA-Z0-9_]+/?", re.IGNORECASE),
+}
+
+
+def _extract_social_links(soup: BeautifulSoup) -> dict:
+    """Extract social media profile URLs from page links."""
+    found = {}
+    for a in soup.find_all("a", href=True):
+        href = a["href"].strip()
+        if not href or href.startswith("#") or href.startswith("javascript:"):
+            continue
+        for platform, pattern in SOCIAL_PATTERNS.items():
+            if platform in found:
+                continue
+            match = pattern.match(href)
+            if match:
+                found[platform] = match.group(0).rstrip("/")
+                break
+    return found
 
 
 def scrape_outlet_contact(outlet_url: str, timeout: int = 15) -> dict:
@@ -185,6 +217,7 @@ def scrape_outlet_contact(outlet_url: str, timeout: int = 15) -> dict:
     """
     all_emails = set()
     all_phones = set()
+    all_socials = {}
     contact_page_url = None
 
     # Phase 1: Scan homepage
@@ -195,6 +228,9 @@ def scrape_outlet_contact(outlet_url: str, timeout: int = 15) -> dict:
         all_phones.update(result["phones"])
         if result["contact_url"]:
             contact_page_url = result["contact_url"]
+        for k, v in result.get("socials", {}).items():
+            if k not in all_socials:
+                all_socials[k] = v
 
     # Phase 2: Try common contact paths
     tried = {outlet_url}
@@ -219,6 +255,9 @@ def scrape_outlet_contact(outlet_url: str, timeout: int = 15) -> dict:
             all_phones.update(result["phones"])
             if not contact_page_url and result["contact_url"]:
                 contact_page_url = result["contact_url"]
+            for k, v in result.get("socials", {}).items():
+                if k not in all_socials:
+                    all_socials[k] = v
 
         # Stop early if we have good data
         if all_emails and all_phones:
@@ -240,4 +279,12 @@ def scrape_outlet_contact(outlet_url: str, timeout: int = 15) -> dict:
         "contact_page_url": contact_page_url,
         "all_emails_found": list(all_emails),
         "all_phones_found": list(all_phones),
+        "social_twitter": all_socials.get("twitter"),
+        "social_facebook": all_socials.get("facebook"),
+        "social_youtube": all_socials.get("youtube"),
+        "social_linkedin": all_socials.get("linkedin"),
+        "social_instagram": all_socials.get("instagram"),
+        "social_tiktok": all_socials.get("tiktok"),
+        "social_discord": all_socials.get("discord"),
+        "social_twitch": all_socials.get("twitch"),
     }

@@ -73,6 +73,10 @@ def _auto_migrate_columns():
     migrations = [
         ("gaming_outlets", "contact_phone", "VARCHAR(100)"),
         ("gaming_outlets", "contact_page_url", "VARCHAR(2048)"),
+        ("gaming_outlets", "social_linkedin", "VARCHAR(500)"),
+        ("gaming_outlets", "social_instagram", "VARCHAR(500)"),
+        ("gaming_outlets", "social_tiktok", "VARCHAR(500)"),
+        ("gaming_outlets", "social_discord", "VARCHAR(500)"),
         ("users", "is_admin", "BOOLEAN DEFAULT FALSE"),
     ]
     with engine.connect() as conn:
