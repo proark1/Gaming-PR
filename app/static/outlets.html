@@ -55,22 +55,6 @@
         .tbtn-accent:hover { opacity: 0.85; }
         .tbtn-accent:disabled { opacity: 0.35; cursor: not-allowed; }
 
-        /* Bulk progress overlay */
-        .bulk-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 250; align-items: center; justify-content: center; }
-        .bulk-overlay.open { display: flex; }
-        .bulk-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 560px; max-height: 80vh; overflow-y: auto; position: relative; }
-        .bulk-modal h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
-        .bulk-modal .sub { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 16px; }
-        .bulk-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
-        .bulk-progress { margin-bottom: 16px; }
-        .bulk-bar-track { height: 8px; background: var(--bg-primary); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
-        .bulk-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
-        .bulk-status { font-size: 0.8rem; color: var(--text-secondary); }
-        .bulk-log { font-family: 'JetBrains Mono', monospace; font-size: 0.73rem; line-height: 1.7; background: var(--bg-primary); border-radius: 8px; padding: 12px; max-height: 300px; overflow-y: auto; color: var(--text-secondary); }
-        .bulk-log .ok { color: var(--green); }
-        .bulk-log .err { color: var(--red); }
-        .bulk-log .info { color: var(--cyan); }
-
         /* Table */
         .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
@@ -134,6 +118,13 @@
         .dp-btn-green { background: var(--green); color: #fff; }
         .dp-btn-green:hover { opacity: 0.85; }
         .dp-btn-green:disabled { opacity: 0.4; cursor: not-allowed; }
+        /* Admin edit form */
+        .admin-edit-form { display: flex; flex-direction: column; gap: 10px; }
+        .ae-row { display: flex; flex-direction: column; gap: 3px; }
+        .ae-row label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .ae-row input, .ae-row select { padding: 8px 10px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 0.84rem; font-family: inherit; outline: none; }
+        .ae-row input:focus, .ae-row select:focus { border-color: var(--accent); }
+
         .scrape-log { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-secondary); background: var(--bg-primary); border-radius: 8px; padding: 10px; line-height: 1.6; max-height: 200px; overflow-y: auto; }
         .scrape-log .ok { color: var(--green); }
         .scrape-log .err { color: var(--red); }
@@ -272,20 +263,6 @@
         </div>
     </div>
 
-    <!-- Bulk Scrape Progress Modal -->
-    <div class="bulk-overlay" id="bulk-overlay" onclick="if(event.target===this && !bulkRunning)closeBulkModal()">
-        <div class="bulk-modal">
-            <button class="close-btn" onclick="if(!bulkRunning)closeBulkModal()">&times;</button>
-            <h2 id="bulk-title">Scraping...</h2>
-            <div class="sub" id="bulk-sub"></div>
-            <div class="bulk-progress">
-                <div class="bulk-bar-track"><div class="bulk-bar-fill" id="bulk-bar" style="width:0%"></div></div>
-                <div class="bulk-status" id="bulk-status">Starting...</div>
-            </div>
-            <div class="bulk-log" id="bulk-log"></div>
-        </div>
-    </div>
-
     <script>
         let allOutlets = [];
         let selectedIds = new Set();
@@ -412,10 +389,15 @@
         }
 
         // ─── Detail Panel ───
+        function isAdmin() { const u = JSON.parse(localStorage.getItem('gpr_user') || 'null'); return u && u.is_admin; }
+
         function openDetail(id) {
             const o = allOutlets.find(x => x.id === id);
             if (!o) return;
             const langName = allLanguages[o.language] || o.language;
+            const admin = isAdmin();
+            const emails = (o.contact_email || '').split(',').map(e => e.trim()).filter(Boolean);
+
             document.getElementById('detail-content').innerHTML = `
                 <div class="dp-header">
                     <div class="dp-icon">${o.favicon_url ? `<img src="${esc(o.favicon_url)}" onerror="this.parentElement.textContent='${esc(o.name).charAt(0)}'">` : esc(o.name).charAt(0)}</div>
@@ -430,7 +412,7 @@
                 <div class="dp-section">
                     <div class="dp-section-title">Contact Information</div>
                     <div class="dp-grid">
-                        <div class="dp-field"><div class="dp-label">Email</div><div class="dp-value">${o.contact_email ? `<a href="mailto:${esc(o.contact_email)}">${esc(o.contact_email)}</a>` : '<span class="no-data">Not found yet</span>'}</div></div>
+                        <div class="dp-field" style="grid-column:1/-1"><div class="dp-label">Email${emails.length > 1 ? 's' : ''}</div><div class="dp-value">${emails.length ? emails.map(e => `<a href="mailto:${esc(e)}" style="display:inline-block;margin-right:8px">${esc(e)}</a>`).join('') : '<span class="no-data">Not found yet</span>'}</div></div>
                         <div class="dp-field"><div class="dp-label">Phone</div><div class="dp-value mono">${o.contact_phone ? esc(o.contact_phone) : '<span class="no-data">Not found yet</span>'}</div></div>
                         <div class="dp-field"><div class="dp-label">Contact Page</div><div class="dp-value">${o.contact_page_url ? `<a href="${esc(o.contact_page_url)}" target="_blank">${esc(o.contact_page_url)}</a>` : '<span class="no-data">-</span>'}</div></div>
                     </div>
@@ -469,11 +451,27 @@
                     </div>
                 </div>` : ''}
 
+                ${admin ? `<div class="dp-section">
+                    <div class="dp-section-title" style="color:var(--orange)">Admin — Edit Outlet</div>
+                    <div class="admin-edit-form">
+                        <div class="ae-row"><label>Contact Email(s)</label><input type="text" id="ae-email" value="${esc(o.contact_email || '')}" placeholder="press@site.com, editor@site.com"></div>
+                        <div class="ae-row"><label>Phone</label><input type="text" id="ae-phone" value="${esc(o.contact_phone || '')}" placeholder="+1-555-1234"></div>
+                        <div class="ae-row"><label>Description</label><input type="text" id="ae-desc" value="${esc(o.description || '')}" placeholder="Description of outlet"></div>
+                        <div class="ae-row"><label>Category</label><input type="text" id="ae-cat" value="${esc(o.category || '')}" placeholder="gaming_news"></div>
+                        <div class="ae-row"><label>Priority (1-10)</label><input type="number" id="ae-prio" value="${o.priority || 5}" min="1" max="10"></div>
+                        <div class="ae-row"><label>RSS Feed URL</label><input type="text" id="ae-rss" value="${esc(o.rss_feed_url || '')}" placeholder="https://site.com/feed/"></div>
+                        <div class="ae-row"><label>Twitter</label><input type="text" id="ae-twitter" value="${esc(o.social_twitter || '')}" placeholder="https://twitter.com/outlet"></div>
+                        <div class="ae-row"><label>Active</label><select id="ae-active"><option value="true" ${o.is_active ? 'selected' : ''}>Active</option><option value="false" ${!o.is_active ? 'selected' : ''}>Inactive</option></select></div>
+                        <button class="dp-btn dp-btn-primary" onclick="saveOutlet(${o.id})" id="ae-save-btn">Save Changes</button>
+                        <span id="ae-status" style="font-size:0.8rem;margin-left:10px"></span>
+                    </div>
+                </div>` : ''}
+
                 <div class="dp-section">
                     <div class="dp-section-title">Actions</div>
                     <div class="dp-actions">
                         <a class="dp-btn dp-btn-primary" href="${esc(o.url)}" target="_blank">Visit Website</a>
-                        ${o.contact_email ? `<a class="dp-btn dp-btn-ghost" href="mailto:${esc(o.contact_email)}">Send Email</a>` : ''}
+                        ${emails.length ? `<a class="dp-btn dp-btn-ghost" href="mailto:${esc(emails[0])}">Send Email</a>` : ''}
                         ${o.contact_page_url ? `<a class="dp-btn dp-btn-ghost" href="${esc(o.contact_page_url)}" target="_blank">Contact Page</a>` : ''}
                         <button class="dp-btn dp-btn-green" onclick="scrapeOutlet(${o.id}, '${esc(o.name)}')" ${!isLoggedIn()?'disabled':''}>Scrape Articles</button>
                         <button class="dp-btn dp-btn-ghost" onclick="scrapeOutletContacts(${o.id}, '${esc(o.name)}')" ${!isLoggedIn()?'disabled':''}>Scrape Contacts</button>
@@ -483,6 +481,35 @@
             `;
             document.getElementById('detail-overlay').classList.add('open');
             document.getElementById('detail-panel').classList.add('open');
+        }
+
+        async function saveOutlet(id) {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const btn = document.getElementById('ae-save-btn');
+            const status = document.getElementById('ae-status');
+            btn.disabled = true; btn.textContent = 'Saving...';
+            status.textContent = '';
+            try {
+                const body = {
+                    contact_email: document.getElementById('ae-email').value || null,
+                    contact_phone: document.getElementById('ae-phone').value || null,
+                    description: document.getElementById('ae-desc').value || null,
+                    category: document.getElementById('ae-cat').value || null,
+                    priority: parseInt(document.getElementById('ae-prio').value) || 5,
+                    rss_feed_url: document.getElementById('ae-rss').value || null,
+                    social_twitter: document.getElementById('ae-twitter').value || null,
+                    is_active: document.getElementById('ae-active').value === 'true',
+                };
+                const res = await fetch(`/api/outlets/${id}`, { method: 'PATCH', headers: h, body: JSON.stringify(body) });
+                if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Failed'); }
+                status.innerHTML = '<span style="color:var(--green)">Saved!</span>';
+                btn.textContent = 'Save Changes'; btn.disabled = false;
+                loadOutlets();
+            } catch (e) {
+                status.innerHTML = `<span style="color:var(--red)">${esc(e.message)}</span>`;
+                btn.textContent = 'Save Changes'; btn.disabled = false;
+            }
         }
 
         function closeDetail() {
@@ -618,25 +645,21 @@
         }
 
         document.getElementById('f-search').addEventListener('keydown', e => { if (e.key === 'Enter') loadOutlets(); });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDetail(); closeEmailModal(); if(!bulkRunning) closeBulkModal(); } });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDetail(); closeEmailModal(); } });
 
-        // ─── Bulk Scrape ───
+        // ─── Bulk Scrape (background, button spinner) ───
         let bulkRunning = false;
 
-        function openBulkModal(title, sub) {
-            document.getElementById('bulk-title').textContent = title;
-            document.getElementById('bulk-sub').textContent = sub;
-            document.getElementById('bulk-bar').style.width = '0%';
-            document.getElementById('bulk-status').textContent = 'Starting...';
-            document.getElementById('bulk-log').innerHTML = '';
-            document.getElementById('bulk-overlay').classList.add('open');
-        }
-        function closeBulkModal() { document.getElementById('bulk-overlay').classList.remove('open'); }
-
-        function bulkLog(msg, cls = '') {
-            const log = document.getElementById('bulk-log');
-            log.innerHTML += `<div><span class="${cls}">${msg}</span></div>`;
-            log.scrollTop = log.scrollHeight;
+        function setBtnLoading(id, loading, text) {
+            const btn = document.getElementById(id);
+            if (loading) {
+                btn.disabled = true;
+                btn.dataset.origText = btn.textContent;
+                btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></span>' + text;
+            } else {
+                btn.disabled = false;
+                btn.textContent = text || btn.dataset.origText || 'Done';
+            }
         }
 
         async function bulkScrapeArticles() {
@@ -645,35 +668,21 @@
             const ids = [...selectedIds];
             if (!ids.length) return;
             const outlets = ids.map(id => allOutlets.find(o => o.id === id)).filter(Boolean);
+            const total = outlets.length;
 
-            openBulkModal('Scraping Articles', `Processing ${outlets.length} outlet${outlets.length > 1 ? 's' : ''} sequentially`);
             bulkRunning = true;
-            let done = 0, totalNew = 0, totalFound = 0, errors = 0;
+            let done = 0;
+            setBtnLoading('scrape-articles-btn', true, `0/${total} scraping...`);
 
             for (const o of outlets) {
-                const pct = Math.round((done / outlets.length) * 100);
-                document.getElementById('bulk-bar').style.width = pct + '%';
-                document.getElementById('bulk-status').textContent = `${done}/${outlets.length} — Scraping ${o.name}...`;
-                bulkLog(`Scraping ${o.name} (${o.language})...`, 'info');
-
                 try {
-                    const res = await fetch(`/api/scraper/run/${o.id}?extract_content=true&run_async=false`, { method: 'POST', headers: h });
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.detail || 'Server error');
-                    totalFound += data.articles_found || 0;
-                    totalNew += data.new_articles || 0;
-                    bulkLog(`  ${o.name}: found ${data.articles_found || 0}, new ${data.new_articles || 0}, status: ${data.status}`, data.status === 'success' ? 'ok' : 'err');
-                    if ((data.errors || []).length > 0) { errors++; data.errors.forEach(e => bulkLog('  Error: ' + e, 'err')); }
-                } catch (e) {
-                    errors++;
-                    bulkLog(`  ${o.name}: FAILED — ${e.message}`, 'err');
-                }
+                    await fetch(`/api/scraper/run/${o.id}?extract_content=true&run_async=false`, { method: 'POST', headers: h });
+                } catch (e) { /* continue */ }
                 done++;
+                setBtnLoading('scrape-articles-btn', true, `${done}/${total} scraping...`);
             }
 
-            document.getElementById('bulk-bar').style.width = '100%';
-            document.getElementById('bulk-status').textContent = `Done: ${done} outlets, ${totalFound} found, ${totalNew} new, ${errors} errors`;
-            bulkLog(`\nComplete: ${totalFound} articles found, ${totalNew} new across ${done} outlets`, 'ok');
+            setBtnLoading('scrape-articles-btn', false, 'Scrape Articles');
             bulkRunning = false;
             loadOutlets();
         }
@@ -684,33 +693,21 @@
             const ids = [...selectedIds];
             if (!ids.length) return;
             const outlets = ids.map(id => allOutlets.find(o => o.id === id)).filter(Boolean);
+            const total = outlets.length;
 
-            openBulkModal('Scraping Contact Data', `Scanning ${outlets.length} outlet website${outlets.length > 1 ? 's' : ''} for emails and phone numbers`);
             bulkRunning = true;
-            let done = 0, found = 0, errors = 0;
+            let done = 0;
+            setBtnLoading('scrape-contacts-btn', true, `0/${total} scanning...`);
 
             for (const o of outlets) {
-                const pct = Math.round((done / outlets.length) * 100);
-                document.getElementById('bulk-bar').style.width = pct + '%';
-                document.getElementById('bulk-status').textContent = `${done}/${outlets.length} — Scanning ${o.name}...`;
-                bulkLog(`Scanning ${o.name} (${o.url})...`, 'info');
-
                 try {
-                    const res = await fetch(`/api/scraper/run/${o.id}?extract_content=false&run_async=false`, { method: 'POST', headers: h });
-                    const data = await res.json();
-                    if (!res.ok) throw new Error(data.detail || 'Server error');
-                    bulkLog(`  ${o.name}: ${data.status}`, data.status === 'success' ? 'ok' : 'err');
-                    if (data.status === 'success') found++;
-                } catch (e) {
-                    errors++;
-                    bulkLog(`  ${o.name}: FAILED — ${e.message}`, 'err');
-                }
+                    await fetch(`/api/scraper/run/${o.id}?extract_content=false&run_async=false`, { method: 'POST', headers: h });
+                } catch (e) { /* continue */ }
                 done++;
+                setBtnLoading('scrape-contacts-btn', true, `${done}/${total} scanning...`);
             }
 
-            document.getElementById('bulk-bar').style.width = '100%';
-            document.getElementById('bulk-status').textContent = `Done: ${done} scanned, ${found} succeeded, ${errors} errors`;
-            bulkLog(`\nComplete: ${done} outlets scanned. Refresh to see updated contact info.`, 'ok');
+            setBtnLoading('scrape-contacts-btn', false, 'Scrape Contacts');
             bulkRunning = false;
             loadOutlets();
         }

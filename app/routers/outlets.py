@@ -8,7 +8,7 @@ from app.config import SUPPORTED_LANGUAGES
 from app.database import get_db
 from app.models.outlet import GamingOutlet
 from app.schemas.outlet import OutletCreate, OutletUpdate, OutletResponse, OutletStatsResponse
-from app.routers.auth import get_current_user
+from app.routers.auth import get_current_user, get_admin_user
 
 router = APIRouter(prefix="/api/outlets", tags=["outlets"])
 
@@ -63,7 +63,7 @@ def get_outlet(outlet_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=OutletResponse, status_code=201)
-def create_outlet(data: OutletCreate, db: Session = Depends(get_db), _user=Depends(get_current_user)):
+def create_outlet(data: OutletCreate, db: Session = Depends(get_db), _user=Depends(get_admin_user)):
     if data.language not in SUPPORTED_LANGUAGES:
         raise HTTPException(status_code=400, detail=f"Unsupported language: {data.language}")
     existing = db.query(GamingOutlet).filter(GamingOutlet.url == data.url).first()
@@ -77,7 +77,7 @@ def create_outlet(data: OutletCreate, db: Session = Depends(get_db), _user=Depen
 
 
 @router.patch("/{outlet_id}", response_model=OutletResponse)
-def update_outlet(outlet_id: int, data: OutletUpdate, db: Session = Depends(get_db), _user=Depends(get_current_user)):
+def update_outlet(outlet_id: int, data: OutletUpdate, db: Session = Depends(get_db), _user=Depends(get_admin_user)):
     outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
     if not outlet:
         raise HTTPException(status_code=404, detail="Outlet not found")
@@ -90,7 +90,7 @@ def update_outlet(outlet_id: int, data: OutletUpdate, db: Session = Depends(get_
 
 
 @router.delete("/{outlet_id}", status_code=204)
-def delete_outlet(outlet_id: int, db: Session = Depends(get_db), _user=Depends(get_current_user)):
+def delete_outlet(outlet_id: int, db: Session = Depends(get_db), _user=Depends(get_admin_user)):
     outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
     if not outlet:
         raise HTTPException(status_code=404, detail="Outlet not found")
