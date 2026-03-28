@@ -8,19 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --bg-primary: #0a0a0f; --bg-secondary: #111118; --bg-card: #16161f; --bg-card-hover: #1c1c28;
-            --border: #2a2a3a; --text-primary: #f0f0f5; --text-secondary: #8888a0; --text-muted: #5a5a72;
-            --accent: #7c5cff; --accent-light: #9b7fff; --green: #22c55e; --green-dim: rgba(34,197,94,0.15);
-            --orange: #f59e0b; --orange-dim: rgba(245,158,11,0.15); --red: #ef4444; --red-dim: rgba(239,68,68,0.15);
-            --cyan: #06b6d4; --cyan-dim: rgba(6,182,212,0.15); --radius: 12px;
-        }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
-        .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(124,92,255,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(124,92,255,0.03) 1px,transparent 1px); background-size: 60px 60px; z-index: 0; pointer-events: none; }
-        .container { max-width: 1500px; margin: 0 auto; padding: 28px 24px; position: relative; z-index: 1; }
-        h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 6px; }
-        .subtitle { color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 24px; }
+        /* Page-specific styles (shared styles loaded by nav.js) */
 
         /* Top bar */
         .top-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 24px; }
@@ -33,21 +21,12 @@
         .outlet-picker select option { background: var(--bg-primary); }
         .run-btn-single { background: var(--accent); box-shadow: 0 3px 12px rgba(124,92,255,0.2); }
 
-        /* Stats */
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
-        .stat-card:hover { border-color: var(--accent); }
-        .stat-label { font-size: 0.66rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 4px; }
-        .stat-value { font-size: 1.4rem; font-weight: 800; }
-        .stat-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
-
         /* Layout */
         .main-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
         @media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } }
 
-        /* Card */
-        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
-        .card-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.88rem; display: flex; align-items: center; justify-content: space-between; }
+        /* Card overrides */
+        .card { margin-bottom: 20px; }
         .card-header .act-btn { font-size: 0.72rem; }
 
         /* Console log */
@@ -68,18 +47,7 @@
         .log-dim { color: var(--text-muted); }
 
         /* Jobs table */
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        th { text-align: left; padding: 8px 12px; color: var(--text-muted); font-weight: 600; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-        td { padding: 8px 12px; border-bottom: 1px solid rgba(42,42,58,0.25); color: var(--text-secondary); vertical-align: top; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: rgba(124,92,255,0.03); }
         tr.expandable { cursor: pointer; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2px; }
-        .badge-green { background: var(--green-dim); color: var(--green); }
-        .badge-red { background: var(--red-dim); color: var(--red); }
-        .badge-orange { background: var(--orange-dim); color: var(--orange); }
-        .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
-        .badge-accent { background: rgba(124,92,255,0.15); color: var(--accent-light); }
 
         /* Job detail expand */
         .job-detail { display: none; }
@@ -115,10 +83,6 @@
         .refresh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .loading { display: flex; align-items: center; justify-content: center; padding: 30px; color: var(--text-muted); font-size: 0.84rem; }
-        .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-right: 8px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .empty { text-align: center; padding: 30px 16px; color: var(--text-muted); font-size: 0.82rem; }
         .login-notice { text-align: center; padding: 10px; background: var(--orange-dim); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; color: var(--orange); font-size: 0.82rem; margin-bottom: 16px; }
     </style>
 </head>

@@ -42,19 +42,25 @@
             .gpr-sidebar .sb-link {
                 display: flex; align-items: center; gap: 10px;
                 padding: 8px 10px; border-radius: 8px; font-size: 0.84rem; font-weight: 500;
-                color: #8888a0; text-decoration: none; transition: all .15s;
-                margin-bottom: 1px;
+                color: #8888a0; text-decoration: none;
+                transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+                margin-bottom: 1px; border-left: 3px solid transparent; padding-left: 10px;
             }
-            .gpr-sidebar .sb-link:hover { color: #f0f0f5; background: rgba(124,92,255,0.08); }
-            .gpr-sidebar .sb-link.active { color: #f0f0f5; background: rgba(124,92,255,0.15); }
+            .gpr-sidebar .sb-link:hover { color: #f0f0f5; background: rgba(124,92,255,0.08); transform: translateX(2px); }
+            .gpr-sidebar .sb-link.active {
+                color: #f0f0f5;
+                background: linear-gradient(90deg, rgba(124,92,255,0.2) 0%, rgba(124,92,255,0.06) 100%);
+                border-left-color: #7c5cff;
+            }
             .gpr-sidebar .sb-link .sb-icon {
                 width: 20px; text-align: center; font-size: 0.9rem; flex-shrink: 0;
-                opacity: 0.7;
+                opacity: 0.6; transition: opacity .2s;
             }
+            .gpr-sidebar .sb-link:hover .sb-icon { opacity: 0.9; }
             .gpr-sidebar .sb-link.active .sb-icon { opacity: 1; }
             .gpr-sidebar .sb-link .sb-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-            .gpr-sidebar .sb-divider { height: 1px; background: #1e1e2e; margin: 8px 10px; }
+            .gpr-sidebar .sb-divider { height: 1px; background: linear-gradient(90deg, transparent, #2a2a3a, transparent); margin: 8px 10px; }
 
             /* User section at bottom */
             .gpr-sidebar .sb-footer {
@@ -71,8 +77,10 @@
                 width: 32px; height: 32px; background: linear-gradient(135deg, #7c5cff, #ec4899);
                 border-radius: 8px; display: flex; align-items: center; justify-content: center;
                 font-size: 0.72rem; font-weight: 700; color: #fff; flex-shrink: 0;
-                text-decoration: none;
+                text-decoration: none; box-shadow: 0 4px 12px rgba(124,92,255,0.25);
+                transition: transform .2s, box-shadow .2s;
             }
+            .gpr-sidebar .sb-avatar:hover { transform: scale(1.05); box-shadow: 0 6px 16px rgba(124,92,255,0.35); }
             .gpr-sidebar .sb-user-info { flex: 1; min-width: 0; }
             .gpr-sidebar .sb-user-name {
                 font-size: 0.82rem; font-weight: 600; color: #f0f0f5;
@@ -125,19 +133,21 @@
             .gpr-hamburger.open span::after { top: 0; transform: rotate(-45deg); }
 
             .gpr-sidebar-overlay {
-                display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-                z-index: 99;
+                position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+                backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+                z-index: 99; opacity: 0; visibility: hidden;
+                transition: opacity .25s, visibility .25s;
             }
+            .gpr-sidebar-overlay.open { opacity: 1; visibility: visible; }
 
             /* ─── Body offset ─── */
             body { padding-left: 240px; }
 
             @media (max-width: 768px) {
                 body { padding-left: 0; }
-                .gpr-sidebar { transform: translateX(-100%); transition: transform .25s ease; }
+                .gpr-sidebar { transform: translateX(-100%); transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1); }
                 .gpr-sidebar.open { transform: translateX(0); }
                 .gpr-hamburger { display: flex; }
-                .gpr-sidebar-overlay.open { display: block; }
             }
 
             /* ─── Auth Modal ─── */
