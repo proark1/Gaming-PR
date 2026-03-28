@@ -63,9 +63,33 @@ def scheduled_retry_queue():
         db.close()
 
 
+def _auto_migrate_columns():
+    """Add missing columns to existing tables (safe for both SQLite and PostgreSQL)."""
+    from sqlalchemy import inspect, text
+    inspector = inspect(engine)
+    migrations = [
+        ("gaming_outlets", "contact_phone", "VARCHAR(100)"),
+        ("gaming_outlets", "contact_page_url", "VARCHAR(2048)"),
+        ("users", "is_admin", "BOOLEAN DEFAULT FALSE"),
+    ]
+    with engine.connect() as conn:
+        for table, column, col_type in migrations:
+            if table not in inspector.get_table_names():
+                continue
+            existing = [c["name"] for c in inspector.get_columns(table)]
+            if column not in existing:
+                try:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+                    conn.commit()
+                    logger.info(f"Migrated: added {table}.{column}")
+                except Exception as e:
+                    logger.warning(f"Migration skip {table}.{column}: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    _auto_migrate_columns()
     db = SessionLocal()
     try:
         added = seed_outlets(db)
