@@ -17,3 +17,6 @@ env/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+gaming_pr.db
+gaming_pr.db-shm
+gaming_pr.db-wal
