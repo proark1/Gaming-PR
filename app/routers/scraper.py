@@ -114,6 +114,7 @@ def list_scraped(
     outlet_id: Optional[int] = None,
     article_type: Optional[str] = None,
     has_full_content: Optional[bool] = None,
+    outlet_category: Optional[str] = None,
     search: Optional[str] = None,
     skip: int = 0,
     limit: int = Query(default=50, le=200),
@@ -121,6 +122,8 @@ def list_scraped(
 ):
     """List scraped articles with filtering."""
     query = db.query(ScrapedArticle)
+    if outlet_category:
+        query = query.join(GamingOutlet).filter(GamingOutlet.category == outlet_category)
     if language:
         query = query.filter(ScrapedArticle.language == language)
     if outlet_id:

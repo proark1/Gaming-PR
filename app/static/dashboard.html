@@ -109,7 +109,7 @@
                     <!-- Stat cards -->
                     <div class="stat-grid">
                         <div class="stat-card">
-                            <div class="stat-label">Total Articles</div>
+                            <div class="stat-label">Total Scraped</div>
                             <div class="stat-value accent">${fmt(o.total_articles)}</div>
                             <div class="stat-sub">${fmt(o.full_content_articles)} full content (${o.extraction_rate_pct}%)</div>
                         </div>
@@ -119,14 +119,24 @@
                             <div class="stat-sub">${fmt(o.articles_last_7d)} in last 7 days</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-label">Active Outlets</div>
-                            <div class="stat-value cyan">${o.active_outlets}</div>
-                            <div class="stat-sub">${o.inactive_outlets} inactive of ${o.total_outlets} total</div>
+                            <div class="stat-label">News Outlets</div>
+                            <div class="stat-value cyan">${o.news_outlets || 0}</div>
+                            <div class="stat-sub">active sources</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-label">Failing Outlets</div>
+                            <div class="stat-label">Gaming VCs</div>
+                            <div class="stat-value green">${o.vc_outlets || 0}</div>
+                            <div class="stat-sub">active firms</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Streamers</div>
+                            <div class="stat-value orange">${o.streamer_outlets || 0}</div>
+                            <div class="stat-sub">active channels</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Failing Sources</div>
                             <div class="stat-value ${dash.failing_outlets.length > 5 ? 'orange' : 'green'}">${dash.failing_outlets.length}</div>
-                            <div class="stat-sub">${health.issues.length ? health.issues[0] : 'No issues'}</div>
+                            <div class="stat-sub">${o.active_outlets} active of ${o.total_outlets} total</div>
                         </div>
                     </div>
 
@@ -178,34 +188,41 @@
                     <div class="grid-2">
                         <!-- Top outlets -->
                         <div class="card">
-                            <div class="card-header">Top Outlets by Articles</div>
+                            <div class="card-header">Top Sources by Articles</div>
                             <table>
-                                <thead><tr><th>Outlet</th><th>Lang</th><th>Total</th><th>Avg/Scrape</th><th>Last Scraped</th></tr></thead>
+                                <thead><tr><th>Source</th><th>Type</th><th>Lang</th><th>Total</th><th>Avg/Scrape</th><th>Last Scraped</th></tr></thead>
                                 <tbody>
-                                    ${dash.top_outlets.slice(0,10).map(o => `<tr>
+                                    ${dash.top_outlets.slice(0,10).map(o => {
+                                        const catLabel = {gaming_news:'News',gaming_vc:'VC',gaming_streamer:'Streamer'}[o.category]||o.category||'?';
+                                        const catColor = {gaming_news:'cyan',gaming_vc:'green',gaming_streamer:'orange'}[o.category]||'accent';
+                                        return `<tr>
                                         <td style="color:var(--text-primary);font-weight:500">${o.name}</td>
+                                        <td><span class="badge badge-${catColor}">${catLabel}</span></td>
                                         <td><span class="badge badge-accent">${o.language}</span></td>
                                         <td>${fmt(o.total_scraped)}</td>
                                         <td>${o.avg_per_scrape ? o.avg_per_scrape.toFixed(1) : '-'}</td>
                                         <td>${timeAgo(o.last_scraped)}</td>
-                                    </tr>`).join('')}
+                                    </tr>`}).join('')}
                                 </tbody>
                             </table>
                         </div>
 
                         <!-- Failing outlets -->
                         <div class="card">
-                            <div class="card-header">Failing Outlets</div>
+                            <div class="card-header">Failing Sources</div>
                             ${dash.failing_outlets.length ? `<table>
-                                <thead><tr><th>Outlet</th><th>Lang</th><th>Failures</th><th>Status</th><th>Last Scraped</th></tr></thead>
+                                <thead><tr><th>Source</th><th>Type</th><th>Failures</th><th>Status</th><th>Last Scraped</th></tr></thead>
                                 <tbody>
-                                    ${dash.failing_outlets.map(o => `<tr>
+                                    ${dash.failing_outlets.map(o => {
+                                        const catLabel = {gaming_news:'News',gaming_vc:'VC',gaming_streamer:'Streamer'}[o.category]||'?';
+                                        const catColor = {gaming_news:'cyan',gaming_vc:'green',gaming_streamer:'orange'}[o.category]||'accent';
+                                        return `<tr>
                                         <td style="color:var(--text-primary);font-weight:500">${o.name}</td>
-                                        <td><span class="badge badge-accent">${o.language}</span></td>
+                                        <td><span class="badge badge-${catColor}">${catLabel}</span></td>
                                         <td style="color:var(--red);font-weight:600">${o.failures}</td>
                                         <td>${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}</td>
                                         <td>${timeAgo(o.last_scraped)}</td>
-                                    </tr>`).join('')}
+                                    </tr>`}).join('')}
                                 </tbody>
                             </table>` : '<div style="padding:24px;text-align:center;color:var(--green)">All outlets healthy</div>'}
                         </div>

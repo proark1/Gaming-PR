@@ -112,6 +112,15 @@
                     <select id="f-language"><option value="">All Languages</option></select>
                 </div>
                 <div class="fg">
+                    <label>Source Type</label>
+                    <select id="f-source">
+                        <option value="">All Sources</option>
+                        <option value="gaming_news">News Outlets</option>
+                        <option value="gaming_vc">Gaming VCs</option>
+                        <option value="gaming_streamer">Streamers</option>
+                    </select>
+                </div>
+                <div class="fg">
                     <label>Article Type</label>
                     <select id="f-type">
                         <option value="">All Types</option>
@@ -121,6 +130,10 @@
                         <option value="guide">Guide</option>
                         <option value="opinion">Opinion</option>
                         <option value="interview">Interview</option>
+                        <option value="investment">Investment</option>
+                        <option value="portfolio">Portfolio</option>
+                        <option value="stream">Stream</option>
+                        <option value="clip">Clip</option>
                     </select>
                 </div>
                 <div class="fg">
@@ -202,11 +215,13 @@
         function buildParams() {
             const params = new URLSearchParams();
             const lang = document.getElementById('f-language').value;
+            const source = document.getElementById('f-source').value;
             const type = document.getElementById('f-type').value;
             const days = document.getElementById('f-days').value;
             const limit = document.getElementById('f-limit').value;
             const body = document.getElementById('f-body').checked;
             if (lang) params.set('language', lang);
+            if (source) params.set('outlet_category', source);
             if (type) params.set('article_type', type);
             if (days) params.set('days', days);
             if (limit && currentFormat !== 'rss') params.set('limit', limit);

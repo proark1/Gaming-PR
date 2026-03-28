@@ -133,6 +133,15 @@
                 </select>
             </div>
             <div class="filter-group">
+                <span class="filter-label">Source Type</span>
+                <select class="filter-select" id="f-source">
+                    <option value="">All Sources</option>
+                    <option value="gaming_news">News Outlets</option>
+                    <option value="gaming_vc">Gaming VCs</option>
+                    <option value="gaming_streamer">Streamers</option>
+                </select>
+            </div>
+            <div class="filter-group">
                 <span class="filter-label">Article Type</span>
                 <select class="filter-select" id="f-type">
                     <option value="">All Types</option>
@@ -142,6 +151,11 @@
                     <option value="guide">Guide</option>
                     <option value="opinion">Opinion</option>
                     <option value="interview">Interview</option>
+                    <option value="investment">Investment</option>
+                    <option value="portfolio">Portfolio</option>
+                    <option value="stream">Stream</option>
+                    <option value="vod">VOD</option>
+                    <option value="clip">Clip</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -220,10 +234,12 @@
             const type = document.getElementById('f-type').value;
             const full = document.getElementById('f-full').value;
 
+            const source = document.getElementById('f-source').value;
             if (search) params.set('search', search);
             if (language) params.set('language', language);
             if (type) params.set('article_type', type);
             if (full) params.set('has_full_content', full);
+            if (source) params.set('outlet_category', source);
             params.set('skip', currentSkip);
             params.set('limit', PAGE_SIZE);
             return params.toString();

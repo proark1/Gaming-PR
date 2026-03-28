@@ -97,9 +97,15 @@
 
         <!-- Top actions -->
         <div class="top-bar">
-            <button class="run-btn run-btn-all" id="runAllBtn" onclick="runAll()">Scrape All Outlets</button>
+            <button class="run-btn run-btn-all" id="runAllBtn" onclick="runAll()">Scrape All Sources</button>
             <div class="outlet-picker">
-                <select id="outlet-select"><option value="">— Pick outlet to scrape —</option></select>
+                <select id="category-select" onchange="filterOutletPicker()" style="min-width:140px">
+                    <option value="">All Types</option>
+                    <option value="gaming_news">News Outlets</option>
+                    <option value="gaming_vc">Gaming VCs</option>
+                    <option value="gaming_streamer">Streamers</option>
+                </select>
+                <select id="outlet-select"><option value="">— Pick source to scrape —</option></select>
                 <button class="run-btn run-btn-single" id="runOneBtn" onclick="runOne()" disabled>Scrape Selected</button>
             </div>
             <div class="refresh-indicator"><span class="refresh-dot"></span> Auto-refresh 10s</div>
@@ -184,17 +190,32 @@
         function clearLog() { document.getElementById('console').innerHTML = ''; log('Console cleared', 'log-dim'); }
 
         // ─── Load Outlets for picker ───
+        const CATEGORY_LABELS = { gaming_news: 'News', gaming_vc: 'VC', gaming_streamer: 'Streamer' };
         async function loadOutletPicker() {
             try {
                 const res = await fetch('/api/outlets/');
                 allOutlets = await res.json();
-                const sel = document.getElementById('outlet-select');
-                sel.innerHTML = '<option value="">— Pick outlet to scrape (' + allOutlets.length + ' total) —</option>';
-                allOutlets.sort((a, b) => a.name.localeCompare(b.name)).forEach(o => {
-                    sel.innerHTML += `<option value="${o.id}">${esc(o.name)} (${o.language})</option>`;
-                });
-                sel.onchange = () => { document.getElementById('runOneBtn').disabled = !sel.value; };
+                filterOutletPicker();
             } catch (e) {}
+        }
+        function filterOutletPicker() {
+            const cat = document.getElementById('category-select').value;
+            const filtered = cat ? allOutlets.filter(o => o.category === cat) : allOutlets;
+            const sel = document.getElementById('outlet-select');
+            sel.innerHTML = `<option value="">— Pick source (${filtered.length} of ${allOutlets.length}) —</option>`;
+            // Group by category
+            const groups = {};
+            filtered.sort((a, b) => a.name.localeCompare(b.name)).forEach(o => {
+                const g = CATEGORY_LABELS[o.category] || o.category || 'Other';
+                if (!groups[g]) groups[g] = [];
+                groups[g].push(o);
+            });
+            for (const [label, outlets] of Object.entries(groups)) {
+                sel.innerHTML += `<optgroup label="${label}">` +
+                    outlets.map(o => `<option value="${o.id}">${esc(o.name)} (${o.language})</option>`).join('') +
+                    '</optgroup>';
+            }
+            sel.onchange = () => { document.getElementById('runOneBtn').disabled = !sel.value; };
         }
 
         // ─── Stats ───
@@ -204,12 +225,16 @@
                 const s = await res.json();
                 const langCount = Object.keys(s.articles_by_language || {}).length;
                 const lastJob = (s.recent_jobs || [])[0];
+                const newsCount = allOutlets.filter(o => o.category === 'gaming_news').length;
+                const vcCount = allOutlets.filter(o => o.category === 'gaming_vc').length;
+                const streamerCount = allOutlets.filter(o => o.category === 'gaming_streamer').length;
                 document.getElementById('stats').innerHTML = `
-                    <div class="stat-card"><div class="stat-label">Total Articles</div><div class="stat-value" style="color:var(--accent-light)">${(s.total_articles||0).toLocaleString()}</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Scraped</div><div class="stat-value" style="color:var(--accent-light)">${(s.total_articles||0).toLocaleString()}</div></div>
                     <div class="stat-card"><div class="stat-label">Full Content</div><div class="stat-value" style="color:var(--green)">${(s.full_content_articles||0).toLocaleString()}</div><div class="stat-sub">${s.total_articles ? Math.round(s.full_content_articles/s.total_articles*100) : 0}%</div></div>
-                    <div class="stat-card"><div class="stat-label">Languages</div><div class="stat-value" style="color:var(--cyan)">${langCount}</div></div>
+                    <div class="stat-card"><div class="stat-label">News Outlets</div><div class="stat-value" style="color:var(--cyan)">${newsCount}</div></div>
+                    <div class="stat-card"><div class="stat-label">Gaming VCs</div><div class="stat-value" style="color:var(--green)">${vcCount}</div></div>
+                    <div class="stat-card"><div class="stat-label">Streamers</div><div class="stat-value" style="color:var(--orange)">${streamerCount}</div></div>
                     <div class="stat-card"><div class="stat-label">Last Job</div><div class="stat-value" style="font-size:0.9rem;color:var(--text-primary)">${lastJob ? timeAgo(lastJob.started_at) : 'Never'}</div><div class="stat-sub">${lastJob ? lastJob.status : '-'}</div></div>
-                    <div class="stat-card"><div class="stat-label">Outlets</div><div class="stat-value" style="color:var(--accent-light)">${allOutlets.length}</div></div>
                 `;
             } catch (e) {}
         }
@@ -220,7 +245,7 @@
             if (!h) return gprOpenModal('login');
             const btn = document.getElementById('runAllBtn');
             btn.disabled = true; btn.textContent = 'Starting...';
-            log('Starting full scrape of all active outlets...', 'log-info');
+            log('Starting full scrape of all active sources (news, VCs, streamers)...', 'log-info');
             try {
                 const res = await fetch('/api/scraper/run?run_async=true', { method: 'POST', headers: h });
                 const data = await res.json();
@@ -268,7 +293,7 @@
             try {
                 const res = await fetch('/api/scraper/jobs?limit=20');
                 const jobs = await res.json();
-                if (!jobs.length) { el.innerHTML = '<div class="empty">No scrape jobs yet. Click "Scrape All Outlets" to start.</div>'; return; }
+                if (!jobs.length) { el.innerHTML = '<div class="empty">No scrape jobs yet. Click "Scrape All Sources" to start.</div>'; return; }
                 el.innerHTML = `<table>
                     <thead><tr><th>ID</th><th>Type</th><th>Status</th><th>When</th><th>Duration</th><th>Outlets</th><th>Found</th><th>New</th><th>Full</th><th>Errors</th></tr></thead>
                     <tbody>${jobs.map(j => {

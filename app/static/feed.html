@@ -110,6 +110,15 @@
                 <select class="filter-select" id="f-language"><option value="">All Languages</option></select>
             </div>
             <div class="filter-group">
+                <span class="filter-label">Source Type</span>
+                <select class="filter-select" id="f-source">
+                    <option value="">All Sources</option>
+                    <option value="gaming_news">News Outlets</option>
+                    <option value="gaming_vc">Gaming VCs</option>
+                    <option value="gaming_streamer">Streamers</option>
+                </select>
+            </div>
+            <div class="filter-group">
                 <span class="filter-label">Article Type</span>
                 <select class="filter-select" id="f-type">
                     <option value="">All Types</option>
@@ -119,6 +128,9 @@
                     <option value="guide">Guide</option>
                     <option value="opinion">Opinion</option>
                     <option value="interview">Interview</option>
+                    <option value="investment">Investment</option>
+                    <option value="stream">Stream</option>
+                    <option value="clip">Clip</option>
                 </select>
             </div>
             <button class="filter-btn" onclick="updateFilters()">Apply Filters</button>

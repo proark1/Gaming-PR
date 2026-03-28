@@ -88,6 +88,14 @@ def dashboard(db: Session = Depends(get_db)):
     # Content extraction rate
     extraction_rate = (full_content_count / total_articles * 100) if total_articles > 0 else 0
 
+    # Category breakdown
+    category_counts = dict(
+        db.query(GamingOutlet.category, func.count(GamingOutlet.id))
+        .filter(GamingOutlet.is_active == True)
+        .group_by(GamingOutlet.category)
+        .all()
+    )
+
     return {
         "timestamp": now.isoformat(),
         "system": {
@@ -101,6 +109,9 @@ def dashboard(db: Session = Depends(get_db)):
             "total_outlets": total_outlets,
             "active_outlets": active_outlets,
             "inactive_outlets": total_outlets - active_outlets,
+            "news_outlets": category_counts.get("gaming_news", 0),
+            "vc_outlets": category_counts.get("gaming_vc", 0),
+            "streamer_outlets": category_counts.get("gaming_streamer", 0),
             "total_articles": total_articles,
             "articles_last_24h": articles_24h,
             "articles_last_7d": articles_7d,
@@ -114,6 +125,7 @@ def dashboard(db: Session = Depends(get_db)):
                 "id": o.id,
                 "name": o.name,
                 "language": o.language,
+                "category": o.category,
                 "total_scraped": o.total_articles_scraped,
                 "avg_per_scrape": o.avg_articles_per_scrape,
                 "last_scraped": o.last_scraped_at.isoformat() if o.last_scraped_at else None,
@@ -125,6 +137,7 @@ def dashboard(db: Session = Depends(get_db)):
                 "id": o.id,
                 "name": o.name,
                 "language": o.language,
+                "category": o.category,
                 "failures": o.consecutive_failures,
                 "is_active": o.is_active,
                 "last_scraped": o.last_scraped_at.isoformat() if o.last_scraped_at else None,

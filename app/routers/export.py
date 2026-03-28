@@ -11,14 +11,18 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.scraped_article import ScrapedArticle
+from app.models.outlet import GamingOutlet
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
 
 def _build_query(db: Session, language: str = None, outlet_id: int = None,
-                 article_type: str = None, days: int = None, limit: int = 1000):
+                 article_type: str = None, days: int = None,
+                 outlet_category: str = None, limit: int = 1000):
     """Build a filtered query for exports."""
     query = db.query(ScrapedArticle)
+    if outlet_category:
+        query = query.join(GamingOutlet).filter(GamingOutlet.category == outlet_category)
     if language:
         query = query.filter(ScrapedArticle.language == language)
     if outlet_id:
@@ -37,13 +41,14 @@ def export_json(
     language: Optional[str] = None,
     outlet_id: Optional[int] = None,
     article_type: Optional[str] = None,
+    outlet_category: Optional[str] = None,
     days: Optional[int] = None,
     limit: int = Query(default=500, le=5000),
     include_body: bool = False,
     db: Session = Depends(get_db),
 ):
     """Export articles as JSON."""
-    articles = _build_query(db, language, outlet_id, article_type, days, limit).all()
+    articles = _build_query(db, language, outlet_id, article_type, days, outlet_category, limit).all()
 
     data = []
     for a in articles:
@@ -81,12 +86,13 @@ def export_csv(
     language: Optional[str] = None,
     outlet_id: Optional[int] = None,
     article_type: Optional[str] = None,
+    outlet_category: Optional[str] = None,
     days: Optional[int] = None,
     limit: int = Query(default=500, le=5000),
     db: Session = Depends(get_db),
 ):
     """Export articles as CSV."""
-    articles = _build_query(db, language, outlet_id, article_type, days, limit).all()
+    articles = _build_query(db, language, outlet_id, article_type, days, outlet_category, limit).all()
 
     output = io.StringIO()
     writer = csv.writer(output)
@@ -121,11 +127,12 @@ def export_rss(
     language: Optional[str] = None,
     outlet_id: Optional[int] = None,
     article_type: Optional[str] = None,
+    outlet_category: Optional[str] = None,
     limit: int = Query(default=50, le=200),
     db: Session = Depends(get_db),
 ):
     """Generate an RSS 2.0 feed of scraped articles."""
-    articles = _build_query(db, language, outlet_id, article_type, days=7, limit=limit).all()
+    articles = _build_query(db, language, outlet_id, article_type, days=7, outlet_category=outlet_category, limit=limit).all()
 
     rss = Element("rss", version="2.0")
     rss.set("xmlns:media", "http://search.yahoo.com/mrss/")

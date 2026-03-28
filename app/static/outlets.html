@@ -134,7 +134,7 @@
 
     <div class="container">
         <h1>Gaming Outlets</h1>
-        <div class="subtitle">188 gaming news outlets across 34 languages — click any outlet for details, select multiple to send emails</div>
+        <div class="subtitle">Gaming news outlets, VC firms, and streamers — click any source for details, select multiple to send emails</div>
 
         <div class="stats-bar" id="stats-bar"></div>
 
@@ -143,6 +143,15 @@
             <div class="fg">
                 <span class="fg-label">Search</span>
                 <input id="f-search" type="text" placeholder="Search outlet name...">
+            </div>
+            <div class="fg">
+                <span class="fg-label">Source Type</span>
+                <select id="f-category">
+                    <option value="">All Types</option>
+                    <option value="gaming_news">News Outlets</option>
+                    <option value="gaming_vc">Gaming VCs</option>
+                    <option value="gaming_streamer">Streamers</option>
+                </select>
             </div>
             <div class="fg">
                 <span class="fg-label">Language</span>
@@ -288,9 +297,11 @@
             document.getElementById('outlet-tbody').innerHTML = '<tr><td colspan="9"><div class="loading"><div class="spinner"></div> Loading...</div></td></tr>';
             const params = new URLSearchParams();
             const search = document.getElementById('f-search').value.trim();
+            const category = document.getElementById('f-category').value;
             const language = document.getElementById('f-language').value;
             const active = document.getElementById('f-active').value;
             if (search) params.set('search', search);
+            if (category) params.set('category', category);
             if (language) params.set('language', language);
             if (active) params.set('is_active', active);
             try {
@@ -607,6 +618,7 @@
 
         function clearFilters() {
             document.getElementById('f-search').value = '';
+            document.getElementById('f-category').value = '';
             document.getElementById('f-language').value = '';
             document.getElementById('f-active').value = '';
             loadOutlets();
