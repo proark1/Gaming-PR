@@ -76,12 +76,15 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
 
+    from datetime import datetime, timedelta, timezone as tz
+    first_scrape = datetime.now(tz.utc) + timedelta(minutes=settings.SCRAPE_INTERVAL_MINUTES)
     scheduler.add_job(
         scheduled_scrape,
         "interval",
         minutes=settings.SCRAPE_INTERVAL_MINUTES,
         id="auto_scrape",
         replace_existing=True,
+        next_run_time=first_scrape,
     )
 
     # Retry queue runs every 5 minutes
