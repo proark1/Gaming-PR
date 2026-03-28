@@ -26,6 +26,8 @@ from app.models.scrape_job import ScrapeJob
 from app.scrapers.base import BaseScraper
 from app.scrapers.generic_rss import RssScraper
 from app.scrapers.site_specific.generic_html import GenericHtmlScraper
+from app.scrapers.site_specific.vc_scraper import VcScraper
+from app.scrapers.site_specific.streamer_scraper import StreamerScraper
 from app.scrapers.content_extractor import extract_full_article
 from app.scrapers.dedup import compute_simhash, is_duplicate
 from app.scrapers.robots import can_fetch
@@ -38,6 +40,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_scraper(outlet: GamingOutlet) -> BaseScraper:
+    if outlet.scraper_type == "vc":
+        return VcScraper(outlet)
+    if outlet.scraper_type == "streamer":
+        return StreamerScraper(outlet)
     if outlet.scraper_type == "rss" and outlet.rss_feed_url:
         return RssScraper(outlet)
     return GenericHtmlScraper(outlet)

@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 
 from app.models.outlet import GamingOutlet
+from app.seed.vc_sources import GAMING_VC_SOURCES, seed_vc_sources
+from app.seed.streamer_sources import GAMING_STREAMER_SOURCES, seed_streamer_sources
 
 GAMING_OUTLETS = [
     # ═══════════════════════════════════════════
@@ -131,7 +133,8 @@ GAMING_OUTLETS = [
 
 
 def seed_outlets(db: Session) -> int:
-    """Seed the database with known gaming outlets. Returns the number of new outlets added."""
+    """Seed the database with known gaming outlets, VC sources, and streamer sources.
+    Returns the number of new outlets added."""
     added = 0
     for outlet_data in GAMING_OUTLETS:
         existing = db.query(GamingOutlet).filter(GamingOutlet.url == outlet_data["url"]).first()
@@ -140,4 +143,9 @@ def seed_outlets(db: Session) -> int:
             db.add(outlet)
             added += 1
     db.commit()
+
+    # Seed VC and streamer sources
+    added += seed_vc_sources(db)
+    added += seed_streamer_sources(db)
+
     return added

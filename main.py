@@ -104,8 +104,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Gaming PR Platform",
     description=(
-        "The world's most advanced gaming news scraper. "
-        "Scrapes 80+ outlets across 10 languages with async concurrency, "
+        "The world's most advanced gaming industry scraper. "
+        "Scrapes 80+ news outlets, 25+ gaming VCs, and 30+ gaming streamers "
+        "across 10 languages with async concurrency, "
         "Playwright browser fallback, stealth headers, circuit breakers, "
         "adaptive scheduling, retry queues, content change tracking, "
         "WebSocket live feed, webhook notifications, and bulk export. "
