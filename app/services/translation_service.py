@@ -65,8 +65,12 @@ def translate_text(text: str, source: str, target: str, retries: int = 3) -> str
     return "\n\n".join(translated_chunks)
 
 
-def translate_article(db: Session, article_id: int) -> list[ArticleTranslation]:
-    """Translate an article into all supported languages."""
+def translate_article(db: Session, article_id: int, retry_only: bool = False) -> list[ArticleTranslation]:
+    """Translate an article into all supported languages.
+
+    If retry_only=True, only retranslate failed/pending translations
+    and create missing ones — skip already completed translations.
+    """
     article = db.query(Article).filter(Article.id == article_id).first()
     if not article:
         raise ValueError(f"Article {article_id} not found")
@@ -75,6 +79,19 @@ def translate_article(db: Session, article_id: int) -> list[ArticleTranslation]:
     for lang_code in SUPPORTED_LANGUAGES:
         if lang_code == article.source_language:
             continue
+
+        if retry_only:
+            existing = (
+                db.query(ArticleTranslation)
+                .filter(
+                    ArticleTranslation.article_id == article.id,
+                    ArticleTranslation.language == lang_code,
+                )
+                .first()
+            )
+            if existing and existing.status == "completed":
+                translations.append(existing)
+                continue
 
         translation = translate_article_to_language(db, article, lang_code)
         translations.append(translation)

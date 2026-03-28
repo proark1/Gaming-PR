@@ -49,7 +49,7 @@ def retry_translations(article_id: int, background_tasks: BackgroundTasks, db: S
         from app.database import SessionLocal
         session = SessionLocal()
         try:
-            translate_article(session, article_id)
+            translate_article(session, article_id, retry_only=True)
         finally:
             session.close()
 
