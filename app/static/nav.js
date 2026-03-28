@@ -509,10 +509,29 @@
         checkRunningJobs();
     }
 
+    // ─── Shared stylesheet ───
+    function injectSharedCSS() {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/static/styles.css';
+        document.head.prepend(link);
+    }
+
+    // ─── Mobile: close sidebar on link click ───
+    function setupMobileLinkClose() {
+        document.querySelectorAll('.gpr-sidebar .sb-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) toggleMobileMenu();
+            });
+        });
+    }
+
     // ─── Init ───
+    injectSharedCSS();
     injectStyles();
     injectToastStyles();
     renderSidebar();
+    setupMobileLinkClose();
     renderToastContainer();
     renderModals();
     renderAuthState();
