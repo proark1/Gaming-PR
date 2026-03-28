@@ -1,23 +1,21 @@
 import os
 
-# Force SQLite for tests before any app imports
-os.environ["DATABASE_URL"] = "sqlite:///./test_gaming_pr.db"
+# Force SQLite in-memory for tests before any app imports
+os.environ["DATABASE_URL"] = "sqlite://"
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from main import app
 
-TEST_DATABASE_URL = "sqlite:///./test_gaming_pr.db"
-
-engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
 TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-# Make SQLite accept JSON columns (it stores them as text)
 @event.listens_for(engine, "connect")
 def _set_sqlite_pragma(dbapi_conn, connection_record):
     cursor = dbapi_conn.cursor()
@@ -28,6 +26,9 @@ def _set_sqlite_pragma(dbapi_conn, connection_record):
 @pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
+    # Reset rate limiter between tests
+    from app.routers.auth import _rate_limits
+    _rate_limits.clear()
     yield
     Base.metadata.drop_all(bind=engine)
 
