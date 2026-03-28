@@ -104,8 +104,44 @@ SQLite is the default for local development.
 - **Security headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - **CORS**: configurable allowed origins (defaults to same-origin in production)
 - **Input validation**: Pydantic schemas on all endpoints, SQLAlchemy parameterized queries
+- **Global exception handler**: unhandled errors return clean JSON, never raw tracebacks
+
+## Design System
+
+A unified design system (`styles.css`) governs the look of all 11 UI screens:
+
+- **7-step type scale**: `--text-xs` (0.68rem) through `--text-2xl` (1.6rem)
+- **9-step spacing**: `--sp-1` (4px) through `--sp-9` (48px) on 8px grid
+- **3 border radii**: `--radius-sm` (6px), `--radius` (10px), `--radius-lg` (16px)
+- **Material motion**: `--ease` cubic-bezier(0.4, 0, 0.2, 1) on all transitions
+- **Unified components**: `.card`, `.stat-card`, `.badge` (5 variants), `.btn` (4 variants), tables, forms
+- **Micro-interactions**: card hover lift, button press scale, input focus glow, zebra-striped tables
+- **Skeleton loaders**: shimmer animation for loading states
+- **Accessibility**: `:focus-visible` outline, proper contrast ratios, custom scrollbar
+
+Sidebar navigation (`nav.js`):
+- Active link with left accent bar + gradient background
+- Link hover with translateX motion
+- Toast notification system for background job completion
+- Mobile hamburger with backdrop-blur overlay (768px breakpoint)
+
+## Testing
+
+31 automated tests covering:
+
+| Suite | Tests | Coverage |
+|-------|-------|----------|
+| `test_url_safety.py` | 13 | SSRF protection — private IPs, metadata, schemes |
+| `test_webhooks.py` | 8 | CRUD, toggle, SSRF blocking, auth required |
+| `test_admin.py` | 5 | Admin-only mutations, user rejection, seed dedup |
+| `test_monitoring.py` | 3 | Dashboard and health endpoints |
+| `test_rate_limit.py` | 2 | Login and register brute-force protection |
+
+Run tests: `pytest tests/ -v`
 
 ## API Endpoints
+
+All endpoints are documented at `/docs` (Swagger UI) and `/redoc` (ReDoc).
 
 ### Auth
 - `POST /api/auth/register` — Create account (rate limited)
@@ -204,7 +240,30 @@ app/
 ├── schemas/                 # Pydantic request/response models
 ├── utils/
 │   └── url_safety.py        # SSRF protection
-├── static/                  # 11 UI screens + sidebar nav
+├── static/
+│   ├── styles.css           # Unified design system (tokens, components)
+│   ├── nav.js               # Sidebar nav + auth modals + toast notifications
+│   ├── landing.html          # Public marketing page
+│   ├── dashboard.html        # Monitoring dashboard
+│   ├── outlets.html          # Outlet table + detail + admin edit + bulk scrape/email
+│   ├── articles.html         # Scraped article browser
+│   ├── scraper.html          # Admin scraper console
+│   └── ...                   # 5 more screens (feed, emails, webhooks, export, profile)
 ├── seed/                    # 188 pre-seeded outlets
 └── config.py                # All settings with env overrides
+
+tests/
+├── conftest.py              # Fixtures: in-memory SQLite, auth helpers
+├── test_url_safety.py       # SSRF protection (13 tests)
+├── test_webhooks.py         # Webhook CRUD + SSRF (8 tests)
+├── test_admin.py            # Admin access control (5 tests)
+├── test_monitoring.py       # Dashboard + health (3 tests)
+├── test_rate_limit.py       # Auth rate limiting (2 tests)
+├── test_auth.py             # Registration + login
+├── test_articles.py         # Article CRUD
+├── test_outlets.py          # Outlet operations
+├── test_scraper.py          # RSS scraper + video detection
+├── test_translations.py     # Translation logic
+├── test_content_extractor.py # Content extraction
+└── test_v4_features.py      # Circuit breaker, retry, stealth, dedup
 ```

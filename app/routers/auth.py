@@ -68,6 +68,7 @@ def get_admin_user(user=Depends(get_current_user)):
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
 def register(request: Request, data: UserRegister, db: Session = Depends(get_db)):
+    """Create a new user account. Rate limited to 5 per minute per IP."""
     _check_rate_limit(request, max_requests=5, window_seconds=60)
     if get_user_by_username(db, data.username):
         raise HTTPException(status_code=400, detail="Username already taken")
@@ -83,6 +84,7 @@ def register(request: Request, data: UserRegister, db: Session = Depends(get_db)
 
 @router.post("/login", response_model=TokenResponse)
 def login(request: Request, data: UserLogin, db: Session = Depends(get_db)):
+    """Authenticate and receive a JWT token. Rate limited to 10 per minute per IP."""
     _check_rate_limit(request, max_requests=10, window_seconds=60)
     user = authenticate_user(db, data.username, data.password)
     if not user:
@@ -96,4 +98,5 @@ def login(request: Request, data: UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 def me(user=Depends(get_current_user)):
+    """Get the current authenticated user's profile."""
     return user

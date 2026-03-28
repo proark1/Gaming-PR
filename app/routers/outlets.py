@@ -21,6 +21,7 @@ def list_outlets(
     search: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
+    """List all gaming outlets with optional filters for language, status, category, and name search."""
     query = db.query(GamingOutlet)
     if language:
         query = query.filter(GamingOutlet.language == language)
@@ -35,6 +36,7 @@ def list_outlets(
 
 @router.get("/stats", response_model=OutletStatsResponse)
 def outlet_stats(db: Session = Depends(get_db)):
+    """Aggregate stats: total outlets, active count, by language, total scraped, failures."""
     total = db.query(func.count(GamingOutlet.id)).scalar()
     active = db.query(func.count(GamingOutlet.id)).filter(GamingOutlet.is_active == True).scalar()
     by_lang = dict(
@@ -56,6 +58,7 @@ def outlet_stats(db: Session = Depends(get_db)):
 
 @router.get("/{outlet_id}", response_model=OutletResponse)
 def get_outlet(outlet_id: int, db: Session = Depends(get_db)):
+    """Get a single outlet by ID with full details."""
     outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
     if not outlet:
         raise HTTPException(status_code=404, detail="Outlet not found")
@@ -64,6 +67,7 @@ def get_outlet(outlet_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=OutletResponse, status_code=201)
 def create_outlet(data: OutletCreate, db: Session = Depends(get_db), _user=Depends(get_admin_user)):
+    """Create a new gaming outlet. Admin only."""
     if data.language not in SUPPORTED_LANGUAGES:
         raise HTTPException(status_code=400, detail=f"Unsupported language: {data.language}")
     existing = db.query(GamingOutlet).filter(GamingOutlet.url == data.url).first()
@@ -78,6 +82,7 @@ def create_outlet(data: OutletCreate, db: Session = Depends(get_db), _user=Depen
 
 @router.patch("/{outlet_id}", response_model=OutletResponse)
 def update_outlet(outlet_id: int, data: OutletUpdate, db: Session = Depends(get_db), _user=Depends(get_admin_user)):
+    """Update an outlet's settings, contact info, or configuration. Admin only."""
     outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
     if not outlet:
         raise HTTPException(status_code=404, detail="Outlet not found")
@@ -91,6 +96,7 @@ def update_outlet(outlet_id: int, data: OutletUpdate, db: Session = Depends(get_
 
 @router.delete("/{outlet_id}", status_code=204)
 def delete_outlet(outlet_id: int, db: Session = Depends(get_db), _user=Depends(get_admin_user)):
+    """Delete an outlet and all its scraped articles. Admin only."""
     outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
     if not outlet:
         raise HTTPException(status_code=404, detail="Outlet not found")
