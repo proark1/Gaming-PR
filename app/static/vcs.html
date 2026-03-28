@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaming VCs — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .stats-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+        .stat-pill { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; display: flex; flex-direction: column; gap: 2px; min-width: 130px; }
+        .stat-pill .label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-pill .value { font-size: 1.3rem; font-weight: 800; }
+        .stat-pill .value.accent { color: var(--accent-light); }
+        .stat-pill .value.green { color: var(--green); }
+        .stat-pill .value.cyan { color: var(--cyan); }
+        .stat-pill .value.orange { color: var(--orange); }
+
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 14px 18px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); align-items: flex-end; }
+        .fg input { width: 200px; }
+        .fg select { min-width: 130px; }
+        .tbtn { padding: 7px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: all .2s; }
+        .tbtn-primary { background: var(--accent); color: #fff; }
+        .tbtn-primary:hover { opacity: 0.85; }
+        .tbtn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .tbtn-ghost:hover { border-color: var(--accent); color: var(--text-primary); }
+        .tbtn-green { background: var(--green); color: #fff; }
+        .tbtn-green:hover { opacity: 0.85; }
+        .tbtn-green:disabled { opacity: 0.4; cursor: not-allowed; }
+        .toolbar-right { margin-left: auto; display: flex; gap: 8px; align-items: flex-end; }
+        .selected-count { font-size: 0.8rem; color: var(--accent-light); font-weight: 600; padding: 8px 0; }
+
+        .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { color: var(--text-secondary); }
+        .cb-cell { width: 36px; text-align: center; }
+        .cb-cell input { accent-color: var(--accent); cursor: pointer; }
+        .name-cell { color: var(--text-primary); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .name-cell:hover { color: var(--accent-light); }
+        .name-cell .fallback-icon { width: 28px; height: 28px; border-radius: 6px; background: rgba(34,197,94,0.15); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: var(--green); flex-shrink: 0; }
+        .name-cell img { width: 28px; height: 28px; border-radius: 6px; object-fit: contain; }
+        .region-badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; background: var(--accent-dim); color: var(--accent-light); }
+        .tier-badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; }
+        .tier-1 { background: rgba(34,197,94,0.15); color: var(--green); }
+        .tier-2 { background: rgba(6,182,212,0.15); color: var(--cyan); }
+        .tier-3 { background: var(--accent-dim); color: var(--accent-light); }
+
+        .detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; }
+        .detail-overlay.open { display: block; }
+        .detail-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 560px; max-width: 90vw; background: var(--bg-secondary); border-left: 1px solid var(--border); z-index: 201; transform: translateX(100%); transition: transform .25s ease; overflow-y: auto; padding: 28px; }
+        .detail-panel.open { transform: translateX(0); }
+        .dp-close { position: absolute; top: 16px; right: 16px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; font-size: 1.1rem; transition: all .2s; }
+        .dp-close:hover { border-color: var(--accent); color: var(--text-primary); }
+        .dp-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding-right: 40px; }
+        .dp-icon { width: 56px; height: 56px; border-radius: 14px; background: rgba(34,197,94,0.12); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; color: var(--green); flex-shrink: 0; overflow: hidden; }
+        .dp-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .dp-name { font-size: 1.2rem; font-weight: 800; }
+        .dp-url { font-size: 0.8rem; color: var(--text-muted); word-break: break-all; }
+        .dp-url a { color: inherit; text-decoration: none; }
+        .dp-url a:hover { color: var(--accent-light); }
+        .dp-section { margin-bottom: 22px; }
+        .dp-section-title { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+        .dp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .dp-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+        .dp-value { font-size: 0.88rem; color: var(--text-primary); }
+        .dp-value a { color: var(--accent-light); text-decoration: none; }
+        .dp-value a:hover { text-decoration: underline; }
+        .dp-value.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+        .dp-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; padding: 10px; background: var(--bg-primary); border-radius: 8px; }
+        .dp-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .dp-btn { padding: 8px 18px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .dp-btn-primary { background: var(--accent); color: #fff; }
+        .dp-btn-primary:hover { opacity: 0.85; }
+        .dp-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .dp-btn-ghost:hover { border-color: var(--accent); color: var(--text-primary); }
+        .dp-btn-green { background: var(--green); color: #fff; }
+        .dp-btn-green:hover { opacity: 0.85; }
+
+        .scraped-items { display: flex; flex-direction: column; gap: 10px; }
+        .scraped-item { padding: 10px 12px; background: var(--bg-primary); border-radius: 8px; border: 1px solid var(--border); }
+        .scraped-item:hover { border-color: var(--border-hover); }
+        .si-title { font-size: 0.84rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+        .si-title a { color: inherit; text-decoration: none; }
+        .si-title a:hover { color: var(--accent-light); }
+        .si-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; gap: 12px; }
+        .si-tag { display: inline-flex; padding: 2px 6px; border-radius: 4px; background: var(--accent-dim); color: var(--accent-light); font-size: 0.68rem; font-weight: 600; }
+
+        .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+        .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+        .empty-state .msg { font-size: 0.9rem; }
+
+        .blog-paths { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .blog-path { padding: 3px 8px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="container">
+        <h1>Gaming VCs</h1>
+        <div class="subtitle">Track venture capital firms investing in gaming companies</div>
+
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-pill"><span class="label">Total VCs</span><span class="value accent" id="statTotal">-</span></div>
+            <div class="stat-pill"><span class="label">Active</span><span class="value green" id="statActive">-</span></div>
+            <div class="stat-pill"><span class="label">Regions</span><span class="value cyan" id="statRegions">-</span></div>
+            <div class="stat-pill"><span class="label">Posts Scraped</span><span class="value accent" id="statScraped">-</span></div>
+            <div class="stat-pill"><span class="label">With Failures</span><span class="value orange" id="statFailing">-</span></div>
+        </div>
+
+        <div class="toolbar">
+            <div class="fg">
+                <label>Search</label>
+                <input type="text" id="searchInput" placeholder="VC firm name...">
+            </div>
+            <div class="fg">
+                <label>Region</label>
+                <select id="regionFilter">
+                    <option value="">All Regions</option>
+                    <option value="US">United States</option>
+                    <option value="EU">Europe</option>
+                    <option value="UK">United Kingdom</option>
+                    <option value="CN">China</option>
+                    <option value="KR">South Korea</option>
+                    <option value="IL">Israel</option>
+                    <option value="SG">Singapore</option>
+                    <option value="HK">Hong Kong</option>
+                    <option value="SA">Saudi Arabia</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Priority</label>
+                <select id="priorityFilter">
+                    <option value="">All</option>
+                    <option value="1">Tier 1</option>
+                    <option value="2">Tier 2</option>
+                    <option value="3">Tier 3</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Status</label>
+                <select id="statusFilter">
+                    <option value="">All</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <button class="tbtn tbtn-primary" onclick="loadVCs()">Filter</button>
+            <button class="tbtn tbtn-ghost" onclick="clearFilters()">Clear</button>
+            <div class="toolbar-right">
+                <span class="selected-count" id="selectedCount"></span>
+                <button class="tbtn tbtn-green" id="scrapeBtn" onclick="scrapeSelected()" disabled>Scrape Selected</button>
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th class="cb-cell"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
+                        <th class="sortable" onclick="sortBy('name')">VC Firm</th>
+                        <th>Region</th>
+                        <th>Country</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Posts</th>
+                        <th>Last Scraped</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="8" class="empty-state"><div class="icon">💰</div><div class="msg">Loading VC firms...</div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+    <div class="detail-panel" id="detailPanel">
+        <button class="dp-close" onclick="closeDetail()">&times;</button>
+        <div id="detailContent"></div>
+    </div>
+
+    <script src="/static/nav.js" data-active="vcs"></script>
+    <script>
+        let allVCs = [];
+        let selectedIds = new Set();
+        let sortField = 'name';
+        let sortDir = 1;
+
+        async function loadVCs() {
+            const params = new URLSearchParams();
+            params.set('category', 'gaming_vc');
+            const status = document.getElementById('statusFilter').value;
+            const search = document.getElementById('searchInput').value.trim();
+            if (status === 'active') params.set('is_active', 'true');
+            else if (status === 'inactive') params.set('is_active', 'false');
+            if (search) params.set('search', search);
+
+            try {
+                const res = await fetch(`/api/outlets/?${params}`);
+                allVCs = await res.json();
+                filterAndRender();
+                updateStats();
+            } catch (e) {
+                console.error('Failed to load VCs:', e);
+            }
+        }
+
+        function filterAndRender() {
+            const region = document.getElementById('regionFilter').value;
+            const priority = document.getElementById('priorityFilter').value;
+            let filtered = allVCs;
+            if (region) filtered = filtered.filter(v => v.region === region);
+            if (priority) filtered = filtered.filter(v => v.priority === parseInt(priority));
+
+            filtered.sort((a, b) => {
+                const av = (a[sortField] || '').toString().toLowerCase();
+                const bv = (b[sortField] || '').toString().toLowerCase();
+                return av < bv ? -sortDir : av > bv ? sortDir : 0;
+            });
+            renderTable(filtered);
+        }
+
+        function renderTable(vcs) {
+            const tbody = document.getElementById('tableBody');
+            if (!vcs.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><div class="icon">💰</div><div class="msg">No VC firms found</div></td></tr>';
+                return;
+            }
+            tbody.innerHTML = vcs.map(v => {
+                const checked = selectedIds.has(v.id) ? 'checked' : '';
+                const statusBadge = v.is_active
+                    ? '<span class="badge badge-green">Active</span>'
+                    : '<span class="badge badge-red">Inactive</span>';
+                const tierClass = v.priority === 1 ? 'tier-1' : v.priority === 2 ? 'tier-2' : 'tier-3';
+                const lastScraped = v.last_scraped_at ? timeAgo(v.last_scraped_at) : '<span class="no-data">Never</span>';
+                const initial = v.name.charAt(0).toUpperCase();
+                const favicon = v.favicon_url || v.logo_url;
+                const icon = favicon
+                    ? `<img src="${esc(favicon)}" onerror="this.outerHTML='<span class=fallback-icon>${initial}</span>'">`
+                    : `<span class="fallback-icon">${initial}</span>`;
+
+                return `<tr>
+                    <td class="cb-cell"><input type="checkbox" ${checked} onchange="toggleSelect(${v.id}, this.checked)"></td>
+                    <td><div class="name-cell" onclick="showDetail(${v.id})">${icon} ${esc(v.name)}</div></td>
+                    <td><span class="region-badge">${esc(v.region || '')}</span></td>
+                    <td>${esc(v.country || '')}</td>
+                    <td><span class="tier-badge ${tierClass}">Tier ${v.priority || '?'}</span></td>
+                    <td>${statusBadge}</td>
+                    <td class="mono" style="font-size:0.82rem">${v.total_articles_scraped || 0}</td>
+                    <td style="font-size:0.78rem;color:var(--text-muted)">${lastScraped}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function updateStats() {
+            const total = allVCs.length;
+            const active = allVCs.filter(v => v.is_active).length;
+            const regions = new Set(allVCs.map(v => v.region)).size;
+            const scraped = allVCs.reduce((sum, v) => sum + (v.total_articles_scraped || 0), 0);
+            const failing = allVCs.filter(v => v.consecutive_failures > 0).length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statRegions').textContent = regions;
+            document.getElementById('statScraped').textContent = scraped.toLocaleString();
+            document.getElementById('statFailing').textContent = failing;
+        }
+
+        async function showDetail(id) {
+            const v = allVCs.find(x => x.id === id);
+            if (!v) return;
+            const cfg = v.scraper_config || {};
+            const blogPaths = cfg.blog_paths || [];
+            const portfolioUrl = cfg.portfolio_url || '';
+            const initial = v.name.charAt(0).toUpperCase();
+
+            document.getElementById('detailContent').innerHTML = `
+                <div class="dp-header">
+                    <div class="dp-icon">${initial}</div>
+                    <div>
+                        <div class="dp-name">${esc(v.name)}</div>
+                        <div class="dp-url"><a href="${esc(v.url)}" target="_blank">${esc(v.url)}</a></div>
+                    </div>
+                </div>
+                <div class="dp-section">
+                    <div class="dp-section-title">Firm Details</div>
+                    <div class="dp-grid">
+                        <div class="dp-field"><div class="dp-label">Region</div><div class="dp-value">${esc(v.region || '-')}</div></div>
+                        <div class="dp-field"><div class="dp-label">Country</div><div class="dp-value">${esc(v.country || '-')}</div></div>
+                        <div class="dp-field"><div class="dp-label">Priority</div><div class="dp-value"><span class="tier-badge ${v.priority === 1 ? 'tier-1' : v.priority === 2 ? 'tier-2' : 'tier-3'}">Tier ${v.priority}</span></div></div>
+                        <div class="dp-field"><div class="dp-label">Status</div><div class="dp-value">${v.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Inactive</span>'}</div></div>
+                    </div>
+                    ${v.description ? `<div style="margin-top:12px" class="dp-desc">${esc(v.description)}</div>` : ''}
+                </div>
+                <div class="dp-section">
+                    <div class="dp-section-title">Scraper Configuration</div>
+                    <div class="dp-grid">
+                        <div class="dp-field"><div class="dp-label">Scraper Type</div><div class="dp-value mono">${esc(v.scraper_type || 'vc')}</div></div>
+                        <div class="dp-field"><div class="dp-label">RSS Feed</div><div class="dp-value">${v.rss_feed_url ? `<a href="${esc(v.rss_feed_url)}" target="_blank">Available</a>` : '<span style="color:var(--text-muted)">None</span>'}</div></div>
+                        ${portfolioUrl ? `<div class="dp-field"><div class="dp-label">Portfolio URL</div><div class="dp-value mono">${esc(portfolioUrl)}</div></div>` : ''}
+                    </div>
+                    ${blogPaths.length ? `
+                        <div style="margin-top:10px">
+                            <div class="dp-label">Blog Paths</div>
+                            <div class="blog-paths">${blogPaths.map(p => `<span class="blog-path">${esc(p)}</span>`).join('')}</div>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="dp-section">
+                    <div class="dp-section-title">Scraping Stats</div>
+                    <div class="dp-grid">
+                        <div class="dp-field"><div class="dp-label">Posts Scraped</div><div class="dp-value mono">${v.total_articles_scraped || 0}</div></div>
+                        <div class="dp-field"><div class="dp-label">Avg per Scrape</div><div class="dp-value mono">${v.avg_articles_per_scrape || 0}</div></div>
+                        <div class="dp-field"><div class="dp-label">Last Scraped</div><div class="dp-value">${v.last_scraped_at ? timeAgo(v.last_scraped_at) : 'Never'}</div></div>
+                        <div class="dp-field"><div class="dp-label">Failures</div><div class="dp-value">${v.consecutive_failures > 0 ? `<span style="color:var(--orange)">${v.consecutive_failures}</span>` : '0'}</div></div>
+                    </div>
+                </div>
+                ${(v.social_twitter || v.contact_email) ? `
+                <div class="dp-section">
+                    <div class="dp-section-title">Contact & Social</div>
+                    <div class="dp-grid">
+                        ${v.social_twitter ? `<div class="dp-field"><div class="dp-label">Twitter</div><div class="dp-value"><a href="${esc(v.social_twitter)}" target="_blank">Profile</a></div></div>` : ''}
+                        ${v.contact_email ? `<div class="dp-field"><div class="dp-label">Email</div><div class="dp-value"><a href="mailto:${esc(v.contact_email)}">${esc(v.contact_email)}</a></div></div>` : ''}
+                    </div>
+                </div>
+                ` : ''}
+                <div class="dp-section">
+                    <div class="dp-section-title">Recent Posts & News</div>
+                    <div id="detailArticles"><div style="color:var(--text-muted);font-size:0.82rem">Loading...</div></div>
+                </div>
+                <div class="dp-actions">
+                    <button class="dp-btn dp-btn-green" onclick="scrapeOne(${v.id})">Scrape Now</button>
+                    <a class="dp-btn dp-btn-ghost" href="${esc(v.url)}" target="_blank">Visit Website</a>
+                    ${portfolioUrl ? `<a class="dp-btn dp-btn-ghost" href="${esc(v.url + portfolioUrl)}" target="_blank">View Portfolio</a>` : ''}
+                </div>
+            `;
+
+            document.getElementById('detailOverlay').classList.add('open');
+            document.getElementById('detailPanel').classList.add('open');
+
+            try {
+                const res = await fetch(`/api/scraper/articles?outlet_id=${id}&limit=10`);
+                const articles = await res.json();
+                const el = document.getElementById('detailArticles');
+                if (articles.length) {
+                    el.innerHTML = '<div class="scraped-items">' + articles.map(a => {
+                        const tags = (a.tags || []).slice(0, 3);
+                        return `
+                        <div class="scraped-item">
+                            <div class="si-title"><a href="${esc(a.url)}" target="_blank">${esc(a.title)}</a></div>
+                            <div class="si-meta">
+                                <span>${a.article_type || 'post'}</span>
+                                ${a.published_at ? `<span>${new Date(a.published_at).toLocaleDateString()}</span>` : ''}
+                                ${tags.map(t => `<span class="si-tag">${esc(t)}</span>`).join('')}
+                            </div>
+                        </div>`;
+                    }).join('') + '</div>';
+                } else {
+                    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.82rem;padding:8px">No posts scraped yet</div>';
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        function closeDetail() {
+            document.getElementById('detailOverlay').classList.remove('open');
+            document.getElementById('detailPanel').classList.remove('open');
+        }
+
+        function toggleSelect(id, checked) {
+            if (checked) selectedIds.add(id); else selectedIds.delete(id);
+            updateSelectionUI();
+        }
+
+        function toggleAll(cb) {
+            const boxes = document.querySelectorAll('#tableBody input[type="checkbox"]');
+            boxes.forEach(b => { b.checked = cb.checked; });
+            if (cb.checked) allVCs.forEach(v => selectedIds.add(v.id));
+            else selectedIds.clear();
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            const count = selectedIds.size;
+            document.getElementById('selectedCount').textContent = count ? `${count} selected` : '';
+            document.getElementById('scrapeBtn').disabled = count === 0;
+        }
+
+        async function scrapeSelected() {
+            const token = localStorage.getItem('gpr_token');
+            if (!token) { if (typeof gprOpenModal === 'function') gprOpenModal('login'); return; }
+            for (const id of selectedIds) {
+                try {
+                    await fetch(`/api/scraper/run/${id}?run_async=true`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+                } catch (e) { /* continue */ }
+            }
+            if (typeof gprToast === 'function') gprToast('Scraping', `Queued ${selectedIds.size} VCs for scraping`, 'success');
+        }
+
+        async function scrapeOne(id) {
+            const token = localStorage.getItem('gpr_token');
+            if (!token) { if (typeof gprOpenModal === 'function') gprOpenModal('login'); return; }
+            try {
+                await fetch(`/api/scraper/run/${id}?run_async=true`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+                if (typeof gprToast === 'function') gprToast('Scraping', 'VC scrape queued', 'success');
+            } catch (e) {
+                if (typeof gprToast === 'function') gprToast('Error', 'Failed to start scrape', 'error');
+            }
+        }
+
+        function sortBy(field) {
+            if (sortField === field) sortDir *= -1; else { sortField = field; sortDir = 1; }
+            filterAndRender();
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('regionFilter').value = '';
+            document.getElementById('priorityFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            loadVCs();
+        }
+
+        function timeAgo(dateStr) {
+            const diff = Date.now() - new Date(dateStr).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1) return 'Just now';
+            if (mins < 60) return `${mins}m ago`;
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return `${hrs}h ago`;
+            const days = Math.floor(hrs / 24);
+            return `${days}d ago`;
+        }
+
+        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        loadVCs();
+    </script>
+</body>
+</html>

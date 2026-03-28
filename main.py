@@ -225,6 +225,16 @@ def outlets_page():
     return _serve_page("outlets.html")
 
 
+@app.get("/streamers", response_class=HTMLResponse)
+def streamers_page():
+    return _serve_page("streamers.html")
+
+
+@app.get("/vcs", response_class=HTMLResponse)
+def vcs_page():
+    return _serve_page("vcs.html")
+
+
 @app.get("/webhooks", response_class=HTMLResponse)
 def webhooks_page():
     return _serve_page("webhooks.html")
