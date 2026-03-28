@@ -49,6 +49,15 @@ ARTICLE_TYPES = {
     "list": ["top", "best", "ranking", "list"],
     "deal": ["deal", "sale", "discount", "oferta", "セール"],
     "trailer": ["trailer", "tráiler", "トレーラー", "трейлер"],
+    # VC / investment article types
+    "investment": ["investment", "funding", "raised", "series a", "series b", "series c", "seed round", "pre-seed", "投資", "融资"],
+    "portfolio": ["portfolio", "backed", "our companies", "portfolio company"],
+    "exit": ["acquisition", "acquired", "ipo", "merger", "exit", "buyout"],
+    # Streamer / content creator article types
+    "stream": ["stream", "live stream", "going live", "streaming", "配信", "стрим"],
+    "vod": ["vod", "past broadcast", "full stream", "rerun"],
+    "clip": ["clip", "highlight", "best of", "montage", "クリップ"],
+    "announcement": ["announcement", "update", "giveaway", "merch", "unboxing"],
 }
 
 # CSS selectors for article body, ordered by specificity
