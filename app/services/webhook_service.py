@@ -79,6 +79,11 @@ def _matches_webhook(webhook: Webhook, event_type: str, payload: dict) -> bool:
 def _deliver(webhook_id: int, url: str, secret: str, event_type: str, payload: dict):
     """Deliver a webhook notification with optional HMAC signing."""
     from app.database import SessionLocal
+    from app.utils.url_safety import is_safe_url
+
+    if not is_safe_url(url):
+        logger.warning(f"Webhook {webhook_id}: blocked unsafe URL {url}")
+        return
 
     body = json.dumps({
         "event": event_type,

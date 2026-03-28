@@ -1,3 +1,6 @@
+import os
+import secrets
+
 from pydantic_settings import BaseSettings
 
 
@@ -64,8 +67,8 @@ class Settings(BaseSettings):
     ENABLE_WEBHOOKS: bool = True
     ENABLE_CHANGE_TRACKING: bool = True
 
-    # Auth / JWT
-    JWT_SECRET_KEY: str = "change-me-to-a-random-secret-in-production"
+    # Auth / JWT — auto-generates secure key if not set via env
+    JWT_SECRET_KEY: str = os.environ.get("JWT_SECRET_KEY", secrets.token_urlsafe(48))
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_MINUTES: int = 1440  # 24 hours
 

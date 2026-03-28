@@ -99,7 +99,11 @@ def _score_email(email: str) -> int:
 
 
 def _fetch_page(url: str, timeout: int = 15) -> str | None:
-    """Fetch a page with stealth headers, return HTML or None."""
+    """Fetch a page with stealth headers and SSRF protection, return HTML or None."""
+    from app.utils.url_safety import is_safe_url
+    if not is_safe_url(url):
+        logger.debug(f"Blocked unsafe URL: {url}")
+        return None
     try:
         headers = get_stealth_headers(url)
         resp = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)

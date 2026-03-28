@@ -125,6 +125,12 @@ class ConnectionManager:
 
         return True
 
+    async def update_filters(self, websocket: WebSocket, new_filters: dict):
+        """Thread-safe filter update for a connected client."""
+        async with self._get_lock():
+            if websocket in self._connections:
+                self._connections[websocket] = new_filters
+
     @property
     def connection_count(self) -> int:
         return len(self._connections)
@@ -173,8 +179,7 @@ async def live_feed(
                 msg = json.loads(data)
                 if msg.get("type") == "update_filters":
                     new_filters = msg.get("filters", {})
-                    async with ws_manager._lock:
-                        ws_manager._connections[websocket] = new_filters
+                    await ws_manager.update_filters(websocket, new_filters)
                     await websocket.send_json({
                         "type": "filters_updated",
                         "filters": new_filters,

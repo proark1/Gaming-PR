@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, Header, HTTPException
+import time
+from collections import defaultdict
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -12,6 +15,21 @@ from app.services.auth_service import (
     get_user_by_username,
     get_user_by_email,
 )
+
+# Simple in-memory rate limiter per IP
+_rate_limits: dict[str, list[float]] = defaultdict(list)
+
+
+def _check_rate_limit(request: Request, max_requests: int = 10, window_seconds: int = 60):
+    """Raise 429 if IP exceeds max_requests within window_seconds."""
+    ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    hits = _rate_limits[ip]
+    # Remove expired entries
+    _rate_limits[ip] = [t for t in hits if now - t < window_seconds]
+    if len(_rate_limits[ip]) >= max_requests:
+        raise HTTPException(status_code=429, detail="Too many requests. Try again later.")
+    _rate_limits[ip].append(now)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -49,7 +67,8 @@ def get_admin_user(user=Depends(get_current_user)):
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
-def register(data: UserRegister, db: Session = Depends(get_db)):
+def register(request: Request, data: UserRegister, db: Session = Depends(get_db)):
+    _check_rate_limit(request, max_requests=5, window_seconds=60)
     if get_user_by_username(db, data.username):
         raise HTTPException(status_code=400, detail="Username already taken")
     if get_user_by_email(db, data.email):
@@ -63,7 +82,8 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(data: UserLogin, db: Session = Depends(get_db)):
+def login(request: Request, data: UserLogin, db: Session = Depends(get_db)):
+    _check_rate_limit(request, max_requests=10, window_seconds=60)
     user = authenticate_user(db, data.username, data.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")

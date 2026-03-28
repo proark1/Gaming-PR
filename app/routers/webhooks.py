@@ -42,6 +42,9 @@ class WebhookResponse(BaseModel):
 @router.post("/", response_model=WebhookResponse)
 def create_webhook(data: WebhookCreate, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     """Register a new webhook."""
+    from app.utils.url_safety import is_safe_url
+    if not is_safe_url(data.url):
+        raise HTTPException(status_code=400, detail="Webhook URL is not allowed (targets internal or private network)")
     webhook = Webhook(
         name=data.name,
         url=data.url,
