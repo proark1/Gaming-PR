@@ -92,6 +92,34 @@
 
         .blog-paths { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
         .blog-path { padding: 3px 8px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; color: var(--text-secondary); }
+        .email-cell { font-size: 0.78rem; color: var(--accent-light); }
+        .email-cell a { color: inherit; text-decoration: none; }
+        .email-cell a:hover { text-decoration: underline; }
+        .no-data { color: var(--text-muted); font-size: 0.75rem; }
+        .tbtn-accent { background: var(--accent); color: #fff; }
+        .tbtn-accent:hover { opacity: 0.85; }
+        .tbtn-accent:disabled { opacity: 0.35; cursor: not-allowed; }
+        .email-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 250; align-items: center; justify-content: center; }
+        .email-overlay.open { display: flex; }
+        .email-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .email-modal h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+        .email-modal .sub { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 20px; }
+        .email-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .em-fg { margin-bottom: 14px; }
+        .em-fg label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; }
+        .em-fg input, .em-fg textarea, .em-fg select { width: 100%; padding: 10px 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.88rem; font-family: inherit; outline: none; }
+        .em-fg input:focus, .em-fg textarea:focus, .em-fg select:focus { border-color: var(--accent); }
+        .em-fg textarea { min-height: 120px; resize: vertical; }
+        .em-recipients { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+        .em-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(124,92,255,0.1); color: var(--accent-light); border-radius: 6px; font-size: 0.76rem; font-weight: 500; }
+        .em-chip .name { color: var(--text-primary); font-weight: 600; }
+        .em-submit { width: 100%; padding: 12px; border-radius: 10px; font-weight: 600; font-size: 0.92rem; border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; font-family: inherit; margin-top: 8px; transition: all .2s; }
+        .em-submit:hover { transform: translateY(-1px); }
+        .em-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .em-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .em-error.visible { display: block; }
+        .em-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: var(--green); padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .em-success.visible { display: block; }
     </style>
 </head>
 <body>
@@ -105,6 +133,7 @@
             <div class="stat-pill"><span class="label">Active</span><span class="value green" id="statActive">-</span></div>
             <div class="stat-pill"><span class="label">Regions</span><span class="value cyan" id="statRegions">-</span></div>
             <div class="stat-pill"><span class="label">Posts Scraped</span><span class="value accent" id="statScraped">-</span></div>
+            <div class="stat-pill"><span class="label">With Email</span><span class="value green" id="statWithEmail">-</span></div>
             <div class="stat-pill"><span class="label">With Failures</span><span class="value orange" id="statFailing">-</span></div>
         </div>
 
@@ -149,7 +178,9 @@
             <button class="tbtn tbtn-ghost" onclick="clearFilters()">Clear</button>
             <div class="toolbar-right">
                 <span class="selected-count" id="selectedCount"></span>
+                <button class="tbtn tbtn-accent" id="scrapeContactsBtn" onclick="bulkScrapeContacts()" disabled>Scrape Contacts</button>
                 <button class="tbtn tbtn-green" id="scrapeBtn" onclick="scrapeSelected()" disabled>Scrape Selected</button>
+                <button class="tbtn tbtn-green" id="emailBtn" onclick="openEmailModal()" disabled>Email Selected</button>
             </div>
         </div>
 
@@ -162,13 +193,14 @@
                         <th>Region</th>
                         <th>Country</th>
                         <th>Priority</th>
+                        <th>Email</th>
                         <th>Status</th>
                         <th>Posts</th>
                         <th>Last Scraped</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <tr><td colspan="8" class="empty-state"><div class="icon">💰</div><div class="msg">Loading VC firms...</div></td></tr>
+                    <tr><td colspan="9" class="empty-state"><div class="icon">💰</div><div class="msg">Loading VC firms...</div></td></tr>
                 </tbody>
             </table>
         </div>
@@ -178,6 +210,27 @@
     <div class="detail-panel" id="detailPanel">
         <button class="dp-close" onclick="closeDetail()">&times;</button>
         <div id="detailContent"></div>
+    </div>
+
+    <!-- Email Modal -->
+    <div class="email-overlay" id="emailOverlay" onclick="if(event.target===this)closeEmailModal()">
+        <div class="email-modal">
+            <button class="close-btn" onclick="closeEmailModal()">&times;</button>
+            <h2>Send Email to VCs</h2>
+            <div class="sub" id="emSub">Sending to 0 VCs</div>
+            <div class="em-error" id="emError"></div>
+            <div class="em-success" id="emSuccess"></div>
+            <div class="em-recipients" id="emRecipients"></div>
+            <form onsubmit="handleSendEmail(event)">
+                <div class="em-fg"><label>From Domain</label><select id="emDomain" required><option value="">Loading domains...</option></select></div>
+                <div class="em-fg"><label>From Email</label><input type="email" id="emFrom" placeholder="press@yourdomain.com" required></div>
+                <div class="em-fg"><label>From Name</label><input type="text" id="emFromName" placeholder="Gaming PR Team"></div>
+                <div class="em-fg"><label>Subject</label><input type="text" id="emSubject" placeholder="Email subject line" required></div>
+                <div class="em-fg"><label>HTML Body</label><textarea id="emHtml" placeholder="<h1>Hello!</h1><p>Your investment proposal...</p>"></textarea></div>
+                <div class="em-fg"><label>Plain Text</label><textarea id="emText" placeholder="Plain text version..." style="min-height:80px"></textarea></div>
+                <button type="submit" class="em-submit" id="emBtn">Send to All Selected</button>
+            </form>
+        </div>
     </div>
 
     <script src="/static/nav.js" data-active="vcs"></script>
@@ -224,7 +277,7 @@
         function renderTable(vcs) {
             const tbody = document.getElementById('tableBody');
             if (!vcs.length) {
-                tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><div class="icon">💰</div><div class="msg">No VC firms found</div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><div class="icon">💰</div><div class="msg">No VC firms found</div></td></tr>';
                 return;
             }
             tbody.innerHTML = vcs.map(v => {
@@ -246,6 +299,7 @@
                     <td><span class="region-badge">${esc(v.region || '')}</span></td>
                     <td>${esc(v.country || '')}</td>
                     <td><span class="tier-badge ${tierClass}">Tier ${v.priority || '?'}</span></td>
+                    <td class="email-cell">${v.contact_email ? `<a href="mailto:${esc(v.contact_email.split(',')[0].trim())}">${esc(v.contact_email.split(',')[0].trim())}</a>` : '<span class="no-data">-</span>'}</td>
                     <td>${statusBadge}</td>
                     <td class="mono" style="font-size:0.82rem">${v.total_articles_scraped || 0}</td>
                     <td style="font-size:0.78rem;color:var(--text-muted)">${lastScraped}</td>
@@ -263,7 +317,9 @@
             document.getElementById('statTotal').textContent = total;
             document.getElementById('statActive').textContent = active;
             document.getElementById('statRegions').textContent = regions;
+            const withEmail = allVCs.filter(v => v.contact_email).length;
             document.getElementById('statScraped').textContent = scraped.toLocaleString();
+            document.getElementById('statWithEmail').textContent = withEmail;
             document.getElementById('statFailing').textContent = failing;
         }
 
@@ -316,21 +372,33 @@
                         <div class="dp-field"><div class="dp-label">Failures</div><div class="dp-value">${v.consecutive_failures > 0 ? `<span style="color:var(--orange)">${v.consecutive_failures}</span>` : '0'}</div></div>
                     </div>
                 </div>
-                ${(v.social_twitter || v.contact_email) ? `
                 <div class="dp-section">
-                    <div class="dp-section-title">Contact & Social</div>
+                    <div class="dp-section-title">Contact Information</div>
                     <div class="dp-grid">
-                        ${v.social_twitter ? `<div class="dp-field"><div class="dp-label">Twitter</div><div class="dp-value"><a href="${esc(v.social_twitter)}" target="_blank">Profile</a></div></div>` : ''}
-                        ${v.contact_email ? `<div class="dp-field"><div class="dp-label">Email</div><div class="dp-value"><a href="mailto:${esc(v.contact_email)}">${esc(v.contact_email)}</a></div></div>` : ''}
+                        <div class="dp-field"><div class="dp-label">Email(s)</div><div class="dp-value">${v.contact_email ? v.contact_email.split(',').map(e => `<a href="mailto:${esc(e.trim())}">${esc(e.trim())}</a>`).join(', ') : '<span style="color:var(--text-muted)">Not found</span>'}</div></div>
+                        <div class="dp-field"><div class="dp-label">Phone</div><div class="dp-value mono">${v.contact_phone || '<span style="color:var(--text-muted)">-</span>'}</div></div>
+                        ${v.contact_page_url ? `<div class="dp-field"><div class="dp-label">Contact Page</div><div class="dp-value"><a href="${esc(v.contact_page_url)}" target="_blank">Visit</a></div></div>` : ''}
                     </div>
                 </div>
-                ` : ''}
+                <div class="dp-section">
+                    <div class="dp-section-title">Social Links</div>
+                    <div class="dp-grid">
+                        ${v.social_twitter ? `<div class="dp-field"><div class="dp-label">Twitter / X</div><div class="dp-value"><a href="${esc(v.social_twitter)}" target="_blank">Profile</a></div></div>` : ''}
+                        ${v.social_linkedin ? `<div class="dp-field"><div class="dp-label">LinkedIn</div><div class="dp-value"><a href="${esc(v.social_linkedin)}" target="_blank">Company</a></div></div>` : ''}
+                        ${v.social_youtube ? `<div class="dp-field"><div class="dp-label">YouTube</div><div class="dp-value"><a href="${esc(v.social_youtube)}" target="_blank">Channel</a></div></div>` : ''}
+                        ${v.social_facebook ? `<div class="dp-field"><div class="dp-label">Facebook</div><div class="dp-value"><a href="${esc(v.social_facebook)}" target="_blank">Page</a></div></div>` : ''}
+                        ${v.social_instagram ? `<div class="dp-field"><div class="dp-label">Instagram</div><div class="dp-value"><a href="${esc(v.social_instagram)}" target="_blank">Profile</a></div></div>` : ''}
+                        ${v.social_discord ? `<div class="dp-field"><div class="dp-label">Discord</div><div class="dp-value"><a href="${esc(v.social_discord)}" target="_blank">Server</a></div></div>` : ''}
+                    </div>
+                    ${!v.social_twitter && !v.social_linkedin && !v.social_youtube ? '<div style="color:var(--text-muted);font-size:0.82rem;padding:4px">No social links found yet. Try scraping contacts.</div>' : ''}
+                </div>
                 <div class="dp-section">
                     <div class="dp-section-title">Recent Posts & News</div>
                     <div id="detailArticles"><div style="color:var(--text-muted);font-size:0.82rem">Loading...</div></div>
                 </div>
                 <div class="dp-actions">
-                    <button class="dp-btn dp-btn-green" onclick="scrapeOne(${v.id})">Scrape Now</button>
+                    <button class="dp-btn dp-btn-green" onclick="scrapeOne(${v.id})">Scrape Content</button>
+                    <button class="dp-btn dp-btn-primary" onclick="scrapeOne(${v.id})">Scrape Contacts</button>
                     <a class="dp-btn dp-btn-ghost" href="${esc(v.url)}" target="_blank">Visit Website</a>
                     ${portfolioUrl ? `<a class="dp-btn dp-btn-ghost" href="${esc(v.url + portfolioUrl)}" target="_blank">View Portfolio</a>` : ''}
                 </div>
@@ -384,6 +452,8 @@
             const count = selectedIds.size;
             document.getElementById('selectedCount').textContent = count ? `${count} selected` : '';
             document.getElementById('scrapeBtn').disabled = count === 0;
+            document.getElementById('scrapeContactsBtn').disabled = count === 0;
+            document.getElementById('emailBtn').disabled = count === 0;
         }
 
         async function scrapeSelected() {
@@ -433,6 +503,85 @@
         }
 
         function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        async function bulkScrapeContacts() {
+            const token = localStorage.getItem('gpr_token');
+            if (!token) { if (typeof gprOpenModal === 'function') gprOpenModal('login'); return; }
+            for (const id of selectedIds) {
+                try {
+                    await fetch(`/api/scraper/run/${id}?run_async=true`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+                } catch (e) { /* continue */ }
+            }
+            if (typeof gprToast === 'function') gprToast('Scraping', `Queued ${selectedIds.size} VCs for contact scraping`, 'success');
+        }
+
+        async function openEmailModal() {
+            const withEmail = allVCs.filter(v => selectedIds.has(v.id) && v.contact_email);
+            if (!withEmail.length) {
+                if (typeof gprToast === 'function') gprToast('No Emails', 'None of the selected VCs have contact emails. Try scraping contacts first.', 'error');
+                return;
+            }
+            document.getElementById('emSub').textContent = `Sending to ${withEmail.length} VC(s)`;
+            document.getElementById('emRecipients').innerHTML = withEmail.map(v =>
+                `<span class="em-chip"><span class="name">${esc(v.name)}</span> ${esc(v.contact_email.split(',')[0].trim())}</span>`
+            ).join('');
+            document.getElementById('emError').className = 'em-error';
+            document.getElementById('emSuccess').className = 'em-success';
+            try {
+                const res = await fetch('/api/email/domains');
+                const domains = await res.json();
+                const sel = document.getElementById('emDomain');
+                sel.innerHTML = '<option value="">Select domain...</option>' +
+                    domains.filter(d => d.status === 'verified').map(d =>
+                        `<option value="${d.id}">${esc(d.domain)}</option>`
+                    ).join('');
+            } catch (e) {
+                document.getElementById('emDomain').innerHTML = '<option value="">No domains available</option>';
+            }
+            document.getElementById('emailOverlay').classList.add('open');
+        }
+
+        function closeEmailModal() {
+            document.getElementById('emailOverlay').classList.remove('open');
+        }
+
+        async function handleSendEmail(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('gpr_token');
+            if (!token) { if (typeof gprOpenModal === 'function') gprOpenModal('login'); return; }
+            const btn = document.getElementById('emBtn');
+            btn.disabled = true; btn.textContent = 'Sending...';
+            const domainId = document.getElementById('emDomain').value;
+            const fromEmail = document.getElementById('emFrom').value;
+            const fromName = document.getElementById('emFromName').value;
+            const subject = document.getElementById('emSubject').value;
+            const html = document.getElementById('emHtml').value;
+            const text = document.getElementById('emText').value;
+            const withEmail = allVCs.filter(v => selectedIds.has(v.id) && v.contact_email);
+            let sent = 0, failed = 0;
+            for (const v of withEmail) {
+                const to = v.contact_email.split(',')[0].trim();
+                try {
+                    const res = await fetch('/api/email/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ domain_id: parseInt(domainId), from_email: fromEmail, from_name: fromName, to: [to], subject, html, text })
+                    });
+                    if (res.ok) sent++; else failed++;
+                } catch (e) { failed++; }
+            }
+            btn.disabled = false; btn.textContent = 'Send to All Selected';
+            if (sent > 0) {
+                const el = document.getElementById('emSuccess');
+                el.textContent = `Sent ${sent} email(s) successfully${failed ? `, ${failed} failed` : ''}`;
+                el.className = 'em-success visible';
+            }
+            if (failed > 0 && sent === 0) {
+                const el = document.getElementById('emError');
+                el.textContent = `Failed to send ${failed} email(s)`;
+                el.className = 'em-error visible';
+            }
+        }
 
         loadVCs();
     </script>
