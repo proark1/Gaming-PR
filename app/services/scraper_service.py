@@ -83,7 +83,11 @@ def scrape_single_outlet(db: Session, outlet_id: int, extract_content: bool = Tr
 
     job.status = "completed" if result["status"] == "success" else "failed"
     job.completed_at = datetime.now(timezone.utc)
-    job.duration_seconds = (job.completed_at - job.started_at).total_seconds()
+    try:
+        started = job.started_at.replace(tzinfo=timezone.utc) if job.started_at.tzinfo is None else job.started_at
+        job.duration_seconds = (job.completed_at - started).total_seconds()
+    except Exception:
+        job.duration_seconds = result.get("duration_seconds", 0)
     job.total_outlets_scraped = 1
     job.total_articles_found = result["articles_found"]
     job.total_new_articles = result["new_articles"]
@@ -416,7 +420,11 @@ async def _scrape_all_async(db: Session, extract_content: bool, adaptive: bool =
     # Update job
     job.status = "completed" if not total_errors else "partial"
     job.completed_at = datetime.now(timezone.utc)
-    job.duration_seconds = (job.completed_at - job.started_at).total_seconds()
+    try:
+        started = job.started_at.replace(tzinfo=timezone.utc) if job.started_at.tzinfo is None else job.started_at
+        job.duration_seconds = (job.completed_at - started).total_seconds()
+    except Exception:
+        job.duration_seconds = 0
     job.total_outlets_scraped = len(outlet_results)
     job.total_articles_found = sum(r.get("articles_found", 0) for r in outlet_results)
     job.total_new_articles = sum(r.get("new_articles", 0) for r in outlet_results)
