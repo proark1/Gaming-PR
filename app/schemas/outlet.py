@@ -19,6 +19,8 @@ class OutletBase(BaseModel):
     social_facebook: Optional[str] = None
     social_youtube: Optional[str] = None
     contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_page_url: Optional[str] = None
 
 
 class OutletCreate(OutletBase):
@@ -37,6 +39,8 @@ class OutletUpdate(BaseModel):
     social_facebook: Optional[str] = None
     social_youtube: Optional[str] = None
     contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_page_url: Optional[str] = None
     scraper_config: Optional[dict] = None
 
 

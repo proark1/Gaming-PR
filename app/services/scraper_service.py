@@ -325,6 +325,23 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
     if settings.ENABLE_CIRCUIT_BREAKER:
         circuit_breaker.record_success(outlet.id)
 
+    # Scrape contact info if outlet doesn't have it yet
+    if not outlet.contact_email and not outlet.contact_phone:
+        try:
+            from app.scrapers.contact_scraper import scrape_outlet_contact
+            contact = scrape_outlet_contact(outlet.url, timeout=settings.SCRAPE_REQUEST_TIMEOUT)
+            if contact.get("contact_email"):
+                outlet.contact_email = contact["contact_email"]
+            if contact.get("contact_phone"):
+                outlet.contact_phone = contact["contact_phone"]
+            if contact.get("contact_page_url"):
+                outlet.contact_page_url = contact["contact_page_url"]
+            if contact.get("contact_email") or contact.get("contact_phone"):
+                db.commit()
+                logger.info(f"Contact info found for {outlet.name}: email={contact.get('contact_email')}, phone={contact.get('contact_phone')}")
+        except Exception as e:
+            logger.debug(f"Contact scraping failed for {outlet.name}: {e}")
+
     return result
 
 
