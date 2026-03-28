@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-card: #16161f;
+            --bg-card-hover: #1c1c28;
+            --border: #2a2a3a;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #5a5a72;
+            --accent: #7c5cff;
+            --accent-light: #9b7fff;
+            --accent-glow: rgba(124, 92, 255, 0.3);
+            --green: #22c55e;
+            --green-glow: rgba(34, 197, 94, 0.2);
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --pink: #ec4899;
+            --cyan: #06b6d4;
+            --radius: 12px;
+            --radius-lg: 20px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+        /* Nav */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(10, 10, 15, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 0;
+        }
+        nav .container { display: flex; align-items: center; justify-content: space-between; }
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-primary); font-weight: 700; font-size: 1.1rem; }
+        .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--pink)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
+        .nav-links { display: flex; align-items: center; gap: 24px; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--text-primary); }
+
+        /* Main content */
+        main { padding-top: 80px; padding-bottom: 40px; }
+
+        /* Loading */
+        #dashboard-loading {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 60vh; gap: 16px;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 3px solid var(--border);
+            border-top-color: var(--accent); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Error */
+        #dashboard-error {
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 60vh; gap: 16px; text-align: center;
+        }
+        #dashboard-error .error-icon { font-size: 48px; color: var(--red); }
+        #error-message { color: var(--text-secondary); max-width: 400px; }
+        .btn-retry {
+            margin-top: 8px; padding: 10px 24px; background: var(--accent); color: white;
+            border: none; border-radius: var(--radius); cursor: pointer; font-size: 0.9rem; font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .btn-retry:hover { opacity: 0.85; }
+
+        /* Dashboard content */
+        #dashboard-content { display: none; }
+
+        .section { margin-bottom: 32px; }
+        .section-title {
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;
+            color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+        }
+        .section-title .icon { color: var(--accent); }
+
+        /* System config bar */
+        .system-bar {
+            display: flex; flex-wrap: wrap; gap: 12px; padding: 16px;
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: var(--radius); margin-bottom: 24px;
+        }
+        .sys-item { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-secondary); }
+        .sys-item .label { font-weight: 500; }
+        .badge {
+            display: inline-block; padding: 2px 8px; border-radius: 6px;
+            font-size: 0.75rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;
+        }
+        .badge-on { background: var(--green-glow); color: var(--green); }
+        .badge-off { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+        .badge-value { background: var(--accent-glow); color: var(--accent-light); }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px;
+        }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px; text-align: center;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .stat-card:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+        .stat-number { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; }
+        .stat-number.accent { color: var(--accent-light); }
+        .stat-number.green { color: var(--green); }
+        .stat-number.orange { color: var(--orange); }
+        .stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+
+        /* Language grid */
+        .lang-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+        }
+        .lang-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 16px;
+            transition: border-color 0.2s;
+        }
+        .lang-card:hover { border-color: var(--accent); }
+        .lang-card h4 { font-size: 0.95rem; margin-bottom: 8px; }
+        .lang-stat { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8; }
+        .lang-stat strong { color: var(--text-primary); font-family: 'JetBrains Mono', monospace; }
+
+        /* Article types */
+        .type-list { display: flex; flex-direction: column; gap: 8px; }
+        .type-row {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 16px;
+        }
+        .type-name {
+            min-width: 140px; font-size: 0.85rem; font-weight: 600;
+            text-transform: capitalize;
+        }
+        .type-bar-bg {
+            flex: 1; height: 8px; background: var(--bg-secondary);
+            border-radius: 4px; overflow: hidden;
+        }
+        .type-bar {
+            height: 100%; background: linear-gradient(90deg, var(--accent), var(--pink));
+            border-radius: 4px; transition: width 0.5s ease;
+        }
+        .type-count {
+            min-width: 60px; text-align: right; font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace; color: var(--text-secondary);
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%; border-collapse: collapse;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); overflow: hidden;
+        }
+        .data-table th {
+            text-align: left; padding: 12px 16px; font-size: 0.8rem;
+            font-weight: 600; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.05em; background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        .data-table td {
+            padding: 10px 16px; font-size: 0.85rem; color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover td { background: var(--bg-card-hover); }
+        .data-table .empty-row td { text-align: center; color: var(--text-muted); padding: 24px; }
+
+        .status-badge {
+            display: inline-block; padding: 2px 10px; border-radius: 6px;
+            font-size: 0.75rem; font-weight: 600;
+        }
+        .status-completed { background: var(--green-glow); color: var(--green); }
+        .status-running { background: var(--accent-glow); color: var(--accent-light); }
+        .status-failed { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+        .status-partial { background: rgba(245, 158, 11, 0.15); color: var(--orange); }
+        .status-active { background: var(--green-glow); color: var(--green); }
+        .status-inactive { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+
+        .failures-high { color: var(--red); font-weight: 700; }
+        .errors-nonzero { color: var(--red); }
+
+        /* Footer */
+        .dashboard-footer {
+            text-align: center; padding: 24px 0; color: var(--text-muted);
+            font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .lang-grid { grid-template-columns: repeat(2, 1fr); }
+            .system-bar { flex-direction: column; }
+            .data-table { font-size: 0.8rem; }
+            .data-table th, .data-table td { padding: 8px 10px; }
+            .nav-links { display: none; }
+            .type-name { min-width: 100px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="container">
+        <a href="/" class="logo">
+            <div class="logo-icon">GP</div>
+            Gaming PR
+        </a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/docs">API Docs</a>
+            <a href="/health">Health</a>
+        </div>
+    </div>
+</nav>
+
+<main class="container">
+    <!-- Loading State -->
+    <div id="dashboard-loading">
+        <div class="spinner"></div>
+        <p style="color: var(--text-secondary);">Loading dashboard...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="dashboard-error">
+        <div class="error-icon">!</div>
+        <h2>Failed to load dashboard</h2>
+        <p id="error-message">An unexpected error occurred.</p>
+        <button class="btn-retry" onclick="loadDashboard()">Retry</button>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div id="dashboard-content">
+        <h1 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 8px;">Scraper Dashboard</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 0.9rem;">
+            Real-time monitoring &middot; Last updated: <span id="dashboard-timestamp">—</span>
+        </p>
+
+        <!-- System Config -->
+        <div class="system-bar">
+            <div class="sys-item">
+                <span class="label">Scrape Interval:</span>
+                <span id="sys-scrape-interval" class="badge badge-value">—</span>
+            </div>
+            <div class="sys-item">
+                <span class="label">Concurrency:</span>
+                <span id="sys-concurrency" class="badge badge-value">—</span>
+            </div>
+            <div class="sys-item">
+                <span class="label">Full Content:</span>
+                <span id="sys-full-content" class="badge">—</span>
+            </div>
+            <div class="sys-item">
+                <span class="label">Robots.txt:</span>
+                <span id="sys-robots" class="badge">—</span>
+            </div>
+            <div class="sys-item">
+                <span class="label">Sitemap:</span>
+                <span id="sys-sitemap" class="badge">—</span>
+            </div>
+        </div>
+
+        <!-- Overview Stats -->
+        <div class="section">
+            <div class="section-title"><span class="icon">&#9632;</span> Overview</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-total-outlets">—</div>
+                    <div class="stat-label">Total Outlets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number green" id="stat-active-outlets">—</div>
+                    <div class="stat-label">Active Outlets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number orange" id="stat-inactive-outlets">—</div>
+                    <div class="stat-label">Inactive Outlets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number accent" id="stat-total-articles">—</div>
+                    <div class="stat-label">Total Articles</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-articles-24h">—</div>
+                    <div class="stat-label">Articles (24h)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-articles-7d">—</div>
+                    <div class="stat-label">Articles (7d)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number green" id="stat-full-content">—</div>
+                    <div class="stat-label">Full Content</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number accent" id="stat-extraction-rate">—</div>
+                    <div class="stat-label">Extraction Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Language Coverage -->
+        <div class="section">
+            <div class="section-title"><span class="icon">&#9679;</span> Language Coverage</div>
+            <div class="lang-grid" id="language-grid"></div>
+        </div>
+
+        <!-- Article Types -->
+        <div class="section">
+            <div class="section-title"><span class="icon">&#9650;</span> Article Types</div>
+            <div class="type-list" id="article-types"></div>
+        </div>
+
+        <!-- Top Outlets -->
+        <div class="section">
+            <div class="section-title"><span class="icon">&#9733;</span> Top Outlets</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Language</th>
+                        <th>Total Scraped</th>
+                        <th>Avg/Scrape</th>
+                        <th>Last Scraped</th>
+                    </tr>
+                </thead>
+                <tbody id="top-outlets-table"></tbody>
+            </table>
+        </div>
+
+        <!-- Failing Outlets -->
+        <div class="section" id="failing-section">
+            <div class="section-title"><span class="icon" style="color: var(--orange);">&#9888;</span> Failing Outlets</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Language</th>
+                        <th>Failures</th>
+                        <th>Status</th>
+                        <th>Last Scraped</th>
+                    </tr>
+                </thead>
+                <tbody id="failing-outlets-table"></tbody>
+            </table>
+        </div>
+
+        <!-- Recent Jobs -->
+        <div class="section">
+            <div class="section-title"><span class="icon">&#9881;</span> Recent Scrape Jobs</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Started</th>
+                        <th>Duration</th>
+                        <th>Found</th>
+                        <th>New</th>
+                        <th>Errors</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-jobs-table"></tbody>
+            </table>
+        </div>
+
+        <div class="dashboard-footer">
+            Gaming PR Platform v4.0 &middot; Auto-refreshes every 60s
+        </div>
+    </div>
+</main>
+
+<script>
+    // Null-safe DOM helpers — prevents "Cannot set properties of null" errors
+    function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value ?? '\u2014';
+    }
+    function setHTML(id, html) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html ?? '';
+    }
+    function setBadge(id, isOn) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = isOn ? 'ON' : 'OFF';
+        el.className = 'badge ' + (isOn ? 'badge-on' : 'badge-off');
+    }
+
+    function formatNumber(n) {
+        if (n == null) return '\u2014';
+        return Number(n).toLocaleString();
+    }
+    function formatDate(iso) {
+        if (!iso) return '\u2014';
+        const d = new Date(iso);
+        return d.toLocaleString();
+    }
+    function relativeTime(iso) {
+        if (!iso) return '\u2014';
+        const now = Date.now();
+        const then = new Date(iso).getTime();
+        const diff = Math.floor((now - then) / 1000);
+        if (diff < 60) return `${diff}s ago`;
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        return `${Math.floor(diff / 86400)}d ago`;
+    }
+    function formatDuration(seconds) {
+        if (seconds == null) return '\u2014';
+        if (seconds < 60) return `${Math.round(seconds)}s`;
+        const m = Math.floor(seconds / 60);
+        const s = Math.round(seconds % 60);
+        return `${m}m ${s}s`;
+    }
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function statusBadge(status) {
+        const s = (status || '').toLowerCase();
+        let cls = 'status-badge ';
+        if (s === 'completed') cls += 'status-completed';
+        else if (s === 'running' || s === 'in_progress') cls += 'status-running';
+        else if (s === 'failed') cls += 'status-failed';
+        else cls += 'status-partial';
+        return `<span class="${cls}">${escapeHTML(status || 'unknown')}</span>`;
+    }
+
+    function renderDashboard(data) {
+        // System config
+        setText('sys-scrape-interval', `${data.system?.scrape_interval_minutes ?? '?'}m`);
+        setText('sys-concurrency', data.system?.concurrency ?? '\u2014');
+        setBadge('sys-full-content', data.system?.full_content_extraction);
+        setBadge('sys-robots', data.system?.robots_txt_compliance);
+        setBadge('sys-sitemap', data.system?.sitemap_discovery);
+
+        // Overview
+        setText('stat-total-outlets', formatNumber(data.overview?.total_outlets));
+        setText('stat-active-outlets', formatNumber(data.overview?.active_outlets));
+        setText('stat-inactive-outlets', formatNumber(data.overview?.inactive_outlets));
+        setText('stat-total-articles', formatNumber(data.overview?.total_articles));
+        setText('stat-articles-24h', formatNumber(data.overview?.articles_last_24h));
+        setText('stat-articles-7d', formatNumber(data.overview?.articles_last_7d));
+        setText('stat-full-content', formatNumber(data.overview?.full_content_articles));
+        setText('stat-extraction-rate', `${data.overview?.extraction_rate_pct ?? 0}%`);
+
+        // Timestamp
+        setText('dashboard-timestamp', formatDate(data.timestamp));
+
+        // Language coverage
+        const langCoverage = data.language_coverage ?? {};
+        const langKeys = Object.keys(langCoverage);
+        if (langKeys.length > 0) {
+            const langHTML = langKeys.map(code => {
+                const lang = langCoverage[code];
+                return `<div class="lang-card">
+                    <h4>${escapeHTML(lang.name || code)}</h4>
+                    <div class="lang-stat"><strong>${formatNumber(lang.active_outlets)}</strong> outlets</div>
+                    <div class="lang-stat"><strong>${formatNumber(lang.total_articles)}</strong> articles</div>
+                    <div class="lang-stat"><strong>${formatNumber(lang.articles_24h)}</strong> new (24h)</div>
+                </div>`;
+            }).join('');
+            setHTML('language-grid', langHTML);
+        } else {
+            setHTML('language-grid', '<p style="color:var(--text-muted)">No language data available.</p>');
+        }
+
+        // Article types
+        const types = data.article_types ?? {};
+        const typeEntries = Object.entries(types).sort((a, b) => b[1] - a[1]);
+        if (typeEntries.length > 0) {
+            const maxCount = typeEntries[0][1] || 1;
+            const typesHTML = typeEntries.map(([type, count]) => {
+                const pct = (count / maxCount * 100).toFixed(1);
+                return `<div class="type-row">
+                    <span class="type-name">${escapeHTML(type)}</span>
+                    <div class="type-bar-bg"><div class="type-bar" style="width:${pct}%"></div></div>
+                    <span class="type-count">${formatNumber(count)}</span>
+                </div>`;
+            }).join('');
+            setHTML('article-types', typesHTML);
+        } else {
+            setHTML('article-types', '<p style="color:var(--text-muted)">No article type data.</p>');
+        }
+
+        // Top outlets
+        const topOutlets = data.top_outlets ?? [];
+        if (topOutlets.length > 0) {
+            const topHTML = topOutlets.map((o, i) => `<tr>
+                <td>${i + 1}</td>
+                <td style="color:var(--text-primary);font-weight:500">${escapeHTML(o.name)}</td>
+                <td>${escapeHTML(o.language || '')}</td>
+                <td>${formatNumber(o.total_scraped)}</td>
+                <td>${o.avg_per_scrape != null ? Number(o.avg_per_scrape).toFixed(1) : '\u2014'}</td>
+                <td>${relativeTime(o.last_scraped)}</td>
+            </tr>`).join('');
+            setHTML('top-outlets-table', topHTML);
+        } else {
+            setHTML('top-outlets-table', '<tr class="empty-row"><td colspan="6">No outlet data yet.</td></tr>');
+        }
+
+        // Failing outlets
+        const failing = data.failing_outlets ?? [];
+        const failingSection = document.getElementById('failing-section');
+        if (failing.length > 0) {
+            if (failingSection) failingSection.style.display = 'block';
+            const failHTML = failing.map(o => {
+                const failClass = o.failures >= 5 ? 'failures-high' : '';
+                const statusCls = o.is_active ? 'status-active' : 'status-inactive';
+                const statusText = o.is_active ? 'Active' : 'Inactive';
+                return `<tr>
+                    <td style="color:var(--text-primary);font-weight:500">${escapeHTML(o.name)}</td>
+                    <td>${escapeHTML(o.language || '')}</td>
+                    <td class="${failClass}">${o.failures ?? 0}</td>
+                    <td><span class="status-badge ${statusCls}">${statusText}</span></td>
+                    <td>${relativeTime(o.last_scraped)}</td>
+                </tr>`;
+            }).join('');
+            setHTML('failing-outlets-table', failHTML);
+        } else {
+            if (failingSection) failingSection.style.display = 'none';
+        }
+
+        // Recent jobs
+        const jobs = data.recent_jobs ?? [];
+        if (jobs.length > 0) {
+            const jobsHTML = jobs.map(j => {
+                const errClass = (j.errors && j.errors > 0) ? 'errors-nonzero' : '';
+                return `<tr>
+                    <td>${j.id ?? '\u2014'}</td>
+                    <td>${escapeHTML(j.type || '\u2014')}</td>
+                    <td>${statusBadge(j.status)}</td>
+                    <td>${relativeTime(j.started)}</td>
+                    <td>${formatDuration(j.duration_s)}</td>
+                    <td>${formatNumber(j.found)}</td>
+                    <td>${formatNumber(j.new)}</td>
+                    <td class="${errClass}">${j.errors ?? 0}</td>
+                </tr>`;
+            }).join('');
+            setHTML('recent-jobs-table', jobsHTML);
+        } else {
+            setHTML('recent-jobs-table', '<tr class="empty-row"><td colspan="8">No scrape jobs recorded yet.</td></tr>');
+        }
+    }
+
+    async function loadDashboard() {
+        const loading = document.getElementById('dashboard-loading');
+        const error = document.getElementById('dashboard-error');
+        const content = document.getElementById('dashboard-content');
+
+        if (loading) loading.style.display = 'flex';
+        if (error) error.style.display = 'none';
+        if (content) content.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/monitoring/dashboard');
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            const data = await res.json();
+            renderDashboard(data);
+            if (loading) loading.style.display = 'none';
+            if (content) content.style.display = 'block';
+        } catch (err) {
+            if (loading) loading.style.display = 'none';
+            if (error) error.style.display = 'flex';
+            setText('error-message', err.message || 'An unexpected error occurred.');
+        }
+    }
+
+    // Load on page ready and auto-refresh every 60s
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDashboard();
+        setInterval(loadDashboard, 60000);
+    });
+</script>
+</body>
+</html>

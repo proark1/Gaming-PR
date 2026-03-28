@@ -732,6 +732,7 @@
             <a href="#email">Email</a>
             <a href="#languages">Languages</a>
             <a href="#api">API</a>
+            <a href="/dashboard">Dashboard</a>
             <a href="/docs" class="btn btn-primary">API Docs</a>
         </div>
     </div>
@@ -1215,6 +1216,7 @@
     let lastScroll = 0;
     window.addEventListener('scroll', () => {
         const nav = document.querySelector('nav');
+        if (!nav) return;
         const scrollY = window.scrollY;
         nav.style.background = scrollY > 50
             ? 'rgba(10, 10, 15, 0.95)'
