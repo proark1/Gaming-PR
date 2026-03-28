@@ -12,6 +12,13 @@ SUPPORTED_LANGUAGES = {
     "pt": "Portuguese",
     "ru": "Russian",
     "ja": "Japanese",
+    "ko": "Korean",
+    "de": "German",
+    "it": "Italian",
+    "tr": "Turkish",
+    "th": "Thai",
+    "id": "Indonesian",
+    "pl": "Polish",
 }
 
 

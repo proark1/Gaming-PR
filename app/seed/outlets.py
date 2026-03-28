@@ -127,6 +127,75 @@ GAMING_OUTLETS = [
     {"name": "Automaton", "url": "https://automaton-media.com", "rss_feed_url": "https://automaton-media.com/feed/", "language": "ja", "region": "JP", "country": "Japan", "scraper_type": "rss", "priority": 2, "category": "gaming_news"},
     {"name": "PlayStation Blog Japan", "url": "https://blog.ja.playstation.com", "rss_feed_url": "https://blog.ja.playstation.com/feed/", "language": "ja", "region": "JP", "country": "Japan", "scraper_type": "rss", "priority": 3, "category": "playstation"},
     {"name": "Nintendo Dream", "url": "https://www.ndw.jp", "rss_feed_url": None, "language": "ja", "region": "JP", "country": "Japan", "scraper_type": "generic", "priority": 3, "category": "nintendo"},
+
+    # ═══════════════════════════════════════════
+    # KOREAN (ko) - South Korea, top-5 global gaming market
+    # ═══════════════════════════════════════════
+    {"name": "Inven (인벤)", "url": "https://www.inven.co.kr", "rss_feed_url": None, "language": "ko", "region": "KR", "country": "South Korea", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Korea's #1 gaming community and news portal"},
+    {"name": "GameMeca (게임메카)", "url": "https://www.gamemeca.com", "rss_feed_url": None, "language": "ko", "region": "KR", "country": "South Korea", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Korea's #1 internet gaming newspaper"},
+    {"name": "This Is Game (디스이즈게임)", "url": "https://www.thisisgame.com", "rss_feed_url": None, "language": "ko", "region": "KR", "country": "South Korea", "scraper_type": "generic", "priority": 1, "category": "gaming_news"},
+    {"name": "Ruliweb (루리웹)", "url": "https://www.ruliweb.com", "rss_feed_url": None, "language": "ko", "region": "KR", "country": "South Korea", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Major Korean gaming community and news"},
+    {"name": "GameToc (게임톡)", "url": "https://www.gametoc.co.kr", "rss_feed_url": None, "language": "ko", "region": "KR", "country": "South Korea", "scraper_type": "generic", "priority": 2, "category": "gaming_news"},
+    {"name": "GameInsight (게임인사이트)", "url": "https://www.gameinsight.co.kr", "rss_feed_url": None, "language": "ko", "region": "KR", "country": "South Korea", "scraper_type": "generic", "priority": 3, "category": "gaming_industry"},
+
+    # ═══════════════════════════════════════════
+    # GERMAN (de) - Biggest European gaming market
+    # ═══════════════════════════════════════════
+    {"name": "GameStar", "url": "https://www.gamestar.de", "rss_feed_url": "https://www.gamestar.de/news/rss.xml", "language": "de", "region": "DE", "country": "Germany", "scraper_type": "rss", "priority": 1, "category": "gaming_news", "description": "Germany's largest and most established gaming publication"},
+    {"name": "GamePro", "url": "https://www.gamepro.de", "rss_feed_url": None, "language": "de", "region": "DE", "country": "Germany", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Major German console gaming publication"},
+    {"name": "PC Games", "url": "https://www.pcgames.de", "rss_feed_url": None, "language": "de", "region": "DE", "country": "Germany", "scraper_type": "generic", "priority": 2, "category": "pc_gaming"},
+    {"name": "Gameswelt", "url": "https://www.gameswelt.de", "rss_feed_url": "https://www.gameswelt.de/feed", "language": "de", "region": "DE", "country": "Germany", "scraper_type": "rss", "priority": 2, "category": "gaming_news"},
+    {"name": "4Players", "url": "https://www.4players.de", "rss_feed_url": None, "language": "de", "region": "DE", "country": "Germany", "scraper_type": "generic", "priority": 3, "category": "gaming_news"},
+    {"name": "GamingNewsTime", "url": "https://gamingnewstime.de", "rss_feed_url": None, "language": "de", "region": "DE", "country": "Germany", "scraper_type": "generic", "priority": 3, "category": "gaming_news"},
+
+    # ═══════════════════════════════════════════
+    # ITALIAN (it)
+    # ═══════════════════════════════════════════
+    {"name": "Multiplayer.it", "url": "https://multiplayer.it", "rss_feed_url": "https://multiplayer.it/feed/", "language": "it", "region": "IT", "country": "Italy", "scraper_type": "rss", "priority": 1, "category": "gaming_news", "description": "Italy's leading gaming outlet"},
+    {"name": "Everyeye.it", "url": "https://www.everyeye.it", "rss_feed_url": "https://www.everyeye.it/feed_news.xml", "language": "it", "region": "IT", "country": "Italy", "scraper_type": "rss", "priority": 1, "category": "gaming_news"},
+    {"name": "Gamesblog.it", "url": "https://www.gamesblog.it", "rss_feed_url": None, "language": "it", "region": "IT", "country": "Italy", "scraper_type": "generic", "priority": 2, "category": "gaming_news"},
+
+    # ═══════════════════════════════════════════
+    # TURKISH (tr)
+    # ═══════════════════════════════════════════
+    {"name": "Merlin'in Kazanı", "url": "https://www.merlininkazani.com", "rss_feed_url": None, "language": "tr", "region": "TR", "country": "Turkey", "scraper_type": "generic", "priority": 1, "category": "gaming_news"},
+    {"name": "Oyungezer", "url": "https://www.oyungezer.com.tr", "rss_feed_url": None, "language": "tr", "region": "TR", "country": "Turkey", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Turkey's established gaming magazine and news site"},
+    {"name": "DonanımHaber Gaming", "url": "https://www.donanimhaber.com/oyun-haberleri", "rss_feed_url": None, "language": "tr", "region": "TR", "country": "Turkey", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Turkey's largest tech site gaming section"},
+    {"name": "Gamer.com.tr", "url": "https://www.gamer.com.tr", "rss_feed_url": None, "language": "tr", "region": "TR", "country": "Turkey", "scraper_type": "generic", "priority": 2, "category": "gaming_news"},
+    {"name": "Atarita", "url": "https://www.atarita.com", "rss_feed_url": None, "language": "tr", "region": "TR", "country": "Turkey", "scraper_type": "generic", "priority": 3, "category": "gaming_news"},
+
+    # ═══════════════════════════════════════════
+    # THAI (th)
+    # ═══════════════════════════════════════════
+    {"name": "Online Station", "url": "https://www.online-station.net", "rss_feed_url": None, "language": "th", "region": "TH", "country": "Thailand", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Thailand's leading gaming news portal"},
+    {"name": "GamingDose", "url": "https://www.gamingdose.com", "rss_feed_url": None, "language": "th", "region": "TH", "country": "Thailand", "scraper_type": "generic", "priority": 1, "category": "gaming_news"},
+    {"name": "Beartai Gaming", "url": "https://www.beartai.com/category/game/game-news", "rss_feed_url": None, "language": "th", "region": "TH", "country": "Thailand", "scraper_type": "generic", "priority": 2, "category": "gaming_news"},
+    {"name": "ThisIsGame Thailand", "url": "https://thisisgamethailand.com", "rss_feed_url": None, "language": "th", "region": "TH", "country": "Thailand", "scraper_type": "generic", "priority": 2, "category": "gaming_news"},
+
+    # ═══════════════════════════════════════════
+    # INDONESIAN (id) - 4th largest global gaming market
+    # ═══════════════════════════════════════════
+    {"name": "DuniaGames", "url": "https://duniagames.co.id", "rss_feed_url": None, "language": "id", "region": "ID", "country": "Indonesia", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Indonesia's #1 gaming portal (Telkomsel)"},
+    {"name": "KotakGame", "url": "https://www.kotakgame.com", "rss_feed_url": None, "language": "id", "region": "ID", "country": "Indonesia", "scraper_type": "generic", "priority": 1, "category": "gaming_news"},
+    {"name": "IniGame", "url": "https://www.inigame.id", "rss_feed_url": None, "language": "id", "region": "ID", "country": "Indonesia", "scraper_type": "generic", "priority": 2, "category": "gaming_news"},
+    {"name": "Ligagame Esports", "url": "https://www.ligagame.tv", "rss_feed_url": None, "language": "id", "region": "ID", "country": "Indonesia", "scraper_type": "generic", "priority": 2, "category": "esports"},
+    {"name": "Gizmologi Gaming", "url": "https://gizmologi.id/game/", "rss_feed_url": None, "language": "id", "region": "ID", "country": "Indonesia", "scraper_type": "generic", "priority": 3, "category": "gaming_news"},
+
+    # ═══════════════════════════════════════════
+    # POLISH (pl) - 4th largest game exporter globally
+    # ═══════════════════════════════════════════
+    {"name": "GRYOnline.pl", "url": "https://www.gry-online.pl", "rss_feed_url": None, "language": "pl", "region": "PL", "country": "Poland", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Poland's dominant gaming media (2M+ users)"},
+    {"name": "Gram.pl", "url": "https://www.gram.pl", "rss_feed_url": None, "language": "pl", "region": "PL", "country": "Poland", "scraper_type": "generic", "priority": 1, "category": "gaming_news"},
+    {"name": "PPE.pl", "url": "https://www.ppe.pl", "rss_feed_url": None, "language": "pl", "region": "PL", "country": "Poland", "scraper_type": "generic", "priority": 2, "category": "gaming_news"},
+    {"name": "PlanetaGracza.pl", "url": "https://planetagracza.pl", "rss_feed_url": None, "language": "pl", "region": "PL", "country": "Poland", "scraper_type": "generic", "priority": 3, "category": "gaming_news"},
+
+    # ═══════════════════════════════════════════
+    # ENGLISH (en) - Additional notable outlets
+    # ═══════════════════════════════════════════
+    {"name": "Video Games Chronicle (VGC)", "url": "https://www.videogameschronicle.com", "rss_feed_url": "https://www.videogameschronicle.com/feed/", "language": "en", "region": "UK", "country": "United Kingdom", "scraper_type": "rss", "priority": 2, "category": "gaming_news", "description": "Highly respected independent outlet known for breaking exclusives"},
+    {"name": "The Escapist", "url": "https://www.escapistmagazine.com", "rss_feed_url": "https://www.escapistmagazine.com/feed/", "language": "en", "region": "US", "country": "United States", "scraper_type": "rss", "priority": 2, "category": "gaming_news"},
+    {"name": "Screenrant Gaming", "url": "https://screenrant.com/gaming/", "rss_feed_url": "https://screenrant.com/feed/gaming/", "language": "en", "region": "US", "country": "United States", "scraper_type": "rss", "priority": 2, "category": "gaming_news"},
+    {"name": "Wccftech Gaming", "url": "https://wccftech.com/cat/gaming/", "rss_feed_url": "https://wccftech.com/feed/", "language": "en", "region": "US", "country": "United States", "scraper_type": "rss", "priority": 3, "category": "gaming_news"},
 ]
 
 
