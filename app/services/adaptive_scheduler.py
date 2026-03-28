@@ -78,7 +78,8 @@ def get_outlets_due_for_scrape(db: Session) -> list[GamingOutlet]:
             due.append(outlet)
             continue
 
-        next_scrape = outlet.last_scraped_at + timedelta(minutes=interval)
+        last = outlet.last_scraped_at.replace(tzinfo=timezone.utc) if outlet.last_scraped_at.tzinfo is None else outlet.last_scraped_at
+        next_scrape = last + timedelta(minutes=interval)
         if now >= next_scrape:
             due.append(outlet)
 
@@ -100,6 +101,8 @@ def get_schedule_info(db: Session) -> list[dict]:
     for outlet in outlets:
         interval = calculate_scrape_interval(outlet)
         last = outlet.last_scraped_at
+        if last and last.tzinfo is None:
+            last = last.replace(tzinfo=timezone.utc)
         next_scrape = last + timedelta(minutes=interval) if last else now
 
         info.append({

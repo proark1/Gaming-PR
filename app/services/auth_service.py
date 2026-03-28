@@ -114,6 +114,12 @@ def seed_admin_user(db: Session, email: str, username: str | None = None, passwo
             db.refresh(existing)
         return existing
     uname = username or email.split("@")[0].replace(".", "_")
+    # Ensure username is unique — append number if taken
+    base_uname = uname
+    counter = 1
+    while get_user_by_username(db, uname):
+        uname = f"{base_uname}_{counter}"
+        counter += 1
     user = User(
         username=uname,
         email=email.lower(),

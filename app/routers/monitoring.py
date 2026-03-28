@@ -163,7 +163,8 @@ def detailed_health(db: Session = Depends(get_db)):
     recent_job = db.query(ScrapeJob).order_by(ScrapeJob.started_at.desc()).first()
     last_scrape_age = None
     if recent_job and recent_job.started_at:
-        last_scrape_age = (now - recent_job.started_at).total_seconds()
+        started = recent_job.started_at.replace(tzinfo=timezone.utc) if recent_job.started_at.tzinfo is None else recent_job.started_at
+        last_scrape_age = (now - started).total_seconds()
 
     articles_last_hour = db.query(func.count(ScrapedArticle.id)).filter(
         ScrapedArticle.scraped_at >= last_hour

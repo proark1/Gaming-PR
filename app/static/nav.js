@@ -292,17 +292,20 @@
     // ─── Auth state ───
     window.gprGetToken = function () { return localStorage.getItem('gpr_token'); };
 
+    function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
     function renderAuthState() {
         const container = document.getElementById('gprNavAuth');
         if (!container) return;
         const user = JSON.parse(localStorage.getItem('gpr_user') || 'null');
         if (user) {
-            const initials = user.username.slice(0, 2).toUpperCase();
+            const initials = escHtml(user.username.slice(0, 2).toUpperCase());
+            const safeName = escHtml(user.username);
             container.innerHTML =
                 '<div class="sb-user">' +
                     '<a href="/profile" class="sb-avatar" title="Profile">' + initials + '</a>' +
                     '<div class="sb-user-info">' +
-                        '<div class="sb-user-name"><a href="/profile">' + user.username + '</a></div>' +
+                        '<div class="sb-user-name"><a href="/profile">' + safeName + '</a></div>' +
                         '<div class="sb-user-role">' + (user.is_admin ? 'Admin' : 'User') + '</div>' +
                     '</div>' +
                     '<button class="sb-logout" onclick="gprLogout()" title="Log out">' +

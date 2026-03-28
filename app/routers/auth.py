@@ -28,9 +28,16 @@ def get_current_user(db: Session = Depends(get_db), authorization: str = Header(
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    user = get_user_by_id(db, int(payload["sub"]))
+    try:
+        user_id = int(payload["sub"])
+    except (ValueError, KeyError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+
+    user = get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account deactivated")
     return user
 
 
