@@ -306,7 +306,7 @@
             if (language) params.set('language', language);
             if (active) params.set('is_active', active);
             try {
-                const res = await fetch('/api/outlets?' + params.toString());
+                const res = await fetch('/api/outlets/?' + params.toString());
                 allOutlets = await res.json();
                 selectedIds.clear();
                 renderTable();

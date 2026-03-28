@@ -140,7 +140,7 @@
 
             // Load articles
             try {
-                const res = await fetch('/api/articles?skip=0&limit=100');
+                const res = await fetch('/api/articles/?skip=0&limit=100');
                 const articles = await res.json();
                 const sel = document.getElementById('article-select');
                 sel.innerHTML = '<option value="">-- Select an article --</option>';

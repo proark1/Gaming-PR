@@ -163,7 +163,7 @@
             checkLoginNotice();
 
             try {
-                const res = await fetch('/api/webhooks');
+                const res = await fetch('/api/webhooks/');
                 const webhooks = await res.json();
 
                 if (webhooks.length === 0) {
@@ -260,7 +260,7 @@
             document.querySelectorAll('.checkbox-row input[type="checkbox"]:checked').forEach(cb => events.push(cb.value));
 
             try {
-                const res = await fetch('/api/webhooks', {
+                const res = await fetch('/api/webhooks/', {
                     method: 'POST',
                     headers: hdrs,
                     body: JSON.stringify({

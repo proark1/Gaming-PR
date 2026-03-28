@@ -3,7 +3,10 @@ from datetime import datetime, timezone
 from time import mktime
 from urllib.parse import urlparse
 
-import feedparser
+try:
+    import feedparser
+except ImportError:
+    feedparser = None
 import requests
 
 from app.scrapers.base import BaseScraper
@@ -20,6 +23,9 @@ FALLBACK_HEADERS = {
 
 class RssScraper(BaseScraper):
     def scrape(self) -> list[dict]:
+        if feedparser is None:
+            logger.warning("feedparser not installed, skipping RSS scrape")
+            return []
         if not self.outlet.rss_feed_url:
             logger.warning(f"No RSS feed URL for outlet: {self.outlet.name}")
             return []

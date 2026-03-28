@@ -186,7 +186,7 @@
             document.getElementById('login-notice').style.display = isLoggedIn() ? 'none' : 'block';
 
             try {
-                const res = await fetch(`/api/articles?skip=${currentSkip}&limit=${PAGE_SIZE}`);
+                const res = await fetch(`/api/articles/?skip=${currentSkip}&limit=${PAGE_SIZE}`);
                 const articles = await res.json();
                 lastCount = articles.length;
 
@@ -299,7 +299,7 @@
             };
 
             const isEdit = !!editingId;
-            const url = isEdit ? `/api/articles/${editingId}` : '/api/articles';
+            const url = isEdit ? `/api/articles/${editingId}` : '/api/articles/';
             const method = isEdit ? 'PUT' : 'POST';
 
             try {
