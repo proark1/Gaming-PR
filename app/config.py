@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 SUPPORTED_LANGUAGES = {
     "en": "English",
     "zh-CN": "Mandarin Chinese",
+    "zh-HK": "Cantonese Chinese",
     "hi": "Hindi",
     "es": "Spanish",
     "fr": "French",
@@ -19,6 +20,22 @@ SUPPORTED_LANGUAGES = {
     "th": "Thai",
     "id": "Indonesian",
     "pl": "Polish",
+    "nl": "Dutch",
+    "sv": "Swedish",
+    "no": "Norwegian",
+    "da": "Danish",
+    "fi": "Finnish",
+    "cs": "Czech",
+    "ro": "Romanian",
+    "hu": "Hungarian",
+    "vi": "Vietnamese",
+    "ms": "Malay",
+    "tl": "Filipino",
+    "uk": "Ukrainian",
+    "el": "Greek",
+    "he": "Hebrew",
+    "fa": "Persian",
+    "sw": "Swahili",
 }
 
 

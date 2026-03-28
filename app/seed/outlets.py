@@ -196,6 +196,168 @@ GAMING_OUTLETS = [
     {"name": "The Escapist", "url": "https://www.escapistmagazine.com", "rss_feed_url": "https://www.escapistmagazine.com/feed/", "language": "en", "region": "US", "country": "United States", "scraper_type": "rss", "priority": 2, "category": "gaming_news"},
     {"name": "Screenrant Gaming", "url": "https://screenrant.com/gaming/", "rss_feed_url": "https://screenrant.com/feed/gaming/", "language": "en", "region": "US", "country": "United States", "scraper_type": "rss", "priority": 2, "category": "gaming_news"},
     {"name": "Wccftech Gaming", "url": "https://wccftech.com/cat/gaming/", "rss_feed_url": "https://wccftech.com/feed/", "language": "en", "region": "US", "country": "United States", "scraper_type": "rss", "priority": 3, "category": "gaming_news"},
+
+    # ═══════════════════════════════════════════
+    # ENGLISH (en) - Australia
+    # ═══════════════════════════════════════════
+    {"name": "Press-Start Australia", "url": "https://press-start.com.au", "rss_feed_url": "https://press-start.com.au/feed/", "language": "en", "region": "AU", "country": "Australia", "scraper_type": "rss", "priority": 3, "category": "gaming_news", "description": "Australian gaming news, reviews and features"},
+    {"name": "Stevivor", "url": "https://stevivor.com", "rss_feed_url": "https://stevivor.com/feed/", "language": "en", "region": "AU", "country": "Australia", "scraper_type": "rss", "priority": 3, "category": "gaming_news", "description": "Australia's most-read independent video games news site"},
+    {"name": "WellPlayed", "url": "https://www.well-played.com.au", "rss_feed_url": "https://www.well-played.com.au/feed/", "language": "en", "region": "AU", "country": "Australia", "scraper_type": "rss", "priority": 3, "category": "gaming_news", "description": "A unique Aussie take on gaming"},
+    {"name": "Vooks", "url": "https://www.vooks.net", "rss_feed_url": "https://www.vooks.net/feed/", "language": "en", "region": "AU", "country": "Australia", "scraper_type": "rss", "priority": 4, "category": "nintendo", "description": "Australia's Nintendo community and news"},
+
+    # ═══════════════════════════════════════════
+    # ENGLISH (en) - Canada
+    # ═══════════════════════════════════════════
+    {"name": "CGMagazine", "url": "https://www.cgmagonline.com", "rss_feed_url": "https://www.cgmagonline.com/feed/", "language": "en", "region": "CA", "country": "Canada", "scraper_type": "rss", "priority": 3, "category": "gaming_news", "description": "Canadian gaming culture and media magazine since 2010"},
+    {"name": "MobileSyrup Gaming", "url": "https://mobilesyrup.com/category/gaming/", "rss_feed_url": "https://mobilesyrup.com/feed/", "language": "en", "region": "CA", "country": "Canada", "scraper_type": "rss", "priority": 3, "category": "gaming_news", "description": "Canadian tech and gaming coverage"},
+
+    # ═══════════════════════════════════════════
+    # ENGLISH (en) - South Africa
+    # ═══════════════════════════════════════════
+    {"name": "GLITCHED", "url": "https://www.glitched.online", "rss_feed_url": "https://www.glitched.online/feed/", "language": "en", "region": "ZA", "country": "South Africa", "scraper_type": "rss", "priority": 3, "category": "gaming_news", "description": "South Africa's largest gaming and pop culture website"},
+    {"name": "Critical Hit", "url": "https://www.criticalhit.net", "rss_feed_url": "https://www.criticalhit.net/feed/", "language": "en", "region": "ZA", "country": "South Africa", "scraper_type": "rss", "priority": 3, "category": "gaming_news", "description": "South African gaming and entertainment news"},
+
+    # ═══════════���═══════════════════════════════
+    # ENGLISH (en) - UK additional
+    # ═══════════════════════════════════════════
+    {"name": "GAMINGbible", "url": "https://www.gamingbible.com", "rss_feed_url": None, "language": "en", "region": "UK", "country": "United Kingdom", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "UK gaming news, views and opinions across gaming and streaming"},
+    {"name": "Esports News UK", "url": "https://esports-news.co.uk", "rss_feed_url": "https://esports-news.co.uk/feed/", "language": "en", "region": "UK", "country": "United Kingdom", "scraper_type": "rss", "priority": 4, "category": "esports", "description": "UK esports news and coverage"},
+
+    # ═══════════════════════════════════════════
+    # DUTCH (nl) - Netherlands & Belgium
+    # ═══════════════════════════════════════════
+    {"name": "Power Unlimited", "url": "https://www.pu.nl", "rss_feed_url": None, "language": "nl", "region": "NL", "country": "Netherlands", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Biggest gaming magazine in the Benelux, active since 1993"},
+    {"name": "InsideGamer", "url": "https://www.insidegamer.nl", "rss_feed_url": None, "language": "nl", "region": "NL", "country": "Netherlands", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Dutch gaming news and reviews, part of PU family"},
+    {"name": "GamersNET", "url": "https://www.gamersnet.nl", "rss_feed_url": None, "language": "nl", "region": "NL", "country": "Netherlands", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Dutch gaming community and news site"},
+    {"name": "Gamereactor Netherlands", "url": "https://www.gamereactor.nl", "rss_feed_url": "https://www.gamereactor.nl/rss/", "language": "nl", "region": "NL", "country": "Netherlands", "scraper_type": "rss", "priority": 2, "category": "gaming_news", "description": "Dutch edition of the pan-European gaming network"},
+    {"name": "Gamer.nl", "url": "https://www.gamer.nl", "rss_feed_url": None, "language": "nl", "region": "NL", "country": "Netherlands", "scraper_type": "generic", "priority": 3, "category": "gaming_news", "description": "One of the oldest Dutch gaming publications, active since 1999"},
+
+    # ═══════════════════════════════════════════
+    # SWEDISH (sv) - Sweden
+    # ═══════════════════════════════════════════
+    {"name": "FZ.se", "url": "https://www.fz.se", "rss_feed_url": None, "language": "sv", "region": "SE", "country": "Sweden", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Sweden's best gaming site — news, reviews and community since 1996"},
+    {"name": "Gamereactor Sverige", "url": "https://www.gamereactor.se", "rss_feed_url": "https://www.gamereactor.se/rss/rss.xml", "language": "sv", "region": "SE", "country": "Sweden", "scraper_type": "rss", "priority": 1, "category": "gaming_news", "description": "Sweden's largest gaming site, part of Gamereactor network"},
+    {"name": "SweClockers Gaming", "url": "https://www.sweclockers.com", "rss_feed_url": None, "language": "sv", "region": "SE", "country": "Sweden", "scraper_type": "generic", "priority": 2, "category": "pc_gaming", "description": "Sweden's largest tech community with dedicated gaming coverage"},
+
+    # ═══════════════════════════════════════════
+    # NORWEGIAN (no) - Norway
+    # ═══════════════════════════════════════════
+    {"name": "Gamereactor Norge", "url": "https://www.gamereactor.no", "rss_feed_url": "https://www.gamereactor.no/rss/rss.xml", "language": "no", "region": "NO", "country": "Norway", "scraper_type": "rss", "priority": 1, "category": "gaming_news", "description": "Norway's leading gaming site, part of the Gamereactor network"},
+    {"name": "PressFire.no", "url": "https://www.pressfire.no", "rss_feed_url": None, "language": "no", "region": "NO", "country": "Norway", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Norway's leading independent gaming journalism site"},
+
+    # ═══════════════════════════════════════════
+    # DANISH (da) - Denmark
+    # ═══════════════════════════════════════════
+    {"name": "Gamereactor Danmark", "url": "https://www.gamereactor.dk", "rss_feed_url": "https://www.gamereactor.dk/rss/rss.xml", "language": "da", "region": "DK", "country": "Denmark", "scraper_type": "rss", "priority": 1, "category": "gaming_news", "description": "Denmark's largest gaming site, founded 1998 as part of Gamereactor network"},
+
+    # ═══════════════════════════════════════════
+    # FINNISH (fi) - Finland
+    # ═══════════════════════════════════════════
+    {"name": "Gamereactor Suomi", "url": "https://www.gamereactor.fi", "rss_feed_url": "https://www.gamereactor.fi/rss/rss.xml", "language": "fi", "region": "FI", "country": "Finland", "scraper_type": "rss", "priority": 1, "category": "gaming_news", "description": "Finland's Gamereactor edition — reviews, news and gaming culture"},
+    {"name": "Pelit.fi", "url": "https://www.pelit.fi", "rss_feed_url": None, "language": "fi", "region": "FI", "country": "Finland", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "One of Finland's longest-running gaming publications"},
+    {"name": "KonsoliFIN", "url": "https://www.konsolifin.net", "rss_feed_url": None, "language": "fi", "region": "FI", "country": "Finland", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Finnish game news, reviews and Finland's best video game forum"},
+    {"name": "Muropaketti Gaming", "url": "https://muropaketti.com/pelit/", "rss_feed_url": None, "language": "fi", "region": "FI", "country": "Finland", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Finnish tech site with dedicated gaming section"},
+    {"name": "Tilt.fi", "url": "https://www.tilt.fi", "rss_feed_url": None, "language": "fi", "region": "FI", "country": "Finland", "scraper_type": "generic", "priority": 3, "category": "gaming_news", "description": "Finnish gaming and esports news"},
+
+    # ═══════════════════════════════════════════
+    # CZECH (cs) - Czech Republic
+    # ═══════════════════════════════════════════
+    {"name": "BonusWeb.cz", "url": "https://bonusweb.idnes.cz", "rss_feed_url": None, "language": "cs", "region": "CZ", "country": "Czech Republic", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Czech gaming daily since 1999, backed by Mafra publishing"},
+    {"name": "Doupě.cz", "url": "https://doupe.zive.cz", "rss_feed_url": None, "language": "cs", "region": "CZ", "country": "Czech Republic", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Czech gaming magazine online since 1999"},
+    {"name": "Hrej.cz", "url": "https://hrej.cz", "rss_feed_url": None, "language": "cs", "region": "CZ", "country": "Czech Republic", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Czech gaming magazine launched 2004"},
+    {"name": "KONZOLIŠTĚ.cz", "url": "https://www.konzoliste.cz", "rss_feed_url": None, "language": "cs", "region": "CZ", "country": "Czech Republic", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Czech gaming magazine for players and pop culture fans"},
+    {"name": "Games.cz", "url": "https://games.tiscali.cz", "rss_feed_url": None, "language": "cs", "region": "CZ", "country": "Czech Republic", "scraper_type": "generic", "priority": 3, "category": "gaming_news", "description": "Czech gaming portal since 2000"},
+
+    # ═══════════════════════════════════════════
+    # ROMANIAN (ro) - Romania
+    # ═══════════════════════════════════════════
+    {"name": "Go4Games.ro", "url": "https://www.go4games.ro", "rss_feed_url": None, "language": "ro", "region": "RO", "country": "Romania", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Romanian gaming news and reviews for PC, PlayStation, Xbox, Nintendo"},
+    {"name": "First Play", "url": "https://www.firstplay.ro", "rss_feed_url": None, "language": "ro", "region": "RO", "country": "Romania", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Romanian gaming reviews and news"},
+    {"name": "Need4Games.ro", "url": "https://need4games.ro", "rss_feed_url": None, "language": "ro", "region": "RO", "country": "Romania", "scraper_type": "generic", "priority": 3, "category": "gaming_news", "description": "Romanian game price comparison and gaming news"},
+
+    # ═══════════════════════════════════════════
+    # HUNGARIAN (hu) - Hungary
+    # ═══════════════════════════════════════════
+    {"name": "GameStar Hungary", "url": "https://www.gamestar.hu", "rss_feed_url": None, "language": "hu", "region": "HU", "country": "Hungary", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Hungary's largest gaming magazine since 1999"},
+    {"name": "Prohardver Gaming", "url": "https://prohardver.hu/hir/jatekok/", "rss_feed_url": None, "language": "hu", "region": "HU", "country": "Hungary", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Hungarian tech site with extensive gaming coverage"},
+    {"name": "Logout.hu", "url": "https://logout.hu", "rss_feed_url": None, "language": "hu", "region": "HU", "country": "Hungary", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Hungarian gaming and entertainment portal"},
+    {"name": "Hírhányó", "url": "https://hirhanyo.hu", "rss_feed_url": None, "language": "hu", "region": "HU", "country": "Hungary", "scraper_type": "generic", "priority": 3, "category": "gaming_news", "description": "Hungarian console and gaming news"},
+
+    # ═══════════════════════════════════════════
+    # VIETNAMESE (vi) - Vietnam (huge gaming market)
+    # ═══════════════════════════════════════════
+    {"name": "GameK", "url": "https://gamek.vn", "rss_feed_url": None, "language": "vi", "region": "VN", "country": "Vietnam", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Vietnam's premier gaming news platform by VCCorp"},
+    {"name": "Genk Gaming", "url": "https://genk.vn/game.chn", "rss_feed_url": None, "language": "vi", "region": "VN", "country": "Vietnam", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Vietnamese tech and gaming news by VCCorp"},
+    {"name": "Vietgame.asia", "url": "https://vietgame.asia", "rss_feed_url": None, "language": "vi", "region": "VN", "country": "Vietnam", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Vietnamese video games reviews and news blog"},
+    {"name": "ONE Esports Vietnam", "url": "https://www.oneesports.vn", "rss_feed_url": None, "language": "vi", "region": "VN", "country": "Vietnam", "scraper_type": "generic", "priority": 2, "category": "esports", "description": "Vietnamese esports news and event coverage"},
+
+    # ═══════════════════════════════════════════
+    # MALAY (ms) - Malaysia
+    # ═══════════════════════════════════════════
+    {"name": "JomGaming", "url": "https://jomgaming.my", "rss_feed_url": None, "language": "ms", "region": "MY", "country": "Malaysia", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Malaysia's Malay-language gaming publication — dari gamers untuk gamers"},
+    {"name": "Gamer Matters", "url": "https://gamermatters.com", "rss_feed_url": None, "language": "ms", "region": "MY", "country": "Malaysia", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Malaysian independent outlet delivering gaming info across Asia"},
+    {"name": "Lowyat.NET Gaming", "url": "https://www.lowyat.net/tag/gaming/", "rss_feed_url": "https://www.lowyat.net/feed/", "language": "ms", "region": "MY", "country": "Malaysia", "scraper_type": "rss", "priority": 2, "category": "gaming_news", "description": "Malaysia's top tech portal with gaming coverage"},
+
+    # ═══════════════════════════════════════════
+    # FILIPINO/TAGALOG (tl) - Philippines
+    # ═══════════════════════════════════════════
+    {"name": "PinoyGamer", "url": "https://pinoygamer.ph", "rss_feed_url": None, "language": "tl", "region": "PH", "country": "Philippines", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Official Philippines Gaming News and Community for all Filipino gamers"},
+    {"name": "GameOPS", "url": "https://www.gameops.net", "rss_feed_url": None, "language": "tl", "region": "PH", "country": "Philippines", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Premier Filipino gaming, tech and pop culture site since 1998"},
+    {"name": "GamingPH", "url": "https://gamingph.com", "rss_feed_url": None, "language": "tl", "region": "PH", "country": "Philippines", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Philippine gaming news, reviews and eSports coverage"},
+    {"name": "Too Much Gaming", "url": "https://www.toomuchgaming.net", "rss_feed_url": None, "language": "tl", "region": "PH", "country": "Philippines", "scraper_type": "generic", "priority": 3, "category": "gaming_news", "description": "Filipino video game news, editorials and podcast"},
+    {"name": "Back2Gaming", "url": "https://back2gaming.com", "rss_feed_url": "https://back2gaming.com/feed/", "language": "tl", "region": "PH", "country": "Philippines", "scraper_type": "rss", "priority": 3, "category": "pc_gaming", "description": "Philippine PC gaming and tech blog with 10+ years of publication"},
+
+    # ═══════════════════════════════════════════
+    # UKRAINIAN (uk) - Ukraine
+    # ═══════════════════════════════════════════
+    {"name": "DOU GameDev", "url": "https://gamedev.dou.ua", "rss_feed_url": None, "language": "uk", "region": "UA", "country": "Ukraine", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Ukrainian gamedev industry news on DOU platform"},
+    {"name": "Mezha.Media Gaming", "url": "https://mezha.media/category/games/", "rss_feed_url": None, "language": "uk", "region": "UA", "country": "Ukraine", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Ukrainian tech and gaming news"},
+    {"name": "dev.ua Gaming", "url": "https://dev.ua/news/tag/ihrovi-novyny", "rss_feed_url": None, "language": "uk", "region": "UA", "country": "Ukraine", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Ukrainian developer-focused platform with gaming news section"},
+
+    # ═══════════════════════════════════════════
+    # GREEK (el) - Greece
+    # ═══════════════════════════════════════════
+    {"name": "GameWorld.gr", "url": "https://www.gameworld.gr", "rss_feed_url": None, "language": "el", "region": "GR", "country": "Greece", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Greek gaming news, reviews, previews, forum and live shows"},
+    {"name": "GGU - Greek Gaming Universe", "url": "https://ggunews.gr", "rss_feed_url": None, "language": "el", "region": "GR", "country": "Greece", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Greek gaming, anime and geek culture news"},
+
+    # ═══════════════════════════════════════════
+    # HEBREW (he) - Israel
+    # ═══════════════════════════════════════════
+    {"name": "GamersPack Israel", "url": "https://gamerspack.co.il", "rss_feed_url": None, "language": "he", "region": "IL", "country": "Israel", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Israeli gaming news, reviews and previews in Hebrew"},
+    {"name": "Israeli Indie Games", "url": "https://indiegames.co.il", "rss_feed_url": None, "language": "he", "region": "IL", "country": "Israel", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Spotlighting Israeli indie games and developers"},
+
+    # ═══════════════════════════════════════════
+    # PERSIAN/FARSI (fa) - Iran
+    # ═══════════════════════════════════════════
+    {"name": "Zoomg", "url": "https://www.zoomg.ir", "rss_feed_url": None, "language": "fa", "region": "IR", "country": "Iran", "scraper_type": "generic", "priority": 1, "category": "gaming_news", "description": "Iran's most prominent gaming and entertainment site, part of Zoom Media Group"},
+    {"name": "BaziNegar", "url": "https://bazinegar.com", "rss_feed_url": None, "language": "fa", "region": "IR", "country": "Iran", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "Persian gaming news and analysis covering Iranian and MENA games"},
+
+    # ═══════════════════════════════════════════
+    # SWAHILI (sw) - East Africa
+    # ═══════════════════════════════════════════
+    {"name": "Esports Africa News (Swahili)", "url": "https://esportsafricanews.com/category/swahili/", "rss_feed_url": None, "language": "sw", "region": "KE", "country": "Kenya", "scraper_type": "generic", "priority": 1, "category": "esports", "description": "Swahili esports news covering East Africa including Swahili Esports Champions"},
+
+    # ══��════════════════════════════════════════
+    # SPANISH (es) - Latin America additional
+    # ═══════════════════════════════════════════
+    {"name": "Cultura Geek", "url": "https://culturageek.com.ar", "rss_feed_url": "https://culturageek.com.ar/feed/", "language": "es", "region": "AR", "country": "Argentina", "scraper_type": "rss", "priority": 2, "category": "gaming_news", "description": "Argentine multimedia gaming and geek culture outlet"},
+    {"name": "Tarreo Gamer", "url": "https://www.tarreo.com", "rss_feed_url": "https://www.tarreo.com/feed/", "language": "es", "region": "CL", "country": "Chile", "scraper_type": "rss", "priority": 2, "category": "gaming_news", "description": "Chile's leading gaming and gamer culture site since 2007"},
+    {"name": "TierraGamer", "url": "https://tierragamer.com", "rss_feed_url": "https://tierragamer.com/feed/", "language": "es", "region": "MX", "country": "Mexico", "scraper_type": "rss", "priority": 2, "category": "gaming_news", "description": "Latin American gaming, anime and geek culture news with 1.5M+ followers"},
+
+    # ═══════════════════════════════════════════
+    # CHINESE (zh-HK) - Hong Kong
+    # ═══════════════════════════════════════════
+    {"name": "Unwire.hk Gaming", "url": "https://unwire.hk/category/game/", "rss_feed_url": "https://unwire.hk/feed/", "language": "zh-HK", "region": "HK", "country": "Hong Kong", "scraper_type": "rss", "priority": 2, "category": "gaming_news", "description": "Hong Kong's leading tech media with gaming coverage, 2M+ monthly visitors"},
+
+    # ═══════════════════════════════════════════
+    # ARABIC (ar) - Additional outlets
+    # ═══════════════════════════════════════════
+    {"name": "IGN Middle East", "url": "https://me.ign.com", "rss_feed_url": None, "language": "ar", "region": "AE", "country": "UAE", "scraper_type": "generic", "priority": 2, "category": "gaming_news", "description": "IGN's Arabic-language Middle East edition"},
+
+    # ═══════════════════════════════════════════
+    # PORTUGUESE (pt-PT) - Portugal additional
+    # ═══════════════════════════════════════════
+    {"name": "4gnews Gaming", "url": "https://4gnews.pt/tag/gaming/", "rss_feed_url": "https://4gnews.pt/feed/", "language": "pt", "region": "PT", "country": "Portugal", "scraper_type": "rss", "priority": 3, "category": "gaming_news", "description": "Portuguese tech site with dedicated gaming coverage"},
 ]
 
 
