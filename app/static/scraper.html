@@ -412,6 +412,15 @@
         // ─── Init ───
         log('Scraper console initialized', 'log-info');
         log('Auto-refreshing every 10 seconds', 'log-dim');
+        // Sync with global category
+        setTimeout(() => {
+            const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+            if (gCat) document.getElementById('category-select').value = gCat;
+        }, 50);
+        window.addEventListener('gpr-category-change', e => {
+            document.getElementById('category-select').value = e.detail.category || '';
+            filterOutletPicker(); loadStats();
+        });
         loadOutletPicker();
         refreshAll();
         setInterval(refreshAll, 10000);

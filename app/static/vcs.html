@@ -583,6 +583,9 @@
             }
         }
 
+        // Auto-set global category when visiting this page
+        setTimeout(() => { if (typeof gprGetCategory === 'function' && gprGetCategory() !== 'gaming_vc') { localStorage.setItem('gpr_category', 'gaming_vc'); document.querySelectorAll('.sb-cat-pill').forEach(p => p.classList.toggle('active', p.dataset.cat === 'gaming_vc')); } }, 100);
+
         loadVCs();
     </script>
 </body>

@@ -377,6 +377,25 @@
         // Enter key to search
         document.getElementById('f-search').addEventListener('keydown', e => { if (e.key === 'Enter') resetAndLoad(); });
 
+        // Sync with global category
+        setTimeout(() => {
+            const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+            if (gCat) document.getElementById('f-source').value = gCat;
+            const h1 = document.querySelector('h1');
+            if (h1 && gCat) {
+                const labels = {gaming_news:'Scraped Articles', gaming_vc:'VC Posts & News', gaming_streamer:'Streamer Content'};
+                h1.textContent = labels[gCat] || 'Scraped Content';
+            }
+        }, 50);
+        window.addEventListener('gpr-category-change', e => {
+            const cat = e.detail.category || '';
+            document.getElementById('f-source').value = cat;
+            const h1 = document.querySelector('h1');
+            const labels = {gaming_news:'Scraped Articles', gaming_vc:'VC Posts & News', gaming_streamer:'Streamer Content'};
+            h1.textContent = labels[cat] || 'Scraped Content';
+            resetAndLoad();
+        });
+
         loadLanguages();
         loadArticles();
     </script>

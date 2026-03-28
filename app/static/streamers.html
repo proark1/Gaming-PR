@@ -590,6 +590,9 @@
             }
         }
 
+        // Auto-set global category when visiting this page
+        setTimeout(() => { if (typeof gprGetCategory === 'function' && gprGetCategory() !== 'gaming_streamer') { localStorage.setItem('gpr_category', 'gaming_streamer'); document.querySelectorAll('.sb-cat-pill').forEach(p => p.classList.toggle('active', p.dataset.cat === 'gaming_streamer')); } }, 100);
+
         loadLanguages();
         loadStreamers();
     </script>

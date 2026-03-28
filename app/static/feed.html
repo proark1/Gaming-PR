@@ -327,6 +327,15 @@
             </div>`;
         }
 
+        // Sync with global category
+        setTimeout(() => {
+            const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+            if (gCat) document.getElementById('f-source').value = gCat;
+        }, 50);
+        window.addEventListener('gpr-category-change', e => {
+            document.getElementById('f-source').value = e.detail.category || '';
+        });
+
         loadLanguages();
     </script>
 </body>

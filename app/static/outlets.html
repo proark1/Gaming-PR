@@ -706,6 +706,16 @@
             loadOutlets();
         }
 
+        // Sync with global category
+        setTimeout(() => {
+            const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+            if (gCat) document.getElementById('f-category').value = gCat;
+        }, 50);
+        window.addEventListener('gpr-category-change', e => {
+            document.getElementById('f-category').value = e.detail.category || '';
+            loadOutlets();
+        });
+
         loadLanguages();
         loadOutlets();
     </script>

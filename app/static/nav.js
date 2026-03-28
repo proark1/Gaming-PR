@@ -140,6 +140,31 @@
             }
             .gpr-sidebar-overlay.open { opacity: 1; visibility: visible; }
 
+            /* ─── Category Switcher ─── */
+            .gpr-sidebar .sb-cat-switcher {
+                padding: 10px 12px; border-bottom: 1px solid #1e1e2e; flex-shrink: 0;
+            }
+            .gpr-sidebar .sb-cat-label {
+                font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 1px; color: #5a5a72; margin-bottom: 6px; padding: 0 2px;
+            }
+            .gpr-sidebar .sb-cat-pills {
+                display: flex; gap: 4px;
+            }
+            .gpr-sidebar .sb-cat-pill {
+                flex: 1; padding: 6px 4px; border-radius: 6px; border: 1px solid #2a2a3a;
+                background: transparent; color: #8888a0; font-size: 0.68rem; font-weight: 600;
+                cursor: pointer; text-align: center; font-family: inherit;
+                transition: all .2s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap;
+            }
+            .gpr-sidebar .sb-cat-pill:hover { color: #f0f0f5; border-color: #7c5cff; }
+            .gpr-sidebar .sb-cat-pill.active {
+                background: rgba(124,92,255,0.2); color: #f0f0f5; border-color: #7c5cff;
+            }
+            .gpr-sidebar .sb-cat-pill[data-cat="gaming_news"].active { background: rgba(6,182,212,0.2); border-color: #06b6d4; color: #22d3ee; }
+            .gpr-sidebar .sb-cat-pill[data-cat="gaming_vc"].active { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #4ade80; }
+            .gpr-sidebar .sb-cat-pill[data-cat="gaming_streamer"].active { background: rgba(245,158,11,0.2); border-color: #f59e0b; color: #fbbf24; }
+
             /* ─── Body offset ─── */
             body { padding-left: 240px; }
 
@@ -224,6 +249,14 @@
             <div class="sb-header">
                 <a class="logo" href="/"><div class="logo-icon">G</div> Gaming PR</a>
             </div>
+            <div class="sb-cat-switcher">
+                <div class="sb-cat-label">Focus</div>
+                <div class="sb-cat-pills">
+                    <button class="sb-cat-pill" data-cat="gaming_news" onclick="gprSetCategory('gaming_news')">News</button>
+                    <button class="sb-cat-pill" data-cat="gaming_vc" onclick="gprSetCategory('gaming_vc')">VCs</button>
+                    <button class="sb-cat-pill" data-cat="gaming_streamer" onclick="gprSetCategory('gaming_streamer')">Streamers</button>
+                </div>
+            </div>
             <div class="sb-nav">
                 <div class="sb-group">
                     ${slink('/dashboard', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>', 'Dashboard', 'dashboard')}
@@ -300,6 +333,32 @@
             o.addEventListener('click', e => { if (e.target === o) gprCloseModals(); });
         });
     }
+
+    // ─── Global Category ───
+    const GPR_CAT_KEY = 'gpr_category';
+    const GPR_CAT_LABELS = { gaming_news: 'News Outlets', gaming_vc: 'Gaming VCs', gaming_streamer: 'Streamers' };
+    const GPR_CAT_CONTENT = { gaming_news: 'Articles', gaming_vc: 'Posts & News', gaming_streamer: 'Videos & Streams' };
+
+    window.gprGetCategory = function () { return localStorage.getItem(GPR_CAT_KEY) || ''; };
+    window.gprSetCategory = function (cat) {
+        const current = localStorage.getItem(GPR_CAT_KEY);
+        if (current === cat) { localStorage.removeItem(GPR_CAT_KEY); cat = ''; }
+        else { localStorage.setItem(GPR_CAT_KEY, cat); }
+        // Update pill UI
+        document.querySelectorAll('.sb-cat-pill').forEach(p => {
+            p.classList.toggle('active', p.dataset.cat === cat);
+        });
+        // Notify page
+        window.dispatchEvent(new CustomEvent('gpr-category-change', { detail: { category: cat } }));
+    };
+    window.gprCategoryLabel = function () { return GPR_CAT_LABELS[gprGetCategory()] || 'All Sources'; };
+    window.gprContentLabel = function () { return GPR_CAT_CONTENT[gprGetCategory()] || 'Scraped Content'; };
+
+    // Init pill state on load
+    setTimeout(() => {
+        const cat = gprGetCategory();
+        if (cat) document.querySelectorAll('.sb-cat-pill').forEach(p => p.classList.toggle('active', p.dataset.cat === cat));
+    }, 0);
 
     // ─── Auth state ───
     window.gprGetToken = function () { return localStorage.getItem('gpr_token'); };
