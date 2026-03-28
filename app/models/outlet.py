@@ -33,6 +33,7 @@ class GamingOutlet(Base):
     social_instagram = Column(String(500), nullable=True)
     social_tiktok = Column(String(500), nullable=True)
     social_discord = Column(String(500), nullable=True)
+    social_twitch = Column(String(500), nullable=True)
     contact_email = Column(String(500), nullable=True)
     contact_phone = Column(String(100), nullable=True)
     contact_page_url = Column(String(2048), nullable=True)

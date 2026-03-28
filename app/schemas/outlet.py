@@ -22,6 +22,7 @@ class OutletBase(BaseModel):
     social_instagram: Optional[str] = None
     social_tiktok: Optional[str] = None
     social_discord: Optional[str] = None
+    social_twitch: Optional[str] = None
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
     contact_page_url: Optional[str] = None
@@ -46,6 +47,7 @@ class OutletUpdate(BaseModel):
     social_instagram: Optional[str] = None
     social_tiktok: Optional[str] = None
     social_discord: Optional[str] = None
+    social_twitch: Optional[str] = None
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
     contact_page_url: Optional[str] = None

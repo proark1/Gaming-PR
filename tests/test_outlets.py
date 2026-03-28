@@ -1,4 +1,6 @@
 from app.seed.outlets import GAMING_OUTLETS, seed_outlets
+from app.seed.vc_sources import GAMING_VC_SOURCES
+from app.seed.streamer_sources import GAMING_STREAMER_SOURCES
 from app.config import SUPPORTED_LANGUAGES
 
 
@@ -23,7 +25,7 @@ def test_no_duplicate_urls():
 
 def test_seed_outlets(db):
     added = seed_outlets(db)
-    assert added == len(GAMING_OUTLETS)
+    assert added == len(GAMING_OUTLETS) + len(GAMING_VC_SOURCES) + len(GAMING_STREAMER_SOURCES)
 
     # Run again - should be idempotent
     added_again = seed_outlets(db)

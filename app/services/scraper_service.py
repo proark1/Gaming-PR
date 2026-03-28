@@ -363,7 +363,7 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
         # Update social links (only if not already set)
         social_fields = [
             "social_twitter", "social_facebook", "social_youtube",
-            "social_linkedin", "social_instagram", "social_tiktok", "social_discord",
+            "social_linkedin", "social_instagram", "social_tiktok", "social_discord", "social_twitch",
         ]
         for field in social_fields:
             if contact.get(field) and not getattr(outlet, field, None):
