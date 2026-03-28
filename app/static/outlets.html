@@ -18,68 +18,125 @@
         }
         body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
         .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(124,92,255,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(124,92,255,0.03) 1px,transparent 1px); background-size: 60px 60px; z-index: 0; pointer-events: none; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; position: relative; z-index: 1; }
+        .container { max-width: 1500px; margin: 0 auto; padding: 32px 24px; position: relative; z-index: 1; }
         h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
         .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px; }
 
-        /* Stats bar */
+        /* Stats */
         .stats-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
-        .stat-pill { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; display: flex; flex-direction: column; gap: 2px; min-width: 140px; }
-        .stat-pill .label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-        .stat-pill .value { font-size: 1.4rem; font-weight: 800; }
+        .stat-pill { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; display: flex; flex-direction: column; gap: 2px; min-width: 130px; }
+        .stat-pill .label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-pill .value { font-size: 1.3rem; font-weight: 800; }
         .stat-pill .value.accent { color: var(--accent-light); }
         .stat-pill .value.green { color: var(--green); }
         .stat-pill .value.orange { color: var(--orange); }
 
-        /* Filters */
-        .filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }
-        .filter-group { display: flex; flex-direction: column; gap: 4px; }
-        .filter-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-        .filter-input, .filter-select {
-            background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary);
-            padding: 8px 12px; border-radius: 8px; font-size: 0.84rem; font-family: inherit; outline: none; transition: border-color .2s;
-        }
-        .filter-input:focus, .filter-select:focus { border-color: var(--accent); }
-        .filter-input { width: 220px; }
-        .filter-select { min-width: 140px; cursor: pointer; }
-        .filter-select option { background: var(--bg-primary); color: var(--text-primary); }
-        .filter-btn { align-self: flex-end; background: var(--accent); color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity .2s; }
-        .filter-btn:hover { opacity: 0.85; }
-        .filter-btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
-        .filter-btn.secondary:hover { border-color: var(--accent); color: var(--text-primary); }
+        /* Toolbar */
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 14px 18px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); align-items: flex-end; }
+        .fg { display: flex; flex-direction: column; gap: 3px; }
+        .fg-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .fg input, .fg select { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 7px 11px; border-radius: 8px; font-size: 0.82rem; font-family: inherit; outline: none; }
+        .fg input:focus, .fg select:focus { border-color: var(--accent); }
+        .fg input { width: 200px; }
+        .fg select { min-width: 130px; cursor: pointer; }
+        .fg select option { background: var(--bg-primary); }
+        .tbtn { padding: 7px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: all .2s; }
+        .tbtn-primary { background: var(--accent); color: #fff; }
+        .tbtn-primary:hover { opacity: 0.85; }
+        .tbtn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .tbtn-ghost:hover { border-color: var(--accent); color: var(--text-primary); }
+        .tbtn-green { background: var(--green); color: #fff; }
+        .tbtn-green:hover { opacity: 0.85; }
+        .tbtn-green:disabled { opacity: 0.4; cursor: not-allowed; }
+        .toolbar-right { margin-left: auto; display: flex; gap: 8px; align-items: flex-end; }
+        .selected-count { font-size: 0.8rem; color: var(--accent-light); font-weight: 600; padding: 8px 0; }
 
-        /* Outlet grid */
-        .outlet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-        .outlet-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 20px; transition: border-color .2s, background .2s;
-        }
-        .outlet-card:hover { border-color: rgba(124,92,255,0.4); background: var(--bg-card-hover); }
-        .outlet-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .outlet-favicon { width: 36px; height: 36px; border-radius: 8px; background: var(--bg-secondary); object-fit: contain; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; color: var(--accent-light); flex-shrink: 0; overflow: hidden; }
-        .outlet-favicon img { width: 100%; height: 100%; object-fit: contain; }
-        .outlet-name { font-size: 1rem; font-weight: 600; line-height: 1.3; }
-        .outlet-url { font-size: 0.78rem; color: var(--text-muted); word-break: break-all; }
-        .outlet-url a { color: var(--text-muted); text-decoration: none; }
-        .outlet-url a:hover { color: var(--accent-light); }
-        .outlet-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        /* Table */
+        .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        th { text-align: left; padding: 10px 14px; color: var(--text-muted); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); background: rgba(10,10,15,0.5); position: sticky; top: 0; }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { color: var(--text-secondary); }
+        td { padding: 10px 14px; border-bottom: 1px solid rgba(42,42,58,0.25); color: var(--text-secondary); vertical-align: middle; }
+        tr:hover td { background: rgba(124,92,255,0.03); }
+        tr.selected td { background: rgba(124,92,255,0.08); }
+        .cb-cell { width: 36px; text-align: center; }
+        .cb-cell input { accent-color: var(--accent); cursor: pointer; }
+        .outlet-name-cell { color: var(--text-primary); font-weight: 600; cursor: pointer; }
+        .outlet-name-cell:hover { color: var(--accent-light); }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2px; }
         .badge-green { background: var(--green-dim); color: var(--green); }
         .badge-red { background: var(--red-dim); color: var(--red); }
         .badge-accent { background: rgba(124,92,255,0.15); color: var(--accent-light); }
         .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
         .badge-orange { background: var(--orange-dim); color: var(--orange); }
-        .outlet-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .outlet-stat { text-align: center; }
-        .outlet-stat .val { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
-        .outlet-stat .lbl { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; }
-        .outlet-contact { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding: 10px 0; border-top: 1px solid rgba(42,42,58,0.3); }
-        .contact-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--accent-light); text-decoration: none; padding: 4px 10px; background: rgba(124,92,255,0.08); border-radius: 6px; transition: all .2s; }
-        .contact-link:hover { background: rgba(124,92,255,0.15); color: #fff; }
-        .contact-link svg { flex-shrink: 0; }
+        .email-cell { font-size: 0.78rem; color: var(--accent-light); }
+        .email-cell a { color: inherit; text-decoration: none; }
+        .email-cell a:hover { text-decoration: underline; }
+        .phone-cell { font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+        .no-data { color: var(--text-muted); font-size: 0.75rem; }
 
-        /* Loading */
-        .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--text-muted); font-size: 0.9rem; }
+        /* Detail panel (slide-in from right) */
+        .detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; }
+        .detail-overlay.open { display: block; }
+        .detail-panel {
+            position: fixed; top: 0; right: 0; bottom: 0; width: 520px; max-width: 90vw;
+            background: var(--bg-secondary); border-left: 1px solid var(--border);
+            z-index: 201; transform: translateX(100%); transition: transform .25s ease;
+            overflow-y: auto; padding: 28px;
+        }
+        .detail-panel.open { transform: translateX(0); }
+        .dp-close { position: absolute; top: 16px; right: 16px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; font-size: 1.1rem; transition: all .2s; }
+        .dp-close:hover { border-color: var(--accent); color: var(--text-primary); }
+        .dp-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding-right: 40px; }
+        .dp-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; color: var(--accent-light); flex-shrink: 0; overflow: hidden; }
+        .dp-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .dp-name { font-size: 1.2rem; font-weight: 800; }
+        .dp-url { font-size: 0.8rem; color: var(--text-muted); word-break: break-all; }
+        .dp-url a { color: inherit; text-decoration: none; }
+        .dp-url a:hover { color: var(--accent-light); }
+        .dp-section { margin-bottom: 22px; }
+        .dp-section-title { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+        .dp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .dp-field { }
+        .dp-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+        .dp-value { font-size: 0.88rem; color: var(--text-primary); }
+        .dp-value a { color: var(--accent-light); text-decoration: none; }
+        .dp-value a:hover { text-decoration: underline; }
+        .dp-value.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+        .dp-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; padding: 10px; background: var(--bg-primary); border-radius: 8px; }
+        .dp-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .dp-btn { padding: 8px 18px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .dp-btn-primary { background: var(--accent); color: #fff; }
+        .dp-btn-primary:hover { opacity: 0.85; }
+        .dp-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .dp-btn-ghost:hover { border-color: var(--accent); color: var(--text-primary); }
+
+        /* Email modal */
+        .email-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 250; align-items: center; justify-content: center; }
+        .email-overlay.open { display: flex; }
+        .email-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .email-modal h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+        .email-modal .sub { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 20px; }
+        .email-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .em-fg { margin-bottom: 14px; }
+        .em-fg label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; }
+        .em-fg input, .em-fg textarea, .em-fg select { width: 100%; padding: 10px 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.88rem; font-family: inherit; outline: none; }
+        .em-fg input:focus, .em-fg textarea:focus, .em-fg select:focus { border-color: var(--accent); }
+        .em-fg textarea { min-height: 120px; resize: vertical; }
+        .em-fg .hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; }
+        .em-recipients { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+        .em-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(124,92,255,0.1); color: var(--accent-light); border-radius: 6px; font-size: 0.76rem; font-weight: 500; }
+        .em-chip .name { color: var(--text-primary); font-weight: 600; }
+        .em-submit { width: 100%; padding: 12px; border-radius: 10px; font-weight: 600; font-size: 0.92rem; border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; font-family: inherit; margin-top: 8px; transition: all .2s; }
+        .em-submit:hover { transform: translateY(-1px); }
+        .em-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .em-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .em-error.visible { display: block; }
+        .em-success { background: var(--green-dim); border: 1px solid rgba(34,197,94,0.3); color: var(--green); padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .em-success.visible { display: block; }
+
+        .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--text-muted); }
         .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin-right: 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
@@ -91,54 +148,126 @@
 
     <div class="container">
         <h1>Gaming Outlets</h1>
-        <div class="subtitle">Manage and monitor the 80+ gaming news outlets being scraped</div>
+        <div class="subtitle">122 gaming news outlets across 17 languages — click any outlet for details, select multiple to send emails</div>
 
         <div class="stats-bar" id="stats-bar"></div>
 
-        <div class="filters">
-            <div class="filter-group">
-                <span class="filter-label">Search</span>
-                <input class="filter-input" id="f-search" type="text" placeholder="Search outlet name...">
+        <!-- Toolbar: filters + actions -->
+        <div class="toolbar">
+            <div class="fg">
+                <span class="fg-label">Search</span>
+                <input id="f-search" type="text" placeholder="Search outlet name...">
             </div>
-            <div class="filter-group">
-                <span class="filter-label">Language</span>
-                <select class="filter-select" id="f-language"><option value="">All Languages</option></select>
+            <div class="fg">
+                <span class="fg-label">Language</span>
+                <select id="f-language"><option value="">All</option></select>
             </div>
-            <div class="filter-group">
-                <span class="filter-label">Status</span>
-                <select class="filter-select" id="f-active">
-                    <option value="">All</option>
-                    <option value="true">Active</option>
-                    <option value="false">Inactive</option>
-                </select>
+            <div class="fg">
+                <span class="fg-label">Status</span>
+                <select id="f-active"><option value="">All</option><option value="true">Active</option><option value="false">Inactive</option></select>
             </div>
-            <button class="filter-btn" onclick="loadOutlets()">Search</button>
-            <button class="filter-btn secondary" onclick="clearFilters()">Clear</button>
+            <button class="tbtn tbtn-primary" onclick="loadOutlets()">Filter</button>
+            <button class="tbtn tbtn-ghost" onclick="clearFilters()">Clear</button>
+            <div class="toolbar-right">
+                <span class="selected-count" id="sel-count"></span>
+                <button class="tbtn tbtn-green" id="email-btn" onclick="openEmailModal()" disabled>Email Selected</button>
+            </div>
         </div>
 
-        <div id="outlet-list" class="outlet-grid">
-            <div class="loading" style="grid-column:1/-1"><div class="spinner"></div> Loading outlets...</div>
+        <!-- Table -->
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="cb-cell"><input type="checkbox" id="select-all" onchange="toggleAll(this.checked)"></th>
+                        <th class="sortable" onclick="sortBy('name')">Outlet</th>
+                        <th>Language</th>
+                        <th>Country</th>
+                        <th>Category</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Articles</th>
+                    </tr>
+                </thead>
+                <tbody id="outlet-tbody">
+                    <tr><td colspan="9"><div class="loading"><div class="spinner"></div> Loading outlets...</div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+    <div class="detail-panel" id="detail-panel">
+        <button class="dp-close" onclick="closeDetail()">&times;</button>
+        <div id="detail-content"></div>
+    </div>
+
+    <!-- Email Modal -->
+    <div class="email-overlay" id="email-overlay" onclick="if(event.target===this)closeEmailModal()">
+        <div class="email-modal">
+            <button class="close-btn" onclick="closeEmailModal()">&times;</button>
+            <h2>Send Email to Outlets</h2>
+            <div class="sub" id="em-sub">Sending to 0 outlets</div>
+            <div class="em-error" id="em-error"></div>
+            <div class="em-success" id="em-success"></div>
+            <div class="em-recipients" id="em-recipients"></div>
+            <form onsubmit="handleSendEmail(event)">
+                <div class="em-fg">
+                    <label>From Domain</label>
+                    <select id="em-domain" required><option value="">Loading domains...</option></select>
+                </div>
+                <div class="em-fg">
+                    <label>From Email</label>
+                    <input type="email" id="em-from" placeholder="press@yourdomain.com" required>
+                </div>
+                <div class="em-fg">
+                    <label>From Name</label>
+                    <input type="text" id="em-fromname" placeholder="Gaming PR Team">
+                </div>
+                <div class="em-fg">
+                    <label>Subject</label>
+                    <input type="text" id="em-subject" placeholder="Email subject line" required>
+                </div>
+                <div class="em-fg">
+                    <label>HTML Body</label>
+                    <textarea id="em-html" placeholder="<h1>Hello!</h1><p>Your press release content...</p>"></textarea>
+                </div>
+                <div class="em-fg">
+                    <label>Plain Text</label>
+                    <textarea id="em-text" placeholder="Plain text version..." style="min-height:80px"></textarea>
+                </div>
+                <button type="submit" class="em-submit" id="em-btn">Send to All Selected Outlets</button>
+            </form>
         </div>
     </div>
 
     <script>
-        function timeAgo(iso) {
-            if (!iso) return 'Never';
-            const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-            if (diff < 60) return Math.round(diff) + 's ago';
-            if (diff < 3600) return Math.round(diff/60) + 'm ago';
-            if (diff < 86400) return Math.round(diff/3600) + 'h ago';
-            return Math.round(diff/86400) + 'd ago';
-        }
+        let allOutlets = [];
+        let selectedIds = new Set();
+        let allLanguages = {};
+        let sortField = 'name';
+        let sortAsc = true;
 
         function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function timeAgo(iso) {
+            if (!iso) return 'Never';
+            const d = (Date.now() - new Date(iso).getTime()) / 1000;
+            if (d < 60) return Math.round(d) + 's ago';
+            if (d < 3600) return Math.round(d/60) + 'm ago';
+            if (d < 86400) return Math.round(d/3600) + 'h ago';
+            return Math.round(d/86400) + 'd ago';
+        }
+        function authHeaders() { const t = gprGetToken(); return t ? { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' } : null; }
+        function isLoggedIn() { return !!gprGetToken(); }
 
         async function loadLanguages() {
             try {
                 const res = await fetch('/api/languages');
-                const langs = await res.json();
+                allLanguages = await res.json();
                 const sel = document.getElementById('f-language');
-                for (const [code, name] of Object.entries(langs)) {
+                for (const [code, name] of Object.entries(allLanguages)) {
                     const opt = document.createElement('option');
                     opt.value = code; opt.textContent = name;
                     sel.appendChild(opt);
@@ -150,19 +279,25 @@
             try {
                 const res = await fetch('/api/outlets/stats');
                 const s = await res.json();
+                const withEmail = allOutlets.filter(o => o.contact_email).length;
                 document.getElementById('stats-bar').innerHTML = `
                     <div class="stat-pill"><span class="label">Total Outlets</span><span class="value accent">${s.total_outlets}</span></div>
                     <div class="stat-pill"><span class="label">Active</span><span class="value green">${s.active_outlets}</span></div>
+                    <div class="stat-pill"><span class="label">With Email</span><span class="value accent">${withEmail}</span></div>
                     <div class="stat-pill"><span class="label">With Failures</span><span class="value orange">${s.outlets_with_failures}</span></div>
-                    <div class="stat-pill"><span class="label">Total Scraped</span><span class="value accent">${(s.total_articles_scraped || 0).toLocaleString()}</span></div>
+                    <div class="stat-pill"><span class="label">Articles Scraped</span><span class="value accent">${(s.total_articles_scraped || 0).toLocaleString()}</span></div>
                 `;
             } catch (e) {}
         }
 
-        async function loadOutlets() {
-            const list = document.getElementById('outlet-list');
-            list.innerHTML = '<div class="loading" style="grid-column:1/-1"><div class="spinner"></div> Loading outlets...</div>';
+        function sortBy(field) {
+            if (sortField === field) sortAsc = !sortAsc;
+            else { sortField = field; sortAsc = true; }
+            renderTable();
+        }
 
+        async function loadOutlets() {
+            document.getElementById('outlet-tbody').innerHTML = '<tr><td colspan="9"><div class="loading"><div class="spinner"></div> Loading...</div></td></tr>';
             const params = new URLSearchParams();
             const search = document.getElementById('f-search').value.trim();
             const language = document.getElementById('f-language').value;
@@ -170,57 +305,217 @@
             if (search) params.set('search', search);
             if (language) params.set('language', language);
             if (active) params.set('is_active', active);
-
             try {
                 const res = await fetch('/api/outlets?' + params.toString());
-                const outlets = await res.json();
-
-                if (outlets.length === 0) {
-                    list.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div style="font-size:1.1rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px">No outlets found</div><div>Try adjusting your filters</div></div>';
-                    return;
-                }
-
-                list.innerHTML = outlets.map(o => `
-                    <div class="outlet-card">
-                        <div class="outlet-header">
-                            <div class="outlet-favicon">
-                                ${o.favicon_url ? `<img src="${esc(o.favicon_url)}" alt="" onerror="this.parentElement.textContent='${esc(o.name).charAt(0)}'">` : esc(o.name).charAt(0)}
-                            </div>
-                            <div>
-                                <div class="outlet-name">${esc(o.name)}</div>
-                                <div class="outlet-url"><a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.url)}</a></div>
-                            </div>
-                        </div>
-                        <div class="outlet-meta">
-                            ${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}
-                            <span class="badge badge-accent">${o.language || '?'}</span>
-                            ${o.category ? `<span class="badge badge-cyan">${esc(o.category)}</span>` : ''}
-                            ${o.scraper_type ? `<span class="badge badge-orange">${esc(o.scraper_type)}</span>` : ''}
-                            ${o.consecutive_failures > 0 ? `<span class="badge badge-red">${o.consecutive_failures} failures</span>` : ''}
-                        </div>
-                        ${o.contact_email || o.contact_phone ? `<div class="outlet-contact">
-                            ${o.contact_email ? `<a href="mailto:${esc(o.contact_email)}" class="contact-link" title="Send email"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> ${esc(o.contact_email)}</a>` : ''}
-                            ${o.contact_phone ? `<a href="tel:${esc(o.contact_phone)}" class="contact-link" title="Call"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ${esc(o.contact_phone)}</a>` : ''}
-                        </div>` : ''}
-                        <div class="outlet-stats">
-                            <div class="outlet-stat">
-                                <div class="val">${(o.total_articles_scraped || 0).toLocaleString()}</div>
-                                <div class="lbl">Scraped</div>
-                            </div>
-                            <div class="outlet-stat">
-                                <div class="val">${o.avg_articles_per_scrape ? o.avg_articles_per_scrape.toFixed(1) : '0'}</div>
-                                <div class="lbl">Avg/Run</div>
-                            </div>
-                            <div class="outlet-stat">
-                                <div class="val">${timeAgo(o.last_scraped_at)}</div>
-                                <div class="lbl">Last Scraped</div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+                allOutlets = await res.json();
+                selectedIds.clear();
+                renderTable();
+                loadStats();
             } catch (err) {
-                list.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div style="color:var(--red);font-weight:600;margin-bottom:8px">Failed to load outlets</div><div>${err.message}</div></div>`;
+                document.getElementById('outlet-tbody').innerHTML = `<tr><td colspan="9"><div class="empty-state" style="color:var(--red)">Failed: ${err.message}</div></td></tr>`;
             }
+        }
+
+        function renderTable() {
+            const sorted = [...allOutlets].sort((a, b) => {
+                let va = (a[sortField] || ''), vb = (b[sortField] || '');
+                if (typeof va === 'string') va = va.toLowerCase();
+                if (typeof vb === 'string') vb = vb.toLowerCase();
+                if (va < vb) return sortAsc ? -1 : 1;
+                if (va > vb) return sortAsc ? 1 : -1;
+                return 0;
+            });
+            const tbody = document.getElementById('outlet-tbody');
+            if (!sorted.length) {
+                tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">No outlets found</div></td></tr>';
+                return;
+            }
+            tbody.innerHTML = sorted.map(o => `
+                <tr class="${selectedIds.has(o.id) ? 'selected' : ''}">
+                    <td class="cb-cell"><input type="checkbox" ${selectedIds.has(o.id)?'checked':''} onchange="toggleSelect(${o.id}, this.checked)"></td>
+                    <td class="outlet-name-cell" onclick="openDetail(${o.id})">${esc(o.name)}</td>
+                    <td><span class="badge badge-accent">${o.language}</span></td>
+                    <td>${esc(o.country || o.region || '-')}</td>
+                    <td>${o.category ? `<span class="badge badge-cyan">${esc(o.category)}</span>` : '<span class="no-data">-</span>'}</td>
+                    <td class="email-cell">${o.contact_email ? `<a href="mailto:${esc(o.contact_email)}">${esc(o.contact_email)}</a>` : '<span class="no-data">-</span>'}</td>
+                    <td class="phone-cell">${o.contact_phone ? esc(o.contact_phone) : '<span class="no-data">-</span>'}</td>
+                    <td>${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">off</span>'}</td>
+                    <td>${(o.total_articles_scraped || 0).toLocaleString()}</td>
+                </tr>
+            `).join('');
+            updateSelectionUI();
+        }
+
+        function toggleSelect(id, checked) {
+            if (checked) selectedIds.add(id); else selectedIds.delete(id);
+            updateSelectionUI();
+            // Update row class
+            renderTable();
+        }
+
+        function toggleAll(checked) {
+            if (checked) allOutlets.forEach(o => selectedIds.add(o.id));
+            else selectedIds.clear();
+            renderTable();
+        }
+
+        function updateSelectionUI() {
+            const count = selectedIds.size;
+            const withEmail = [...selectedIds].filter(id => allOutlets.find(o => o.id === id)?.contact_email).length;
+            document.getElementById('sel-count').textContent = count ? `${count} selected (${withEmail} with email)` : '';
+            document.getElementById('email-btn').disabled = withEmail === 0;
+        }
+
+        // ─── Detail Panel ───
+        function openDetail(id) {
+            const o = allOutlets.find(x => x.id === id);
+            if (!o) return;
+            const langName = allLanguages[o.language] || o.language;
+            document.getElementById('detail-content').innerHTML = `
+                <div class="dp-header">
+                    <div class="dp-icon">${o.favicon_url ? `<img src="${esc(o.favicon_url)}" onerror="this.parentElement.textContent='${esc(o.name).charAt(0)}'">` : esc(o.name).charAt(0)}</div>
+                    <div>
+                        <div class="dp-name">${esc(o.name)}</div>
+                        <div class="dp-url"><a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.url)}</a></div>
+                    </div>
+                </div>
+
+                ${o.description ? `<div class="dp-section"><div class="dp-desc">${esc(o.description)}</div></div>` : ''}
+
+                <div class="dp-section">
+                    <div class="dp-section-title">Contact Information</div>
+                    <div class="dp-grid">
+                        <div class="dp-field"><div class="dp-label">Email</div><div class="dp-value">${o.contact_email ? `<a href="mailto:${esc(o.contact_email)}">${esc(o.contact_email)}</a>` : '<span class="no-data">Not found yet</span>'}</div></div>
+                        <div class="dp-field"><div class="dp-label">Phone</div><div class="dp-value mono">${o.contact_phone ? esc(o.contact_phone) : '<span class="no-data">Not found yet</span>'}</div></div>
+                        <div class="dp-field"><div class="dp-label">Contact Page</div><div class="dp-value">${o.contact_page_url ? `<a href="${esc(o.contact_page_url)}" target="_blank">${esc(o.contact_page_url)}</a>` : '<span class="no-data">-</span>'}</div></div>
+                    </div>
+                </div>
+
+                <div class="dp-section">
+                    <div class="dp-section-title">Outlet Details</div>
+                    <div class="dp-grid">
+                        <div class="dp-field"><div class="dp-label">Language</div><div class="dp-value">${esc(langName)} (${o.language})</div></div>
+                        <div class="dp-field"><div class="dp-label">Country</div><div class="dp-value">${esc(o.country || '-')}</div></div>
+                        <div class="dp-field"><div class="dp-label">Region</div><div class="dp-value">${esc(o.region || '-')}</div></div>
+                        <div class="dp-field"><div class="dp-label">Category</div><div class="dp-value">${esc(o.category || '-')}</div></div>
+                        <div class="dp-field"><div class="dp-label">Priority</div><div class="dp-value">${o.priority}</div></div>
+                        <div class="dp-field"><div class="dp-label">Scraper Type</div><div class="dp-value">${esc(o.scraper_type)}</div></div>
+                        <div class="dp-field"><div class="dp-label">Status</div><div class="dp-value">${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}</div></div>
+                        <div class="dp-field"><div class="dp-label">RSS Feed</div><div class="dp-value mono" style="font-size:0.76rem;word-break:break-all">${o.rss_feed_url ? `<a href="${esc(o.rss_feed_url)}" target="_blank">${esc(o.rss_feed_url)}</a>` : '<span class="no-data">None (generic scraper)</span>'}</div></div>
+                    </div>
+                </div>
+
+                <div class="dp-section">
+                    <div class="dp-section-title">Scraping Stats</div>
+                    <div class="dp-grid">
+                        <div class="dp-field"><div class="dp-label">Articles Scraped</div><div class="dp-value">${(o.total_articles_scraped || 0).toLocaleString()}</div></div>
+                        <div class="dp-field"><div class="dp-label">Avg per Run</div><div class="dp-value">${o.avg_articles_per_scrape ? o.avg_articles_per_scrape.toFixed(1) : '0'}</div></div>
+                        <div class="dp-field"><div class="dp-label">Last Scraped</div><div class="dp-value">${o.last_scraped_at ? new Date(o.last_scraped_at).toLocaleString() : 'Never'}</div></div>
+                        <div class="dp-field"><div class="dp-label">Failures</div><div class="dp-value" style="color:${o.consecutive_failures > 0 ? 'var(--red)' : 'inherit'}">${o.consecutive_failures || 0}</div></div>
+                    </div>
+                </div>
+
+                ${o.social_twitter || o.social_facebook || o.social_youtube ? `<div class="dp-section">
+                    <div class="dp-section-title">Social</div>
+                    <div class="dp-grid">
+                        ${o.social_twitter ? `<div class="dp-field"><div class="dp-label">Twitter</div><div class="dp-value"><a href="${esc(o.social_twitter)}" target="_blank">${esc(o.social_twitter)}</a></div></div>` : ''}
+                        ${o.social_facebook ? `<div class="dp-field"><div class="dp-label">Facebook</div><div class="dp-value"><a href="${esc(o.social_facebook)}" target="_blank">${esc(o.social_facebook)}</a></div></div>` : ''}
+                        ${o.social_youtube ? `<div class="dp-field"><div class="dp-label">YouTube</div><div class="dp-value"><a href="${esc(o.social_youtube)}" target="_blank">${esc(o.social_youtube)}</a></div></div>` : ''}
+                    </div>
+                </div>` : ''}
+
+                <div class="dp-section">
+                    <div class="dp-actions">
+                        <a class="dp-btn dp-btn-primary" href="${esc(o.url)}" target="_blank">Visit Website</a>
+                        ${o.contact_email ? `<a class="dp-btn dp-btn-ghost" href="mailto:${esc(o.contact_email)}">Send Email</a>` : ''}
+                        ${o.contact_page_url ? `<a class="dp-btn dp-btn-ghost" href="${esc(o.contact_page_url)}" target="_blank">Contact Page</a>` : ''}
+                    </div>
+                </div>
+            `;
+            document.getElementById('detail-overlay').classList.add('open');
+            document.getElementById('detail-panel').classList.add('open');
+        }
+
+        function closeDetail() {
+            document.getElementById('detail-overlay').classList.remove('open');
+            document.getElementById('detail-panel').classList.remove('open');
+        }
+
+        // ─── Email Modal ───
+        async function openEmailModal() {
+            if (!isLoggedIn()) return gprOpenModal('login');
+            const recipients = [...selectedIds]
+                .map(id => allOutlets.find(o => o.id === id))
+                .filter(o => o && o.contact_email);
+            if (!recipients.length) return alert('No selected outlets have email addresses.');
+
+            document.getElementById('em-sub').textContent = `Sending to ${recipients.length} outlet${recipients.length > 1 ? 's' : ''}`;
+            document.getElementById('em-recipients').innerHTML = recipients.map(o =>
+                `<span class="em-chip"><span class="name">${esc(o.name)}</span> ${esc(o.contact_email)}</span>`
+            ).join('');
+            document.getElementById('em-error').classList.remove('visible');
+            document.getElementById('em-success').classList.remove('visible');
+
+            // Load domains
+            try {
+                const res = await fetch('/api/email/domains');
+                const domains = await res.json();
+                const sel = document.getElementById('em-domain');
+                sel.innerHTML = '<option value="">Select domain...</option>' + domains.map(d =>
+                    `<option value="${d.id}">${esc(d.domain)} (${d.status})</option>`
+                ).join('');
+            } catch (e) {}
+
+            document.getElementById('email-overlay').classList.add('open');
+        }
+
+        function closeEmailModal() { document.getElementById('email-overlay').classList.remove('open'); }
+
+        async function handleSendEmail(e) {
+            e.preventDefault();
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const btn = document.getElementById('em-btn');
+            btn.disabled = true; btn.textContent = 'Sending...';
+            document.getElementById('em-error').classList.remove('visible');
+
+            const recipients = [...selectedIds]
+                .map(id => allOutlets.find(o => o.id === id))
+                .filter(o => o && o.contact_email);
+
+            const domainId = parseInt(document.getElementById('em-domain').value);
+            const fromEmail = document.getElementById('em-from').value;
+            const fromName = document.getElementById('em-fromname').value || null;
+            const subject = document.getElementById('em-subject').value;
+            const html = document.getElementById('em-html').value || null;
+            const text = document.getElementById('em-text').value || null;
+
+            let sent = 0, failed = 0;
+            for (const outlet of recipients) {
+                try {
+                    const res = await fetch('/api/email/send', {
+                        method: 'POST', headers: h,
+                        body: JSON.stringify({
+                            domain_id: domainId, from_email: fromEmail, from_name: fromName,
+                            to: [outlet.contact_email], subject, html, text,
+                        }),
+                    });
+                    if (res.ok) sent++; else failed++;
+                } catch (err) { failed++; }
+            }
+
+            if (failed === 0) {
+                const suc = document.getElementById('em-success');
+                suc.textContent = `Successfully sent to ${sent} outlet${sent > 1 ? 's' : ''}!`;
+                suc.classList.add('visible');
+                btn.textContent = 'Sent!';
+                setTimeout(() => closeEmailModal(), 2000);
+            } else {
+                const el = document.getElementById('em-error');
+                el.textContent = `Sent ${sent}, failed ${failed}. Check your domain and email settings.`;
+                el.classList.add('visible');
+            }
+            btn.disabled = false; btn.textContent = `Send to All Selected Outlets`;
         }
 
         function clearFilters() {
@@ -231,9 +526,9 @@
         }
 
         document.getElementById('f-search').addEventListener('keydown', e => { if (e.key === 'Enter') loadOutlets(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDetail(); closeEmailModal(); } });
 
         loadLanguages();
-        loadStats();
         loadOutlets();
     </script>
 </body>
