@@ -51,6 +51,26 @@
         .toolbar-right { margin-left: auto; display: flex; gap: 8px; align-items: flex-end; }
         .selected-count { font-size: 0.8rem; color: var(--accent-light); font-weight: 600; padding: 8px 0; }
 
+        .tbtn-accent { background: var(--accent); color: #fff; }
+        .tbtn-accent:hover { opacity: 0.85; }
+        .tbtn-accent:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        /* Bulk progress overlay */
+        .bulk-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 250; align-items: center; justify-content: center; }
+        .bulk-overlay.open { display: flex; }
+        .bulk-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 560px; max-height: 80vh; overflow-y: auto; position: relative; }
+        .bulk-modal h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+        .bulk-modal .sub { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 16px; }
+        .bulk-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .bulk-progress { margin-bottom: 16px; }
+        .bulk-bar-track { height: 8px; background: var(--bg-primary); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+        .bulk-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
+        .bulk-status { font-size: 0.8rem; color: var(--text-secondary); }
+        .bulk-log { font-family: 'JetBrains Mono', monospace; font-size: 0.73rem; line-height: 1.7; background: var(--bg-primary); border-radius: 8px; padding: 12px; max-height: 300px; overflow-y: auto; color: var(--text-secondary); }
+        .bulk-log .ok { color: var(--green); }
+        .bulk-log .err { color: var(--red); }
+        .bulk-log .info { color: var(--cyan); }
+
         /* Table */
         .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
@@ -177,6 +197,8 @@
             <button class="tbtn tbtn-ghost" onclick="clearFilters()">Clear</button>
             <div class="toolbar-right">
                 <span class="selected-count" id="sel-count"></span>
+                <button class="tbtn tbtn-accent" id="scrape-articles-btn" onclick="bulkScrapeArticles()" disabled>Scrape Articles</button>
+                <button class="tbtn tbtn-accent" id="scrape-contacts-btn" onclick="bulkScrapeContacts()" disabled>Scrape Contacts</button>
                 <button class="tbtn tbtn-green" id="email-btn" onclick="openEmailModal()" disabled>Email Selected</button>
             </div>
         </div>
@@ -247,6 +269,20 @@
                 </div>
                 <button type="submit" class="em-submit" id="em-btn">Send to All Selected Outlets</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Bulk Scrape Progress Modal -->
+    <div class="bulk-overlay" id="bulk-overlay" onclick="if(event.target===this && !bulkRunning)closeBulkModal()">
+        <div class="bulk-modal">
+            <button class="close-btn" onclick="if(!bulkRunning)closeBulkModal()">&times;</button>
+            <h2 id="bulk-title">Scraping...</h2>
+            <div class="sub" id="bulk-sub"></div>
+            <div class="bulk-progress">
+                <div class="bulk-bar-track"><div class="bulk-bar-fill" id="bulk-bar" style="width:0%"></div></div>
+                <div class="bulk-status" id="bulk-status">Starting...</div>
+            </div>
+            <div class="bulk-log" id="bulk-log"></div>
         </div>
     </div>
 
@@ -369,8 +405,10 @@
         function updateSelectionUI() {
             const count = selectedIds.size;
             const withEmail = [...selectedIds].filter(id => allOutlets.find(o => o.id === id)?.contact_email).length;
-            document.getElementById('sel-count').textContent = count ? `${count} selected (${withEmail} with email)` : '';
+            document.getElementById('sel-count').textContent = count ? `${count} selected` : '';
             document.getElementById('email-btn').disabled = withEmail === 0;
+            document.getElementById('scrape-articles-btn').disabled = count === 0;
+            document.getElementById('scrape-contacts-btn').disabled = count === 0;
         }
 
         // ─── Detail Panel ───
@@ -580,7 +618,102 @@
         }
 
         document.getElementById('f-search').addEventListener('keydown', e => { if (e.key === 'Enter') loadOutlets(); });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDetail(); closeEmailModal(); } });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDetail(); closeEmailModal(); if(!bulkRunning) closeBulkModal(); } });
+
+        // ─── Bulk Scrape ───
+        let bulkRunning = false;
+
+        function openBulkModal(title, sub) {
+            document.getElementById('bulk-title').textContent = title;
+            document.getElementById('bulk-sub').textContent = sub;
+            document.getElementById('bulk-bar').style.width = '0%';
+            document.getElementById('bulk-status').textContent = 'Starting...';
+            document.getElementById('bulk-log').innerHTML = '';
+            document.getElementById('bulk-overlay').classList.add('open');
+        }
+        function closeBulkModal() { document.getElementById('bulk-overlay').classList.remove('open'); }
+
+        function bulkLog(msg, cls = '') {
+            const log = document.getElementById('bulk-log');
+            log.innerHTML += `<div><span class="${cls}">${msg}</span></div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function bulkScrapeArticles() {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const ids = [...selectedIds];
+            if (!ids.length) return;
+            const outlets = ids.map(id => allOutlets.find(o => o.id === id)).filter(Boolean);
+
+            openBulkModal('Scraping Articles', `Processing ${outlets.length} outlet${outlets.length > 1 ? 's' : ''} sequentially`);
+            bulkRunning = true;
+            let done = 0, totalNew = 0, totalFound = 0, errors = 0;
+
+            for (const o of outlets) {
+                const pct = Math.round((done / outlets.length) * 100);
+                document.getElementById('bulk-bar').style.width = pct + '%';
+                document.getElementById('bulk-status').textContent = `${done}/${outlets.length} — Scraping ${o.name}...`;
+                bulkLog(`Scraping ${o.name} (${o.language})...`, 'info');
+
+                try {
+                    const res = await fetch(`/api/scraper/run/${o.id}?extract_content=true&run_async=false`, { method: 'POST', headers: h });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.detail || 'Server error');
+                    totalFound += data.articles_found || 0;
+                    totalNew += data.new_articles || 0;
+                    bulkLog(`  ${o.name}: found ${data.articles_found || 0}, new ${data.new_articles || 0}, status: ${data.status}`, data.status === 'success' ? 'ok' : 'err');
+                    if ((data.errors || []).length > 0) { errors++; data.errors.forEach(e => bulkLog('  Error: ' + e, 'err')); }
+                } catch (e) {
+                    errors++;
+                    bulkLog(`  ${o.name}: FAILED — ${e.message}`, 'err');
+                }
+                done++;
+            }
+
+            document.getElementById('bulk-bar').style.width = '100%';
+            document.getElementById('bulk-status').textContent = `Done: ${done} outlets, ${totalFound} found, ${totalNew} new, ${errors} errors`;
+            bulkLog(`\nComplete: ${totalFound} articles found, ${totalNew} new across ${done} outlets`, 'ok');
+            bulkRunning = false;
+            loadOutlets();
+        }
+
+        async function bulkScrapeContacts() {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const ids = [...selectedIds];
+            if (!ids.length) return;
+            const outlets = ids.map(id => allOutlets.find(o => o.id === id)).filter(Boolean);
+
+            openBulkModal('Scraping Contact Data', `Scanning ${outlets.length} outlet website${outlets.length > 1 ? 's' : ''} for emails and phone numbers`);
+            bulkRunning = true;
+            let done = 0, found = 0, errors = 0;
+
+            for (const o of outlets) {
+                const pct = Math.round((done / outlets.length) * 100);
+                document.getElementById('bulk-bar').style.width = pct + '%';
+                document.getElementById('bulk-status').textContent = `${done}/${outlets.length} — Scanning ${o.name}...`;
+                bulkLog(`Scanning ${o.name} (${o.url})...`, 'info');
+
+                try {
+                    const res = await fetch(`/api/scraper/run/${o.id}?extract_content=false&run_async=false`, { method: 'POST', headers: h });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.detail || 'Server error');
+                    bulkLog(`  ${o.name}: ${data.status}`, data.status === 'success' ? 'ok' : 'err');
+                    if (data.status === 'success') found++;
+                } catch (e) {
+                    errors++;
+                    bulkLog(`  ${o.name}: FAILED — ${e.message}`, 'err');
+                }
+                done++;
+            }
+
+            document.getElementById('bulk-bar').style.width = '100%';
+            document.getElementById('bulk-status').textContent = `Done: ${done} scanned, ${found} succeeded, ${errors} errors`;
+            bulkLog(`\nComplete: ${done} outlets scanned. Refresh to see updated contact info.`, 'ok');
+            bulkRunning = false;
+            loadOutlets();
+        }
 
         loadLanguages();
         loadOutlets();
