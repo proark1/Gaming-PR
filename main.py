@@ -15,7 +15,11 @@ from app.routers.webhooks import router as webhooks_router
 from app.routers.export import router as export_router
 from app.routers.websocket import router as websocket_router
 from app.routers.email import router as email_router
+from app.routers.investors import router as investors_router
+from app.routers.streamers import router as streamers_router
 from app.seed.outlets import seed_outlets
+from app.seed.investors import seed_investors
+from app.seed.streamers import seed_streamers
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -65,8 +69,14 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        added = seed_outlets(db)
-        logger.info(f"Database initialized. {added} new outlets seeded.")
+        outlets_added = seed_outlets(db)
+        investors_added = seed_investors(db)
+        streamers_added = seed_streamers(db)
+        logger.info(
+            f"Database initialized. "
+            f"{outlets_added} outlets, {investors_added} investors, "
+            f"{streamers_added} streamers seeded."
+        )
     finally:
         db.close()
 
@@ -132,6 +142,8 @@ app.include_router(webhooks_router)
 app.include_router(export_router)
 app.include_router(websocket_router)
 app.include_router(email_router)
+app.include_router(investors_router)
+app.include_router(streamers_router)
 
 
 @app.get("/", response_class=HTMLResponse)
