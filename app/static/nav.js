@@ -249,6 +249,11 @@
         document.head.appendChild(style);
     }
 
+    // ─── Global Category Constants (must be before renderSidebar) ───
+    const GPR_CAT_KEY = 'gpr_category';
+    const GPR_CAT_LABELS = { gaming_news: 'News Outlets', gaming_vc: 'Gaming VCs', gaming_streamer: 'Streamers' };
+    const GPR_CAT_CONTENT = { gaming_news: 'Articles', gaming_vc: 'Posts & News', gaming_streamer: 'Videos & Streams' };
+
     function slink(href, icon, label, id) {
         const cls = id === activePage ? ' active' : '';
         return `<a href="${href}" class="sb-link${cls}"><span class="sb-icon">${icon}</span><span class="sb-text">${label}</span></a>`;
@@ -433,11 +438,7 @@
         });
     }
 
-    // ─── Global Category ───
-    const GPR_CAT_KEY = 'gpr_category';
-    const GPR_CAT_LABELS = { gaming_news: 'News Outlets', gaming_vc: 'Gaming VCs', gaming_streamer: 'Streamers' };
-    const GPR_CAT_CONTENT = { gaming_news: 'Articles', gaming_vc: 'Posts & News', gaming_streamer: 'Videos & Streams' };
-
+    // ─── Global Category Functions ───
     window.gprGetCategory = function () { return localStorage.getItem(GPR_CAT_KEY) || ''; };
     window.gprSetCategory = function (cat) {
         const current = localStorage.getItem(GPR_CAT_KEY);
