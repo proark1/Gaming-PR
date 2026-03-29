@@ -149,6 +149,7 @@ def process_retry_queue(db: Session) -> dict:
 
 def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = True) -> dict:
     """Scrape a single outlet with all v4 features integrated."""
+    import requests as _requests
     start = time.monotonic()
 
     result = {
@@ -202,130 +203,195 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
 
     result["articles_found"] = len(raw_articles)
 
-    # Phase 3: Process articles
+    # Phase 3: Pre-load data to avoid N+1 queries
+    # Bulk-load existing articles for all candidate URLs (1 query instead of N)
+    candidate_urls = [a.get("url", "") for a in raw_articles if a.get("url")]
+    existing_map: dict[str, ScrapedArticle] = {}
+    if candidate_urls:
+        for art in db.query(ScrapedArticle).filter(ScrapedArticle.url.in_(candidate_urls)).all():
+            existing_map[art.url] = art
+
+    # Pre-load recent SimHashes into memory (1 query instead of N)
+    recent_hashes: set[str] = set()
+    if extract_content and settings.FULL_CONTENT_EXTRACTION:
+        recent_hashes = {
+            row[0] for row in
+            db.query(ScrapedArticle.content_hash)
+            .filter(ScrapedArticle.content_hash.isnot(None))
+            .order_by(ScrapedArticle.scraped_at.desc())
+            .limit(500)
+            .all()
+            if row[0]
+        }
+
+    # Phase 4: Categorize articles into new vs existing-needing-update
+    new_articles_data: list[dict] = []
+    existing_to_update: list[tuple[ScrapedArticle, dict]] = []
+    existing_needing_content: list[ScrapedArticle] = []
+
     for article_data in raw_articles:
         url = article_data.get("url", "")
         if not url:
             continue
-
-        # robots.txt check
         if settings.RESPECT_ROBOTS_TXT and not can_fetch(url):
             result["robots_blocked"] += 1
             continue
+        existing = existing_map.get(url)
+        if existing:
+            existing_to_update.append((existing, article_data))
+            if not existing.full_body_text and extract_content and settings.FULL_CONTENT_EXTRACTION:
+                existing_needing_content.append(existing)
+        else:
+            new_articles_data.append(article_data)
 
+    # Phase 5: Extract full content in parallel for all articles needing it
+    # Shared HTTP session reuses TCP connections (keep-alive) across articles from same domain
+    extracted: dict[str, dict] = {}
+
+    urls_needing_extraction = (
+        [a.get("url", "") for a in new_articles_data if a.get("url")]
+        + [e.url for e in existing_needing_content]
+    )
+
+    if urls_needing_extraction and extract_content and settings.FULL_CONTENT_EXTRACTION:
+        http_session = _requests.Session()
         try:
-            existing = db.query(ScrapedArticle).filter(ScrapedArticle.url == url).first()
+            def _extract_one(url: str) -> tuple[str, dict]:
+                time.sleep(settings.SCRAPE_RATE_LIMIT_DELAY)
+                return url, extract_full_article(
+                    url,
+                    timeout=settings.SCRAPE_REQUEST_TIMEOUT,
+                    language=outlet.language,
+                    use_stealth=settings.ENABLE_STEALTH_HEADERS,
+                    use_browser_fallback=settings.ENABLE_BROWSER_FALLBACK,
+                    session=http_session,
+                )
 
-            if existing:
-                # Save old content hash for change tracking
-                old_hash = existing.content_hash
-                old_title = existing.title
+            max_workers = min(3, len(urls_needing_extraction))
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                for url, full_data in executor.map(_extract_one, urls_needing_extraction):
+                    extracted[url] = full_data
+        finally:
+            http_session.close()
 
-                updated = _update_existing_article(db, existing, article_data, extract_content, outlet.language)
-                if updated:
-                    result["updated_articles"] += 1
-                    # Content change tracking - compare new content against saved old hash
-                    if settings.ENABLE_CHANGE_TRACKING and existing.full_body_text and old_hash:
-                        try:
-                            from app.services.change_tracker import track_change
-                            changed = track_change(
-                                db, existing, existing.full_body_text,
-                                existing.title, old_hash_override=old_hash,
-                            )
-                            if changed:
-                                result["content_changes_detected"] += 1
-                        except Exception as e:
-                            logger.debug(f"Change tracking error: {e}")
-                continue
+    # Phase 6: Process existing articles (update with pre-fetched content)
+    for existing, article_data in existing_to_update:
+        try:
+            old_hash = existing.content_hash
+            prefetched = extracted.get(existing.url)
+            updated = _update_existing_article(
+                db, existing, article_data, extract_content, outlet.language,
+                prefetched_full_data=prefetched,
+            )
+            if updated:
+                result["updated_articles"] += 1
+                if settings.ENABLE_CHANGE_TRACKING and existing.full_body_text and old_hash:
+                    try:
+                        from app.services.change_tracker import track_change
+                        changed = track_change(
+                            db, existing, existing.full_body_text,
+                            existing.title, old_hash_override=old_hash,
+                        )
+                        if changed:
+                            result["content_changes_detected"] += 1
+                    except Exception as e:
+                        logger.debug(f"Change tracking error: {e}")
+        except Exception as e:
+            logger.error(f"Error updating article {existing.url}: {e}")
+            result["errors"].append(f"{existing.url}: {e}")
 
-            # New article - create it
+    # Phase 7: Build new article objects (no DB yet)
+    new_scraped: list[ScrapedArticle] = []
+    retry_candidates: list[tuple[ScrapedArticle, str]] = []
+
+    for article_data in new_articles_data:
+        url = article_data.get("url", "")
+        if not url:
+            continue
+        try:
             scraped = _create_scraped_article(outlet, article_data)
-            db.add(scraped)
-            db.flush()
+            full_data = extracted.get(url)
 
-            # Extract full content
-            if extract_content and settings.FULL_CONTENT_EXTRACTION:
-                try:
-                    time.sleep(settings.SCRAPE_RATE_LIMIT_DELAY)
-                    full_data = extract_full_article(
-                        url,
-                        timeout=settings.SCRAPE_REQUEST_TIMEOUT,
-                        language=outlet.language,
-                        use_stealth=settings.ENABLE_STEALTH_HEADERS,
-                        use_browser_fallback=settings.ENABLE_BROWSER_FALLBACK,
-                    )
-                    _apply_full_content(scraped, full_data)
+            if full_data:
+                _apply_full_content(scraped, full_data)
+                if scraped.is_full_content:
+                    result["full_content_extracted"] += 1
+                if full_data.get("rendered_by") == "playwright":
+                    result["browser_rendered"] += 1
 
-                    if scraped.is_full_content:
-                        result["full_content_extracted"] += 1
-                    if full_data.get("rendered_by") == "playwright":
-                        result["browser_rendered"] += 1
+                # SimHash dedup against in-memory set (no DB query per article)
+                if scraped.full_body_text:
+                    simhash = compute_simhash(scraped.full_body_text)
+                    scraped.content_hash = str(simhash)
+                    if _is_near_duplicate_set(simhash, recent_hashes):
+                        result["duplicates_skipped"] += 1
+                        continue
+                    recent_hashes.add(str(simhash))
 
-                    # SimHash dedup check
-                    if scraped.full_body_text:
-                        simhash = compute_simhash(scraped.full_body_text)
-                        scraped.content_hash = str(simhash)
-                        if _is_near_duplicate(db, simhash, scraped.id):
-                            result["duplicates_skipped"] += 1
+            elif extract_content and settings.FULL_CONTENT_EXTRACTION:
+                # Extraction was attempted but yielded no content
+                scraped.extraction_errors = ["Content extraction failed"]
+                if settings.ENABLE_RETRY_QUEUE:
+                    retry_candidates.append((scraped, url))
 
-                    # Initial change tracking snapshot
-                    if settings.ENABLE_CHANGE_TRACKING and scraped.full_body_text:
-                        try:
-                            from app.services.change_tracker import track_change
-                            track_change(db, scraped, scraped.full_body_text, scraped.title)
-                        except Exception:
-                            pass
-
-                except Exception as e:
-                    logger.warning(f"Content extraction failed for {url}: {e}")
-                    if scraped.extraction_errors is None:
-                        scraped.extraction_errors = []
-                    scraped.extraction_errors.append(f"Full extraction failed: {e}")
-
-                    # Queue for retry
-                    if settings.ENABLE_RETRY_QUEUE:
-                        retry_queue.enqueue(scraped.id, url, outlet.id, str(e))
-                        result["retries_queued"] += 1
-
+            new_scraped.append(scraped)
             result["new_articles"] += 1
-
-            # Notify webhooks about new article
-            if settings.ENABLE_WEBHOOKS:
-                try:
-                    from app.services.webhook_service import notify_new_article
-                    notify_new_article(db, {
-                        "article_id": scraped.id,
-                        "title": scraped.title,
-                        "url": scraped.url,
-                        "language": scraped.language,
-                        "article_type": scraped.article_type,
-                        "outlet_id": outlet.id,
-                        "outlet_name": outlet.name,
-                    })
-                except Exception as e:
-                    logger.debug(f"Webhook notification error: {e}")
-
-            # Broadcast to WebSocket clients (best-effort, handles sync/async contexts)
-            try:
-                from app.routers.websocket import ws_manager
-                if ws_manager.connection_count > 0:
-                    _broadcast_to_websocket(ws_manager, {
-                        "article_id": scraped.id,
-                        "title": scraped.title,
-                        "url": scraped.url,
-                        "language": scraped.language,
-                        "article_type": scraped.article_type,
-                        "outlet_id": outlet.id,
-                        "outlet_name": outlet.name,
-                        "author": scraped.author,
-                        "featured_image_url": scraped.featured_image_url,
-                    })
-            except Exception:
-                pass  # WebSocket is best-effort
 
         except Exception as e:
             logger.error(f"Error processing article {url}: {e}")
             result["errors"].append(f"{url}: {e}")
+
+    # Phase 8: Bulk save new articles + single flush (assigns IDs)
+    if new_scraped:
+        for s in new_scraped:
+            db.add(s)
+        db.flush()
+
+    # Phase 9: Post-flush operations (change tracking, retry queue, webhooks, websocket)
+    for scraped in new_scraped:
+        if settings.ENABLE_CHANGE_TRACKING and scraped.full_body_text:
+            try:
+                from app.services.change_tracker import track_change
+                track_change(db, scraped, scraped.full_body_text, scraped.title)
+            except Exception:
+                pass
+
+        if settings.ENABLE_WEBHOOKS:
+            try:
+                from app.services.webhook_service import notify_new_article
+                notify_new_article(db, {
+                    "article_id": scraped.id,
+                    "title": scraped.title,
+                    "url": scraped.url,
+                    "language": scraped.language,
+                    "article_type": scraped.article_type,
+                    "outlet_id": outlet.id,
+                    "outlet_name": outlet.name,
+                })
+            except Exception as e:
+                logger.debug(f"Webhook notification error: {e}")
+
+        try:
+            from app.routers.websocket import ws_manager
+            if ws_manager.connection_count > 0:
+                _broadcast_to_websocket(ws_manager, {
+                    "article_id": scraped.id,
+                    "title": scraped.title,
+                    "url": scraped.url,
+                    "language": scraped.language,
+                    "article_type": scraped.article_type,
+                    "outlet_id": outlet.id,
+                    "outlet_name": outlet.name,
+                    "author": scraped.author,
+                    "featured_image_url": scraped.featured_image_url,
+                })
+        except Exception:
+            pass  # WebSocket is best-effort
+
+    for scraped, url in retry_candidates:
+        if scraped.id:
+            retry_queue.enqueue(scraped.id, url, outlet.id, "Content extraction failed")
+            result["retries_queued"] += 1
 
     db.commit()
     result["duration_seconds"] = round(time.monotonic() - start, 2)
@@ -584,6 +650,17 @@ def _is_near_duplicate(db: Session, simhash: int, exclude_id: int) -> bool:
     return False
 
 
+def _is_near_duplicate_set(simhash: int, recent_hashes: set[str]) -> bool:
+    """Check if a SimHash is near-duplicate using an in-memory set (no DB query)."""
+    for existing_hash in recent_hashes:
+        try:
+            if is_duplicate(simhash, int(existing_hash)):
+                return True
+        except (ValueError, TypeError):
+            continue
+    return False
+
+
 def _create_scraped_article(outlet: GamingOutlet, data: dict) -> ScrapedArticle:
     """Create a ScrapedArticle from scraped data."""
     return ScrapedArticle(
@@ -663,25 +740,29 @@ def _apply_full_content(article: ScrapedArticle, data: dict):
 
 
 def _update_existing_article(db: Session, existing: ScrapedArticle, new_data: dict,
-                              extract_content: bool, language: str = "en") -> bool:
+                              extract_content: bool, language: str = "en",
+                              prefetched_full_data: dict = None) -> bool:
     """Update an existing article if new data is better."""
     updated = False
 
     if not existing.full_body_text and extract_content and settings.FULL_CONTENT_EXTRACTION:
-        try:
-            time.sleep(settings.SCRAPE_RATE_LIMIT_DELAY)
-            full_data = extract_full_article(
-                existing.url,
-                timeout=settings.SCRAPE_REQUEST_TIMEOUT,
-                language=language,
-                use_stealth=settings.ENABLE_STEALTH_HEADERS,
-                use_browser_fallback=settings.ENABLE_BROWSER_FALLBACK,
-            )
-            if full_data.get("full_body_text"):
-                _apply_full_content(existing, full_data)
-                updated = True
-        except Exception as e:
-            logger.warning(f"Content extraction failed for existing article {existing.url}: {e}")
+        full_data = prefetched_full_data
+        if full_data is None:
+            # Fallback: extract synchronously if not pre-fetched
+            try:
+                time.sleep(settings.SCRAPE_RATE_LIMIT_DELAY)
+                full_data = extract_full_article(
+                    existing.url,
+                    timeout=settings.SCRAPE_REQUEST_TIMEOUT,
+                    language=language,
+                    use_stealth=settings.ENABLE_STEALTH_HEADERS,
+                    use_browser_fallback=settings.ENABLE_BROWSER_FALLBACK,
+                )
+            except Exception as e:
+                logger.warning(f"Content extraction failed for existing article {existing.url}: {e}")
+        if full_data and full_data.get("full_body_text"):
+            _apply_full_content(existing, full_data)
+            updated = True
 
     if not existing.summary and new_data.get("summary"):
         existing.summary = new_data["summary"]

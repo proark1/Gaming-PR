@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
-from sqlalchemy import func
+from sqlalchemy import func, case
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -160,8 +160,13 @@ def get_article_history(article_id: int, db: Session = Depends(get_db)):
 @router.get("/stats")
 def scraper_stats(db: Session = Depends(get_db)):
     """Get scraper statistics."""
-    total_articles = db.query(func.count(ScrapedArticle.id)).scalar()
-    full_content = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.is_full_content == True).scalar()
+    # Single aggregate query instead of 2 separate scalar queries
+    counts = db.query(
+        func.count(ScrapedArticle.id).label("total"),
+        func.sum(case((ScrapedArticle.is_full_content == True, 1), else_=0)).label("full_content"),
+    ).one()
+    total_articles = counts.total or 0
+    full_content = counts.full_content or 0
     by_language = dict(
         db.query(ScrapedArticle.language, func.count(ScrapedArticle.id))
         .group_by(ScrapedArticle.language)

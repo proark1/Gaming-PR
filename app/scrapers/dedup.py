@@ -9,6 +9,9 @@ import hashlib
 import re
 from typing import Optional
 
+# Compiled once at module level — avoids re-compiling the pattern on every call
+_WORD_RE = re.compile(r"\w+")
+
 
 def compute_simhash(text: str) -> int:
     """
@@ -65,12 +68,15 @@ def similarity_score(hash1: int, hash2: int) -> float:
 
 def _tokenize(text: str) -> list[str]:
     """Tokenize text into shingles (3-grams of words) for SimHash."""
-    words = re.findall(r"\w+", text.lower())
+    words = _WORD_RE.findall(text.lower())
+
+    # Cap to 2000 words — head + tail sample is sufficient for near-duplicate
+    # detection and avoids building 10K+ shingles for long articles
+    if len(words) > 2000:
+        words = words[:1000] + words[-1000:]
+
     if len(words) < 3:
         return words
 
     # Use 3-word shingles for better similarity detection
-    shingles = []
-    for i in range(len(words) - 2):
-        shingles.append(f"{words[i]}_{words[i+1]}_{words[i+2]}")
-    return shingles
+    return [f"{words[i]}_{words[i+1]}_{words[i+2]}" for i in range(len(words) - 2)]

@@ -20,7 +20,11 @@ from app.routers.export import router as export_router
 from app.routers.websocket import router as websocket_router
 from app.routers.email import router as email_router
 from app.routers.auth import router as auth_router
+from app.routers.investors import router as investors_router
+from app.routers.streamers import router as streamers_router
 from app.seed.outlets import seed_outlets
+from app.seed.investors import seed_investors
+from app.seed.streamers import seed_streamers
 from app.services.auth_service import seed_admin_user
 
 logging.basicConfig(level=logging.INFO)
@@ -101,8 +105,14 @@ async def lifespan(app: FastAPI):
     _auto_migrate_columns()
     db = SessionLocal()
     try:
-        added = seed_outlets(db)
-        logger.info(f"Database initialized. {added} new outlets seeded.")
+        outlets_added = seed_outlets(db)
+        investors_added = seed_investors(db)
+        streamers_added = seed_streamers(db)
+        logger.info(
+            f"Database initialized. "
+            f"{outlets_added} outlets, {investors_added} investors, "
+            f"{streamers_added} streamers seeded."
+        )
         admin = seed_admin_user(db, email="assad.dar@gmail.com", username="assad_dar")
         if admin:
             logger.info(f"Admin user ready: {admin.email} (id={admin.id})")
@@ -200,6 +210,8 @@ app.include_router(export_router)
 app.include_router(websocket_router)
 app.include_router(email_router)
 app.include_router(auth_router)
+app.include_router(investors_router)
+app.include_router(streamers_router)
 
 # Serve shared static assets (nav.js, etc.)
 _static_dir = Path(__file__).parent / "app" / "static"
