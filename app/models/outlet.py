@@ -37,6 +37,7 @@ class GamingOutlet(Base):
     contact_email = Column(String(500), nullable=True)
     contact_phone = Column(String(100), nullable=True)
     contact_page_url = Column(String(2048), nullable=True)
+    contact_form_url = Column(String(2048), nullable=True)
 
     # Scraping state
     last_scraped_at = Column(DateTime, nullable=True)

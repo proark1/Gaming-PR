@@ -26,6 +26,7 @@ class OutletBase(BaseModel):
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
     contact_page_url: Optional[str] = None
+    contact_form_url: Optional[str] = None
 
 
 class OutletCreate(OutletBase):
@@ -51,6 +52,7 @@ class OutletUpdate(BaseModel):
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
     contact_page_url: Optional[str] = None
+    contact_form_url: Optional[str] = None
     scraper_config: Optional[dict] = None
 
 

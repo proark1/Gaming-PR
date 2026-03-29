@@ -844,3 +844,97 @@ def _needs_browser_check(url: str, html_text: str) -> bool:
         return needs_browser(url, html_text)
     except Exception:
         return False
+
+
+# URL path patterns that commonly host contact or submission forms
+_CONTACT_FORM_PATHS = [
+    "/contact", "/contact-us", "/contactus", "/contact_us",
+    "/submit", "/submit-news", "/submit-tip", "/tips", "/tip",
+    "/press", "/press-contact", "/media", "/media-contact",
+    "/about/contact", "/about/press", "/pitch",
+    "/advertise", "/partnership", "/partnerships",
+    "/feedback", "/get-in-touch", "/reach-us",
+]
+
+# Keywords in link text that suggest a contact/submit page
+_CONTACT_LINK_KEYWORDS = [
+    "contact", "submit", "tip", "tips", "press", "media",
+    "pitch", "advertise", "feedback", "get in touch", "reach us",
+    "reach out", "send us", "write for", "contribute",
+]
+
+
+def detect_contact_form_url(outlet_url: str, timeout: int = 10,
+                             language: str = "en",
+                             use_stealth: bool = True) -> Optional[str]:
+    """
+    Detect the URL of a contact or submission form on an outlet's website.
+
+    Fetches the outlet homepage, discovers candidate contact/submit pages from
+    known path patterns and link text, then checks each candidate for an HTML
+    <form> element.  Returns the first URL that contains a contact/submit form,
+    or None if none is found.
+    """
+    parsed_base = urlparse(outlet_url)
+    base = f"{parsed_base.scheme}://{parsed_base.netloc}"
+
+    headers = HEADERS
+    if use_stealth:
+        try:
+            headers = get_session_headers(parsed_base.netloc, language=language)
+        except Exception:
+            pass
+
+    def _has_contact_form(url: str) -> bool:
+        """Return True if the page at *url* contains a form that looks like a contact/submit form."""
+        try:
+            resp = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+            if resp.status_code != 200:
+                return False
+            soup = BeautifulSoup(resp.text, "lxml")
+            for form in soup.find_all("form"):
+                # Look for tell-tale input names or submit buttons suggesting contact/submit intent
+                form_html = str(form).lower()
+                contact_signals = [
+                    "name", "email", "message", "subject", "contact",
+                    "submit", "send", "tip", "press",
+                ]
+                if any(signal in form_html for signal in contact_signals):
+                    return True
+        except Exception:
+            pass
+        return False
+
+    # Build candidate URL list ---------------------------------------------------
+    candidates: list[str] = []
+    seen_paths: set[str] = set()
+
+    # 1. Well-known paths
+    for path in _CONTACT_FORM_PATHS:
+        candidates.append(base + path)
+        seen_paths.add(path)
+
+    # 2. Links found on the homepage that hint at contact/submit pages
+    try:
+        resp = requests.get(outlet_url, headers=headers, timeout=timeout, allow_redirects=True)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, "lxml")
+            for a in soup.find_all("a", href=True):
+                href = a.get("href", "").strip()
+                text = a.get_text(strip=True).lower()
+                if any(kw in text for kw in _CONTACT_LINK_KEYWORDS):
+                    full = urljoin(outlet_url, href)
+                    path = urlparse(full).path.rstrip("/") or "/"
+                    if urlparse(full).netloc == parsed_base.netloc and path not in seen_paths:
+                        candidates.append(full)
+                        seen_paths.add(path)
+    except Exception:
+        pass
+
+    # Check each candidate -------------------------------------------------------
+    for url in candidates:
+        if _has_contact_form(url):
+            logger.debug(f"Contact form found at {url}")
+            return url
+
+    return None

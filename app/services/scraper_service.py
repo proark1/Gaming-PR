@@ -28,7 +28,7 @@ from app.scrapers.generic_rss import RssScraper
 from app.scrapers.site_specific.generic_html import GenericHtmlScraper
 from app.scrapers.site_specific.vc_scraper import VcScraper
 from app.scrapers.site_specific.streamer_scraper import StreamerScraper
-from app.scrapers.content_extractor import extract_full_article
+from app.scrapers.content_extractor import extract_full_article, detect_contact_form_url
 from app.scrapers.dedup import compute_simhash, is_duplicate
 from app.scrapers.robots import can_fetch
 from app.scrapers.sitemap import discover_sitemap_urls, parse_sitemap
@@ -425,6 +425,22 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
         if contact.get("contact_page_url") and not outlet.contact_page_url:
             outlet.contact_page_url = contact["contact_page_url"]
             changed = True
+
+        # Detect contact/submit form URL for all categories (if not already known)
+        if not outlet.contact_form_url:
+            try:
+                form_url = detect_contact_form_url(
+                    outlet.url,
+                    timeout=settings.SCRAPE_REQUEST_TIMEOUT,
+                    language=outlet.language,
+                    use_stealth=settings.ENABLE_STEALTH_HEADERS,
+                )
+                if form_url:
+                    outlet.contact_form_url = form_url
+                    changed = True
+                    logger.info(f"Contact form URL found for {outlet.name}: {form_url}")
+            except Exception as e:
+                logger.debug(f"Contact form detection failed for {outlet.name}: {e}")
 
         # Update social links (only if not already set)
         social_fields = [
