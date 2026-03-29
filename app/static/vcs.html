@@ -200,7 +200,7 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <tr><td colspan="9" class="empty-state"><div class="icon">💰</div><div class="msg">Loading VC firms...</div></td></tr>
+                    <tr><td colspan="9"><div style="padding:20px"><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div></div></td></tr>
                 </tbody>
             </table>
         </div>
@@ -277,7 +277,7 @@
         function renderTable(vcs) {
             const tbody = document.getElementById('tableBody');
             if (!vcs.length) {
-                tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><div class="icon">💰</div><div class="msg">No VC firms found</div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9"><div class="gpr-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div class="msg">No VC firms found</div><div class="hint">Try adjusting your filters</div></div></td></tr>';
                 return;
             }
             tbody.innerHTML = vcs.map(v => {
@@ -492,18 +492,8 @@
             loadVCs();
         }
 
-        function timeAgo(dateStr) {
-            const diff = Date.now() - new Date(dateStr).getTime();
-            const mins = Math.floor(diff / 60000);
-            if (mins < 1) return 'Just now';
-            if (mins < 60) return `${mins}m ago`;
-            const hrs = Math.floor(mins / 60);
-            if (hrs < 24) return `${hrs}h ago`;
-            const days = Math.floor(hrs / 24);
-            return `${days}d ago`;
-        }
-
-        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function timeAgo(d) { return typeof gprTimeAgo === 'function' ? gprTimeAgo(d) : (d || ''); }
+        function esc(s) { return typeof gprEsc === 'function' ? gprEsc(s) : (s || ''); }
 
         async function bulkScrapeContacts() {
             const token = localStorage.getItem('gpr_token');

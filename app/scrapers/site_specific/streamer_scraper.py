@@ -91,6 +91,10 @@ class StreamerScraper(BaseScraper):
             return self._scrape_youtube_html()
 
         feed = feedparser.parse(response.text)
+        if not feed.entries:
+            logger.warning(f"YouTube RSS returned 0 entries for {self.outlet.name}")
+            return self._scrape_youtube_html()
+
         articles = []
 
         for entry in feed.entries[:50]:
@@ -98,6 +102,8 @@ class StreamerScraper(BaseScraper):
             video_url = entry.get("link", "")
             if not video_url and video_id:
                 video_url = f"https://www.youtube.com/watch?v={video_id}"
+            if video_id and len(video_id) != 11:
+                video_id = ""  # Invalid video ID
 
             title = entry.get("title", "")
             if not title or not video_url:
@@ -246,9 +252,18 @@ class StreamerScraper(BaseScraper):
 
     def _extract_twitch_channel(self) -> str | None:
         """Extract Twitch channel name from URL."""
+        # First check scraper_config
+        config = self.outlet.scraper_config or {}
+        if config.get("channel_name"):
+            return config["channel_name"]
         parsed = urlparse(self.outlet.url)
-        path = parsed.path.strip("/").split("/")[0] if parsed.path else ""
-        return path if path and path not in {"clips", "videos", "schedule"} else None
+        parts = [p for p in parsed.path.strip("/").split("/") if p]
+        # Filter out known non-channel path segments
+        skip = {"clips", "videos", "schedule", "about", "chat", "squad"}
+        for part in parts:
+            if part.lower() not in skip:
+                return part
+        return None
 
     def _scrape_twitch_page(self, url: str, channel_name: str, content_type: str) -> list[dict]:
         """Scrape a Twitch page for content links."""

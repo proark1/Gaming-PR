@@ -9,6 +9,7 @@ import logging
 import re
 from urllib.parse import urljoin, urlparse
 
+import feedparser
 import requests
 from bs4 import BeautifulSoup
 
@@ -72,6 +73,14 @@ class VcScraper(BaseScraper):
         articles = []
         seen_urls = set()
 
+        # If RSS feed is available, use it first (most reliable)
+        if self.outlet.rss_feed_url:
+            rss_articles = self._scrape_rss(headers)
+            for a in rss_articles:
+                if a["url"] not in seen_urls:
+                    seen_urls.add(a["url"])
+                    articles.append(a)
+
         # Scrape main page
         main_articles = self._scrape_page(self.outlet.url, headers)
         for a in main_articles:
@@ -82,8 +91,9 @@ class VcScraper(BaseScraper):
         # Scrape blog/news subpages if configured or discoverable
         blog_paths = config.get("blog_paths", ["/blog", "/news", "/insights", "/perspectives"])
         for path in blog_paths:
-            blog_url = urljoin(self.outlet.url, path)
-            if blog_url == self.outlet.url:
+            base = self.outlet.url.rstrip("/")
+            blog_url = base + "/" + path.lstrip("/")
+            if blog_url == self.outlet.url or blog_url in seen_urls:
                 continue
             try:
                 page_articles = self._scrape_page(blog_url, headers)
@@ -97,7 +107,8 @@ class VcScraper(BaseScraper):
         # Scrape portfolio page for company listings
         portfolio_path = config.get("portfolio_url")
         if portfolio_path:
-            portfolio_url = urljoin(self.outlet.url, portfolio_path)
+            base = self.outlet.url.rstrip("/")
+            portfolio_url = base + "/" + portfolio_path.lstrip("/")
             try:
                 portfolio_articles = self._scrape_portfolio(portfolio_url, headers)
                 for a in portfolio_articles:
@@ -113,6 +124,46 @@ class VcScraper(BaseScraper):
 
         logger.info(f"Scraped {len(articles)} articles from {self.outlet.name} (VC)")
         return articles[:100]
+
+    def _scrape_rss(self, headers: dict) -> list[dict]:
+        """Scrape VC blog/news via RSS feed if available."""
+        try:
+            response = requests.get(self.outlet.rss_feed_url, headers=headers, timeout=15)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            logger.debug(f"RSS fetch failed for {self.outlet.name}: {e}")
+            return []
+
+        feed = feedparser.parse(response.text)
+        articles = []
+        for entry in feed.entries[:50]:
+            title = entry.get("title", "")
+            url = entry.get("link", "")
+            if not title or not url:
+                continue
+
+            summary = None
+            if entry.get("summary"):
+                summary = BeautifulSoup(entry.summary, "html.parser").get_text(strip=True)[:500]
+
+            thumbnail = None
+            if hasattr(entry, "media_thumbnail") and entry.media_thumbnail:
+                thumbnail = entry.media_thumbnail[0].get("url")
+            elif hasattr(entry, "media_content") and entry.media_content:
+                thumbnail = entry.media_content[0].get("url")
+
+            articles.append({
+                "title": title,
+                "url": url,
+                "summary": summary,
+                "author": entry.get("author", self.outlet.name),
+                "published_at": entry.get("published", entry.get("updated")),
+                "featured_image_url": thumbnail,
+                "categories": [t.get("term", "") for t in entry.get("tags", []) if t.get("term")],
+            })
+
+        logger.info(f"Scraped {len(articles)} entries from {self.outlet.name} (VC RSS)")
+        return articles
 
     def _scrape_page(self, url: str, headers: dict) -> list[dict]:
         """Scrape a single page for blog posts and news articles."""

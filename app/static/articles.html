@@ -179,7 +179,7 @@
         </div>
 
         <div id="articles-list" class="articles-list">
-            <div class="loading"><div class="spinner"></div> Loading articles...</div>
+            <div style="display:flex;flex-direction:column;gap:12px;padding:8px"><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div></div>
         </div>
     </div>
 
@@ -196,21 +196,9 @@
         const PAGE_SIZE = 30;
         let lastResultCount = 0;
 
-        function timeAgo(iso) {
-            if (!iso) return 'Unknown';
-            const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-            if (diff < 60) return Math.round(diff) + 's ago';
-            if (diff < 3600) return Math.round(diff/60) + 'm ago';
-            if (diff < 86400) return Math.round(diff/3600) + 'h ago';
-            return Math.round(diff/86400) + 'd ago';
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            const d = document.createElement('div');
-            d.textContent = str;
-            return d.innerHTML;
-        }
+        // Use shared utilities from nav.js (gprTimeAgo, gprEsc, gprFmt)
+        function timeAgo(iso) { return typeof gprTimeAgo === 'function' ? gprTimeAgo(iso) : (iso || 'Unknown'); }
+        function escapeHtml(str) { return typeof gprEsc === 'function' ? gprEsc(str) : (str || ''); }
 
         // Load languages into filter
         async function loadLanguages() {
@@ -247,7 +235,7 @@
 
         async function loadArticles() {
             const list = document.getElementById('articles-list');
-            list.innerHTML = '<div class="loading"><div class="spinner"></div> Loading articles...</div>';
+            list.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px;padding:8px"><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div></div>';
 
             try {
                 const res = await fetch(`/api/scraper/articles?${buildQuery()}`);
@@ -260,10 +248,13 @@
                 document.getElementById('btn-next').disabled = articles.length < PAGE_SIZE;
 
                 if (articles.length === 0) {
-                    list.innerHTML = `<div class="empty-state">
-                        <div class="icon">&#128270;</div>
-                        <div style="font-size:1.1rem;font-weight:600;margin-bottom:6px;color:var(--text-secondary)">No articles found</div>
-                        <div>Try adjusting your filters or search terms</div>
+                    const cat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+                    const labels = {gaming_news:'articles', gaming_vc:'VC posts', gaming_streamer:'streamer content'};
+                    const contentType = labels[cat] || 'content';
+                    list.innerHTML = `<div class="gpr-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <div class="msg">No ${contentType} found</div>
+                        <div class="hint">Try adjusting your filters or run a scrape first</div>
                     </div>`;
                     return;
                 }
@@ -318,7 +309,7 @@
                     ${a.featured_image_url ? `<img src="${escapeHtml(a.featured_image_url)}" style="width:100%;border-radius:10px;margin-bottom:20px;max-height:300px;object-fit:cover" onerror="this.style.display='none'">` : ''}
                     <div class="modal-meta">
                         ${a.author ? `<dl><dt>Author</dt><dd>${escapeHtml(a.author)}</dd></dl>` : ''}
-                        ${a.published_at ? `<dl><dt>Published</dt><dd>${new Date(a.published_at).toLocaleDateString()}</dd></dl>` : ''}
+                        ${a.published_at ? `<dl><dt>Published</dt><dd>${timeAgo(a.published_at)}</dd></dl>` : ''}
                         ${a.language ? `<dl><dt>Language</dt><dd>${a.language}</dd></dl>` : ''}
                         ${a.article_type ? `<dl><dt>Type</dt><dd>${a.article_type}</dd></dl>` : ''}
                         ${a.word_count ? `<dl><dt>Words</dt><dd>${a.word_count.toLocaleString()}</dd></dl>` : ''}
@@ -335,7 +326,7 @@
                             <div class="detail-item"><dt>Source URL</dt><dd><a href="${escapeHtml(a.url)}" target="_blank" rel="noopener" style="color:var(--accent-light);word-break:break-all">${escapeHtml(a.url)}</a></dd></div>
                             ${a.outlet_id ? `<div class="detail-item"><dt>Outlet ID</dt><dd>#${a.outlet_id}</dd></div>` : ''}
                             <div class="detail-item"><dt>Full Content</dt><dd>${a.is_full_content ? 'Yes' : 'No'}</dd></div>
-                            ${a.scraped_at ? `<div class="detail-item"><dt>Scraped</dt><dd>${new Date(a.scraped_at).toLocaleString()}</dd></div>` : ''}
+                            ${a.scraped_at ? `<div class="detail-item"><dt>Scraped</dt><dd>${timeAgo(a.scraped_at)}</dd></div>` : ''}
                             ${a.comment_count !== null && a.comment_count !== undefined ? `<div class="detail-item"><dt>Comments</dt><dd>${a.comment_count}</dd></div>` : ''}
                             ${a.rating_score ? `<div class="detail-item"><dt>Rating</dt><dd>${a.rating_score}${a.rating_max ? '/' + a.rating_max : ''}</dd></div>` : ''}
                         </div>
@@ -368,6 +359,7 @@
 
         function clearFilters() {
             document.getElementById('f-search').value = '';
+            document.getElementById('f-source').value = '';
             document.getElementById('f-language').value = '';
             document.getElementById('f-type').value = '';
             document.getElementById('f-full').value = '';

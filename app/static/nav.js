@@ -165,6 +165,32 @@
             .gpr-sidebar .sb-cat-pill[data-cat="gaming_vc"].active { background: rgba(34,197,94,0.2); border-color: #22c55e; color: #4ade80; }
             .gpr-sidebar .sb-cat-pill[data-cat="gaming_streamer"].active { background: rgba(245,158,11,0.2); border-color: #f59e0b; color: #fbbf24; }
 
+            /* ─── Shared table polish ─── */
+            table th { position: sticky; top: 0; z-index: 2; }
+            table tbody tr { transition: background .15s; }
+            table tbody tr:hover td { background: rgba(124,92,255,0.06) !important; }
+            .sort-indicator { opacity: 0.4; font-size: 0.7em; margin-left: 4px; }
+            .sort-indicator.active { opacity: 1; color: var(--accent-light); }
+
+            /* ─── Skeleton loading ─── */
+            .skeleton { background: linear-gradient(90deg, var(--bg-card) 25%, rgba(124,92,255,0.06) 50%, var(--bg-card) 75%); background-size: 200% 100%; animation: shimmer 1.5s ease infinite; border-radius: 6px; }
+            @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+            .skeleton-text { height: 14px; margin-bottom: 8px; }
+            .skeleton-card { height: 80px; margin-bottom: 12px; }
+
+            /* ─── Better empty states ─── */
+            .gpr-empty { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+            .gpr-empty svg { width: 48px; height: 48px; stroke: var(--text-muted); opacity: 0.4; margin-bottom: 12px; }
+            .gpr-empty .msg { font-size: 0.9rem; margin-bottom: 4px; }
+            .gpr-empty .hint { font-size: 0.78rem; color: var(--text-muted); opacity: 0.7; }
+
+            /* ─── Image fallback ─── */
+            .gpr-avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; overflow: hidden; }
+            .gpr-avatar img { width: 100%; height: 100%; object-fit: cover; }
+            .gpr-avatar.news { background: rgba(6,182,212,0.15); color: #22d3ee; }
+            .gpr-avatar.vc { background: rgba(34,197,94,0.15); color: #4ade80; }
+            .gpr-avatar.streamer { background: rgba(245,158,11,0.15); color: #fbbf24; }
+
             /* ─── Body offset ─── */
             body { padding-left: 240px; }
 
@@ -429,6 +455,66 @@
     };
     window.gprCategoryLabel = function () { return GPR_CAT_LABELS[gprGetCategory()] || 'All Sources'; };
     window.gprContentLabel = function () { return GPR_CAT_CONTENT[gprGetCategory()] || 'Scraped Content'; };
+
+    // ─── Shared Utilities (available on all pages) ───
+
+    /** Unified date formatting - relative for recent, absolute for old */
+    window.gprTimeAgo = function (iso) {
+        if (!iso) return '';
+        const d = (Date.now() - new Date(iso).getTime()) / 1000;
+        if (d < 0) return 'Just now';
+        if (d < 60) return Math.round(d) + 's ago';
+        if (d < 3600) return Math.round(d / 60) + 'm ago';
+        if (d < 86400) return Math.round(d / 3600) + 'h ago';
+        if (d < 604800) return Math.round(d / 86400) + 'd ago';
+        return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    /** Format a date as a human-readable string */
+    window.gprFormatDate = function (iso) {
+        if (!iso) return '';
+        return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    /** Format large numbers nicely */
+    window.gprFmt = function (n) {
+        if (n == null || isNaN(n)) return '0';
+        n = Number(n);
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+        return n.toLocaleString();
+    };
+
+    /** Escape HTML to prevent XSS */
+    window.gprEsc = function (s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    };
+
+    /** Category badge HTML */
+    window.gprCatBadge = function (category) {
+        const map = {
+            gaming_news: { label: 'News', color: 'cyan' },
+            gaming_vc: { label: 'VC', color: 'green' },
+            gaming_streamer: { label: 'Streamer', color: 'orange' },
+        };
+        const c = map[category] || { label: category || '?', color: 'accent' };
+        return `<span class="badge badge-${c.color}">${c.label}</span>`;
+    };
+
+    /** Status badge HTML */
+    window.gprStatusBadge = function (status) {
+        const map = { completed: 'green', success: 'green', running: 'cyan', failed: 'red', error: 'red', queued: 'orange', pending: 'accent', circuit_open: 'orange', active: 'green', inactive: 'red' };
+        return `<span class="badge badge-${map[status] || 'accent'}">${status}</span>`;
+    };
+
+    /** Debounce function calls */
+    window.gprDebounce = function (fn, ms) {
+        let timer;
+        return function (...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), ms); };
+    };
 
     // ─── Auth state ───
     window.gprGetToken = function () { return localStorage.getItem('gpr_token'); };
