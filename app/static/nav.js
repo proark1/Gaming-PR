@@ -228,6 +228,101 @@
         return `<a href="${href}" class="sb-link${cls}"><span class="sb-icon">${icon}</span><span class="sb-text">${label}</span></a>`;
     }
 
+    // ─── SVG Icons ───
+    const ICONS = {
+        dashboard: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+        articles: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+        edit: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+        globe: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+        outlet: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
+        video: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
+        dollar: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+        scraper: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+        feed: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>',
+        email: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+        webhook: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+        download: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+        docs: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+    };
+
+    function buildNavHtml(cat) {
+        // Category-specific configuration
+        const NAV_CONFIG = {
+            gaming_news: {
+                contentLabel: 'Content',
+                contentLinks: [
+                    ['/articles', ICONS.articles, 'Scraped Articles', 'articles'],
+                    ['/manage/articles', ICONS.edit, 'My Articles', 'manage-articles'],
+                    ['/translations', ICONS.globe, 'Translations', 'translations'],
+                ],
+                sourceLabel: 'Sources',
+                sourceLinks: [
+                    ['/outlets', ICONS.outlet, 'News Outlets', 'outlets'],
+                ],
+            },
+            gaming_vc: {
+                contentLabel: 'Content',
+                contentLinks: [
+                    ['/articles', ICONS.articles, 'VC Posts & News', 'articles'],
+                ],
+                sourceLabel: 'Sources',
+                sourceLinks: [
+                    ['/vcs', ICONS.dollar, 'Gaming VCs', 'vcs'],
+                ],
+            },
+            gaming_streamer: {
+                contentLabel: 'Content',
+                contentLinks: [
+                    ['/articles', ICONS.articles, 'Videos & Streams', 'articles'],
+                ],
+                sourceLabel: 'Sources',
+                sourceLinks: [
+                    ['/streamers', ICONS.video, 'Streamers', 'streamers'],
+                ],
+            },
+            '': {
+                contentLabel: 'Content',
+                contentLinks: [
+                    ['/articles', ICONS.articles, 'Scraped Content', 'articles'],
+                    ['/manage/articles', ICONS.edit, 'My Articles', 'manage-articles'],
+                    ['/translations', ICONS.globe, 'Translations', 'translations'],
+                ],
+                sourceLabel: 'Sources',
+                sourceLinks: [
+                    ['/outlets', ICONS.outlet, 'News Outlets', 'outlets'],
+                    ['/streamers', ICONS.video, 'Streamers', 'streamers'],
+                    ['/vcs', ICONS.dollar, 'Gaming VCs', 'vcs'],
+                ],
+            },
+        };
+
+        const cfg = NAV_CONFIG[cat] || NAV_CONFIG[''];
+
+        return `
+            <div class="sb-group">
+                ${slink('/dashboard', ICONS.dashboard, 'Dashboard', 'dashboard')}
+            </div>
+            <div class="sb-group">
+                <div class="sb-group-label">${cfg.contentLabel}</div>
+                ${cfg.contentLinks.map(l => slink(l[0], l[1], l[2], l[3])).join('')}
+            </div>
+            <div class="sb-group">
+                <div class="sb-group-label">${cfg.sourceLabel}</div>
+                ${cfg.sourceLinks.map(l => slink(l[0], l[1], l[2], l[3])).join('')}
+                ${slink('/scraper', ICONS.scraper, 'Scraper', 'scraper')}
+                ${slink('/feed', ICONS.feed, 'Live Feed', 'feed')}
+            </div>
+            <div class="sb-group">
+                <div class="sb-group-label">Outreach</div>
+                ${slink('/emails', ICONS.email, 'Email', 'emails')}
+                ${slink('/webhooks', ICONS.webhook, 'Webhooks', 'webhooks')}
+                ${slink('/export', ICONS.download, 'Export', 'export')}
+            </div>
+            <div class="sb-divider"></div>
+            ${slink('/docs', ICONS.docs, 'API Docs', 'docs')}
+        `;
+    }
+
     function renderSidebar() {
         // Hamburger button
         const hamburger = document.createElement('button');
@@ -242,6 +337,8 @@
         overlay.onclick = toggleMobileMenu;
         document.body.prepend(overlay);
 
+        const initCat = localStorage.getItem(GPR_CAT_KEY) || '';
+
         // Sidebar
         const sidebar = document.createElement('aside');
         sidebar.className = 'gpr-sidebar';
@@ -252,37 +349,13 @@
             <div class="sb-cat-switcher">
                 <div class="sb-cat-label">Focus</div>
                 <div class="sb-cat-pills">
-                    <button class="sb-cat-pill" data-cat="gaming_news" onclick="gprSetCategory('gaming_news')">News</button>
-                    <button class="sb-cat-pill" data-cat="gaming_vc" onclick="gprSetCategory('gaming_vc')">VCs</button>
-                    <button class="sb-cat-pill" data-cat="gaming_streamer" onclick="gprSetCategory('gaming_streamer')">Streamers</button>
+                    <button class="sb-cat-pill${initCat === 'gaming_news' ? ' active' : ''}" data-cat="gaming_news" onclick="gprSetCategory('gaming_news')">News</button>
+                    <button class="sb-cat-pill${initCat === 'gaming_vc' ? ' active' : ''}" data-cat="gaming_vc" onclick="gprSetCategory('gaming_vc')">VCs</button>
+                    <button class="sb-cat-pill${initCat === 'gaming_streamer' ? ' active' : ''}" data-cat="gaming_streamer" onclick="gprSetCategory('gaming_streamer')">Streamers</button>
                 </div>
             </div>
-            <div class="sb-nav">
-                <div class="sb-group">
-                    ${slink('/dashboard', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>', 'Dashboard', 'dashboard')}
-                </div>
-                <div class="sb-group">
-                    <div class="sb-group-label">Content</div>
-                    ${slink('/articles', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>', 'Scraped Articles', 'articles')}
-                    ${slink('/manage/articles', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', 'My Articles', 'manage-articles')}
-                    ${slink('/translations', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>', 'Translations', 'translations')}
-                </div>
-                <div class="sb-group">
-                    <div class="sb-group-label">Sources</div>
-                    ${slink('/outlets', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>', 'News Outlets', 'outlets')}
-                    ${slink('/streamers', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>', 'Streamers', 'streamers')}
-                    ${slink('/vcs', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>', 'Gaming VCs', 'vcs')}
-                    ${slink('/scraper', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>', 'Scraper', 'scraper')}
-                    ${slink('/feed', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>', 'Live Feed', 'feed')}
-                </div>
-                <div class="sb-group">
-                    <div class="sb-group-label">Integrations</div>
-                    ${slink('/emails', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>', 'Email', 'emails')}
-                    ${slink('/webhooks', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>', 'Webhooks', 'webhooks')}
-                    ${slink('/export', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>', 'Export', 'export')}
-                </div>
-                <div class="sb-divider"></div>
-                ${slink('/docs', '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', 'API Docs', 'docs')}
+            <div class="sb-nav" id="gprNavLinks">
+                ${buildNavHtml(initCat)}
             </div>
             <div class="sb-footer" id="gprNavAuth"></div>
         `;
@@ -348,17 +421,14 @@
         document.querySelectorAll('.sb-cat-pill').forEach(p => {
             p.classList.toggle('active', p.dataset.cat === cat);
         });
+        // Re-render sidebar nav links for the new category
+        const navEl = document.getElementById('gprNavLinks');
+        if (navEl) navEl.innerHTML = buildNavHtml(cat);
         // Notify page
         window.dispatchEvent(new CustomEvent('gpr-category-change', { detail: { category: cat } }));
     };
     window.gprCategoryLabel = function () { return GPR_CAT_LABELS[gprGetCategory()] || 'All Sources'; };
     window.gprContentLabel = function () { return GPR_CAT_CONTENT[gprGetCategory()] || 'Scraped Content'; };
-
-    // Init pill state on load
-    setTimeout(() => {
-        const cat = gprGetCategory();
-        if (cat) document.querySelectorAll('.sb-cat-pill').forEach(p => p.classList.toggle('active', p.dataset.cat === cat));
-    }, 0);
 
     // ─── Auth state ───
     window.gprGetToken = function () { return localStorage.getItem('gpr_token'); };
