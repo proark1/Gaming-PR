@@ -81,4 +81,8 @@ class ScrapedArticle(Base):
     __table_args__ = (
         Index("ix_scraped_articles_outlet_published", "outlet_id", "published_at"),
         Index("ix_scraped_articles_language_scraped", "language", "scraped_at"),
+        # Performance indices for stats aggregation and dedup queries
+        Index("ix_scraped_articles_content_hash", "content_hash"),
+        Index("ix_scraped_articles_article_type", "article_type"),
+        Index("ix_scraped_articles_is_full_content", "is_full_content"),
     )

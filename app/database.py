@@ -12,8 +12,8 @@ if settings.DATABASE_URL.startswith("sqlite"):
 else:
     # PostgreSQL: enable connection pooling
     engine_kwargs = {
-        "pool_size": 10,
-        "max_overflow": 20,
+        "pool_size": 20,       # was 10 — supports SCRAPE_CONCURRENCY=10 × 3 inner workers
+        "max_overflow": 30,    # was 20 — headroom for translation threads + API requests
         "pool_pre_ping": True,
         "pool_recycle": 300,
     }
