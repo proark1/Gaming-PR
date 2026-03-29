@@ -78,6 +78,7 @@ def _auto_migrate_columns():
         ("gaming_outlets", "contact_email", "VARCHAR(500)"),
         ("gaming_outlets", "contact_phone", "VARCHAR(100)"),
         ("gaming_outlets", "contact_page_url", "VARCHAR(2048)"),
+        ("gaming_outlets", "contact_form_url", "VARCHAR(2048)"),
         ("gaming_outlets", "social_linkedin", "VARCHAR(500)"),
         ("gaming_outlets", "social_instagram", "VARCHAR(500)"),
         ("gaming_outlets", "social_tiktok", "VARCHAR(500)"),
