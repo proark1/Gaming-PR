@@ -99,6 +99,26 @@ def _auto_migrate_columns():
                 except Exception as e:
                     logger.warning(f"Migration skip {table}.{column}: {e}")
 
+    # Widen INTEGER columns to BIGINT for fields that can exceed 2^31 (e.g. YouTube total views)
+    bigint_migrations = [
+        ("streamers", "youtube_total_views"),
+        ("streamers", "twitch_views_total"),
+        ("streamers", "total_followers"),
+        ("streamers", "estimated_monthly_reach"),
+    ]
+    with engine.connect() as conn:
+        for table, column in bigint_migrations:
+            if table not in inspector.get_table_names():
+                continue
+            cols = {c["name"]: c for c in inspector.get_columns(table)}
+            if column in cols and str(cols[column]["type"]) == "INTEGER":
+                try:
+                    conn.execute(text(f"ALTER TABLE {table} ALTER COLUMN {column} TYPE BIGINT"))
+                    conn.commit()
+                    logger.info(f"Migrated: changed {table}.{column} to BIGINT")
+                except Exception as e:
+                    logger.warning(f"Migration skip {table}.{column} type change: {e}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

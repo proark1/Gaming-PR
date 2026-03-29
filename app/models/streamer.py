@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Float, JSON, Index
+from sqlalchemy import Column, Integer, BigInteger, String, Text, Boolean, DateTime, Float, JSON, Index
 
 from app.database import Base
 
@@ -27,14 +27,14 @@ class Streamer(Base):
     twitch_is_affiliate = Column(Boolean, nullable=True)
     twitch_description = Column(Text, nullable=True)
     twitch_profile_image_url = Column(String(2048), nullable=True)
-    twitch_views_total = Column(Integer, nullable=True)  # channel total views
+    twitch_views_total = Column(BigInteger, nullable=True)  # channel total views
 
     # YouTube
     youtube_channel_id = Column(String(100), nullable=True, unique=True)
     youtube_channel_name = Column(String(500), nullable=True)
     youtube_url = Column(String(2048), nullable=True)
     youtube_subscribers = Column(Integer, nullable=True)
-    youtube_total_views = Column(Integer, nullable=True)
+    youtube_total_views = Column(BigInteger, nullable=True)
     youtube_video_count = Column(Integer, nullable=True)
     youtube_avg_views_per_video = Column(Integer, nullable=True)
     youtube_description = Column(Text, nullable=True)
@@ -68,8 +68,8 @@ class Streamer(Base):
     region = Column(String(10), nullable=True)
 
     # Overall reach (computed / denormalized for quick sorting)
-    total_followers = Column(Integer, nullable=True)          # sum across all platforms
-    estimated_monthly_reach = Column(Integer, nullable=True)  # rough monthly impressions
+    total_followers = Column(BigInteger, nullable=True)          # sum across all platforms
+    estimated_monthly_reach = Column(BigInteger, nullable=True)  # rough monthly impressions
 
     # PR / contact
     contact_email = Column(String(500), nullable=True)
