@@ -67,6 +67,7 @@ class OutletResponse(OutletBase):
     total_articles_scraped: int = 0
     consecutive_failures: int = 0
     avg_articles_per_scrape: float = 0.0
+    scraper_config: Optional[dict] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

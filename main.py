@@ -71,6 +71,7 @@ def _auto_migrate_columns():
     from sqlalchemy import inspect, text
     inspector = inspect(engine)
     migrations = [
+        ("gaming_outlets", "contact_email", "VARCHAR(500)"),
         ("gaming_outlets", "contact_phone", "VARCHAR(100)"),
         ("gaming_outlets", "contact_page_url", "VARCHAR(2048)"),
         ("gaming_outlets", "social_linkedin", "VARCHAR(500)"),
