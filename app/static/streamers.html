@@ -466,7 +466,8 @@
             const token = localStorage.getItem('gpr_token');
             if (!token) { if (typeof gprOpenModal === 'function') gprOpenModal('login'); return; }
             try {
-                await fetch(`/api/scraper/run/${id}?run_async=true`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`/api/scraper/run/${id}?run_async=true`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.status === 401 || res.status === 403) { localStorage.removeItem('gpr_token'); if (typeof gprOpenModal === 'function') gprOpenModal('login'); return; }
                 if (typeof gprToast === 'function') gprToast('Scraping', 'Streamer scrape queued', 'success');
             } catch (e) {
                 if (typeof gprToast === 'function') gprToast('Error', 'Failed to start scrape', 'error');
