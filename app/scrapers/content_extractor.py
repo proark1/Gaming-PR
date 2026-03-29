@@ -92,7 +92,8 @@ STRIP_TAGS = [
 
 
 def extract_full_article(url: str, timeout: int = 20, language: str = "en",
-                         use_stealth: bool = True, use_browser_fallback: bool = True) -> dict:
+                         use_stealth: bool = True, use_browser_fallback: bool = True,
+                         session: requests.Session = None) -> dict:
     """
     Extract everything possible from an article URL.
 
@@ -100,6 +101,7 @@ def extract_full_article(url: str, timeout: int = 20, language: str = "en",
     partial data with errors logged in the 'extraction_errors' field.
 
     Features stealth headers and Playwright browser fallback for JS-heavy sites.
+    Pass a `session` to reuse TCP connections across multiple article extractions.
     """
     result = {
         "url": url,
@@ -155,7 +157,8 @@ def extract_full_article(url: str, timeout: int = 20, language: str = "en",
     html_text = None
 
     try:
-        response = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+        requester = session if session is not None else requests
+        response = requester.get(url, headers=headers, timeout=timeout, allow_redirects=True)
         result["http_status_code"] = response.status_code
         response.raise_for_status()
         html_text = response.text

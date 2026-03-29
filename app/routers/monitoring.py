@@ -24,32 +24,53 @@ def dashboard(db: Session = Depends(get_db)):
     last_24h = now - timedelta(hours=24)
     last_7d = now - timedelta(days=7)
 
-    # Overall counts
-    total_outlets = db.query(func.count(GamingOutlet.id)).scalar()
-    active_outlets = db.query(func.count(GamingOutlet.id)).filter(GamingOutlet.is_active == True).scalar()
-    total_articles = db.query(func.count(ScrapedArticle.id)).scalar()
-    articles_24h = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.scraped_at >= last_24h).scalar()
-    articles_7d = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.scraped_at >= last_7d).scalar()
-    full_content_count = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.is_full_content == True).scalar()
+    # Batch outlet counts into a single aggregate query (was 2 separate queries)
+    outlet_row = db.query(
+        func.count(GamingOutlet.id).label("total"),
+        func.sum(case((GamingOutlet.is_active == True, 1), else_=0)).label("active"),
+    ).one()
+    total_outlets = outlet_row.total or 0
+    active_outlets = outlet_row.active or 0
 
-    # Coverage by language
-    lang_coverage = {}
-    for lang_code, lang_name in SUPPORTED_LANGUAGES.items():
-        outlet_count = db.query(func.count(GamingOutlet.id)).filter(
-            GamingOutlet.language == lang_code, GamingOutlet.is_active == True
-        ).scalar()
-        article_count = db.query(func.count(ScrapedArticle.id)).filter(
-            ScrapedArticle.language == lang_code
-        ).scalar()
-        recent_count = db.query(func.count(ScrapedArticle.id)).filter(
-            ScrapedArticle.language == lang_code, ScrapedArticle.scraped_at >= last_24h
-        ).scalar()
-        lang_coverage[lang_code] = {
+    # Batch article counts into a single aggregate query (was 4 separate queries)
+    article_row = db.query(
+        func.count(ScrapedArticle.id).label("total"),
+        func.sum(case((ScrapedArticle.scraped_at >= last_24h, 1), else_=0)).label("last_24h"),
+        func.sum(case((ScrapedArticle.scraped_at >= last_7d, 1), else_=0)).label("last_7d"),
+        func.sum(case((ScrapedArticle.is_full_content == True, 1), else_=0)).label("full_content"),
+    ).one()
+    total_articles = article_row.total or 0
+    articles_24h = article_row.last_24h or 0
+    articles_7d = article_row.last_7d or 0
+    full_content_count = article_row.full_content or 0
+
+    # Coverage by language — 3 GROUP BY queries instead of 3N individual queries
+    outlet_by_lang = dict(
+        db.query(GamingOutlet.language, func.count(GamingOutlet.id))
+        .filter(GamingOutlet.is_active == True)
+        .group_by(GamingOutlet.language)
+        .all()
+    )
+    article_by_lang = dict(
+        db.query(ScrapedArticle.language, func.count(ScrapedArticle.id))
+        .group_by(ScrapedArticle.language)
+        .all()
+    )
+    recent_by_lang = dict(
+        db.query(ScrapedArticle.language, func.count(ScrapedArticle.id))
+        .filter(ScrapedArticle.scraped_at >= last_24h)
+        .group_by(ScrapedArticle.language)
+        .all()
+    )
+    lang_coverage = {
+        lang_code: {
             "name": lang_name,
-            "active_outlets": outlet_count,
-            "total_articles": article_count,
-            "articles_24h": recent_count,
+            "active_outlets": outlet_by_lang.get(lang_code, 0),
+            "total_articles": article_by_lang.get(lang_code, 0),
+            "articles_24h": recent_by_lang.get(lang_code, 0),
         }
+        for lang_code, lang_name in SUPPORTED_LANGUAGES.items()
+    }
 
     # Failing outlets
     failing_outlets = (
