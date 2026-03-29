@@ -78,6 +78,14 @@ class ScrapedArticle(Base):
 
     outlet = relationship("GamingOutlet", back_populates="scraped_articles")
 
+    @property
+    def outlet_name(self):
+        return self.outlet.name if self.outlet else None
+
+    @property
+    def outlet_category(self):
+        return self.outlet.category if self.outlet else None
+
     __table_args__ = (
         Index("ix_scraped_articles_outlet_published", "outlet_id", "published_at"),
         Index("ix_scraped_articles_language_scraped", "language", "scraped_at"),

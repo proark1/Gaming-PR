@@ -49,6 +49,8 @@ class ScrapedArticleListResponse(BaseModel):
 
     id: int
     outlet_id: int
+    outlet_name: Optional[str] = None
+    outlet_category: Optional[str] = None
     title: str
     url: str
     summary: Optional[str] = None

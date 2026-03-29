@@ -259,13 +259,20 @@
                     return;
                 }
 
-                list.innerHTML = articles.map(a => `
+                const CAT_LABELS = {gaming_news:'News', gaming_vc:'VC', gaming_streamer:'Streamer'};
+                const CAT_CLASSES = {gaming_news:'badge-cyan', gaming_vc:'badge-green', gaming_streamer:'badge-orange'};
+                list.innerHTML = articles.map(a => {
+                    const catLabel = a.outlet_category ? CAT_LABELS[a.outlet_category] || a.outlet_category : null;
+                    const catClass = a.outlet_category ? CAT_CLASSES[a.outlet_category] || 'badge-accent' : '';
+                    return `
                     <div class="article-card" onclick="openArticle(${a.id})">
                         <div>
                             <div class="article-title">
                                 <a href="${escapeHtml(a.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${escapeHtml(a.title)}</a>
                             </div>
                             <div class="article-meta">
+                                ${a.outlet_name ? `<span style="font-weight:600">${escapeHtml(a.outlet_name)}</span><span class="sep">|</span>` : ''}
+                                ${catLabel ? `<span class="badge ${catClass}">${catLabel}</span>` : ''}
                                 ${a.author ? `<span>${escapeHtml(a.author)}</span><span class="sep">|</span>` : ''}
                                 <span>${timeAgo(a.published_at || a.scraped_at)}</span>
                                 <span class="sep">|</span>
@@ -284,7 +291,7 @@
                         </div>
                         ${a.featured_image_url ? `<img class="article-thumb" src="${escapeHtml(a.featured_image_url)}" alt="" onerror="this.style.display='none'">` : ''}
                     </div>
-                `).join('');
+                `}).join('');
             } catch (err) {
                 list.innerHTML = `<div class="empty-state">
                     <div style="color:var(--red);font-weight:600;margin-bottom:8px">Failed to load articles</div>

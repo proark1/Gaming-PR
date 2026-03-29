@@ -194,8 +194,10 @@
             const params = new URLSearchParams();
             const lang = document.getElementById('f-language').value;
             const type = document.getElementById('f-type').value;
+            const source = document.getElementById('f-source').value;
             if (lang) params.set('language', lang);
             if (type) params.set('article_type', type);
+            if (source) params.set('outlet_category', source);
             const qs = params.toString();
             return `${proto}//${location.host}/ws/feed${qs ? '?' + qs : ''}`;
         }
@@ -254,10 +256,16 @@
 
             let content = '';
 
+            const CAT_LABELS = {gaming_news:'News', gaming_vc:'VC', gaming_streamer:'Streamer'};
+            const CAT_CLASSES = {gaming_news:'badge-cyan', gaming_vc:'badge-green', gaming_streamer:'badge-orange'};
             if (msg.type === 'new_article') {
+                const catLabel = data.outlet_category ? CAT_LABELS[data.outlet_category] || data.outlet_category : null;
+                const catClass = data.outlet_category ? CAT_CLASSES[data.outlet_category] || 'badge-accent' : '';
                 content = `
                     <div class="feed-title"><a href="${esc(data.url)}" target="_blank" rel="noopener">${esc(data.title || 'Untitled')}</a></div>
                     <div class="feed-meta">
+                        ${data.outlet_name ? `<span style="font-weight:600">${esc(data.outlet_name)}</span>` : ''}
+                        ${catLabel ? `<span class="badge ${catClass}">${catLabel}</span>` : ''}
                         ${data.author ? `<span>${esc(data.author)}</span>` : ''}
                         ${data.language ? `<span class="badge badge-accent">${data.language}</span>` : ''}
                         ${data.article_type ? `<span class="badge badge-cyan">${data.article_type}</span>` : ''}
@@ -310,8 +318,10 @@
                 const filters = {};
                 const lang = document.getElementById('f-language').value;
                 const type = document.getElementById('f-type').value;
+                const source = document.getElementById('f-source').value;
                 if (lang) filters.language = lang;
                 if (type) filters.article_type = type;
+                if (source) filters.outlet_category = source;
                 ws.send(JSON.stringify({ type: 'update_filters', filters: filters }));
             }
         }

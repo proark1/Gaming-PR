@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy import func, case
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.config import settings
 from app.database import get_db
@@ -121,7 +121,7 @@ def list_scraped(
     db: Session = Depends(get_db),
 ):
     """List scraped articles with filtering."""
-    query = db.query(ScrapedArticle)
+    query = db.query(ScrapedArticle).options(joinedload(ScrapedArticle.outlet))
     if outlet_category:
         query = query.join(GamingOutlet).filter(GamingOutlet.category == outlet_category)
     if language:

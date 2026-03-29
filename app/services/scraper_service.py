@@ -382,6 +382,7 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
                     "article_type": scraped.article_type,
                     "outlet_id": outlet.id,
                     "outlet_name": outlet.name,
+                    "outlet_category": outlet.category,
                     "author": scraped.author,
                     "featured_image_url": scraped.featured_image_url,
                 })

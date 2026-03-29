@@ -123,6 +123,10 @@ class ConnectionManager:
         if outlet_filter and article_data.get("outlet_id") != outlet_filter:
             return False
 
+        category_filter = filters.get("outlet_category")
+        if category_filter and article_data.get("outlet_category") != category_filter:
+            return False
+
         return True
 
     async def update_filters(self, websocket: WebSocket, new_filters: dict):
@@ -146,12 +150,13 @@ async def live_feed(
     language: Optional[str] = Query(default=None),
     article_type: Optional[str] = Query(default=None),
     outlet_id: Optional[int] = Query(default=None),
+    outlet_category: Optional[str] = Query(default=None),
 ):
     """
     WebSocket live feed endpoint.
 
     Connect to receive real-time article notifications.
-    Optional query params for filtering: ?language=en&article_type=review
+    Optional query params for filtering: ?language=en&article_type=review&outlet_category=gaming_vc
     """
     filters = {}
     if language:
@@ -160,6 +165,8 @@ async def live_feed(
         filters["article_type"] = article_type
     if outlet_id:
         filters["outlet_id"] = outlet_id
+    if outlet_category:
+        filters["outlet_category"] = outlet_category
 
     await ws_manager.connect(websocket, filters)
 
