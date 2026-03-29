@@ -78,7 +78,7 @@
     <script src="/static/nav.js" data-active="export"></script>
 
     <div class="container">
-        <h1>Export Data</h1>
+        <h1 id="pageTitle">Export Data</h1>
         <div class="subtitle">Download scraped articles as JSON, CSV, or subscribe via RSS feed</div>
 
         <!-- Format selection -->
@@ -332,10 +332,17 @@
         // Sync with global category
         setTimeout(() => {
             const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
-            if (gCat) document.getElementById('f-source').value = gCat;
+            if (gCat) {
+                document.getElementById('f-source').value = gCat;
+                const labels = {gaming_news:'News',gaming_vc:'VC',gaming_streamer:'Streamer'};
+                if (labels[gCat]) document.getElementById('pageTitle').textContent = `Export ${labels[gCat]} Data`;
+            }
         }, 50);
         window.addEventListener('gpr-category-change', e => {
-            document.getElementById('f-source').value = e.detail.category || '';
+            const cat = e.detail.category || '';
+            document.getElementById('f-source').value = cat;
+            const labels = {gaming_news:'News',gaming_vc:'VC',gaming_streamer:'Streamer'};
+            document.getElementById('pageTitle').textContent = labels[cat] ? `Export ${labels[cat]} Data` : 'Export Data';
             updateUrl();
         });
 

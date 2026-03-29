@@ -60,20 +60,8 @@
     <script>
         const COLORS = ['#7c5cff','#ec4899','#06b6d4','#22c55e','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#f97316','#6366f1'];
 
-        function fmt(n) {
-            if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-            if (n >= 1000) return (n/1000).toFixed(1) + 'K';
-            return n.toString();
-        }
-
-        function timeAgo(iso) {
-            if (!iso) return 'Never';
-            const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-            if (diff < 60) return Math.round(diff) + 's ago';
-            if (diff < 3600) return Math.round(diff/60) + 'm ago';
-            if (diff < 86400) return Math.round(diff/3600) + 'h ago';
-            return Math.round(diff/86400) + 'd ago';
-        }
+        function fmt(n) { return gprFmt(n); }
+        function timeAgo(d) { return gprTimeAgo(d) || 'Never'; }
 
         function statusBadge(status) {
             const map = { completed: 'green', running: 'cyan', failed: 'red', queued: 'orange' };

@@ -91,8 +91,8 @@
     <script src="/static/nav.js" data-active="scraper"></script>
 
     <div class="container">
-        <h1>Scraper Console</h1>
-        <div class="subtitle">Admin console — run scrapes, monitor activity, inspect per-outlet results</div>
+        <h1 id="pageTitle">Scraper Console</h1>
+        <div class="subtitle" id="pageSubtitle">Admin console — run scrapes, monitor activity, inspect per-outlet results</div>
         <div id="login-notice" class="login-notice" style="display:none">Log in to run scrapes and manage the scraper.</div>
 
         <!-- Top actions -->
@@ -406,12 +406,19 @@
         log('Scraper console initialized', 'log-info');
         log('Auto-refreshing every 10 seconds', 'log-dim');
         // Sync with global category
+        function updateScraperHeading(cat) {
+            const labels = {gaming_news:'News Outlets',gaming_vc:'Gaming VCs',gaming_streamer:'Streamers'};
+            const suffix = labels[cat] ? ` — ${labels[cat]}` : '';
+            document.getElementById('pageTitle').textContent = 'Scraper Console' + suffix;
+        }
         setTimeout(() => {
             const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
-            if (gCat) document.getElementById('category-select').value = gCat;
+            if (gCat) { document.getElementById('category-select').value = gCat; updateScraperHeading(gCat); }
         }, 50);
         window.addEventListener('gpr-category-change', e => {
-            document.getElementById('category-select').value = e.detail.category || '';
+            const cat = e.detail.category || '';
+            document.getElementById('category-select').value = cat;
+            updateScraperHeading(cat);
             filterOutletPicker(); loadStats();
         });
         loadOutletPicker();

@@ -87,7 +87,7 @@
     <script src="/static/nav.js" data-active="feed"></script>
 
     <div class="container">
-        <h1>Live Feed</h1>
+        <h1 id="pageTitle">Live Feed</h1>
         <div class="subtitle">Real-time WebSocket stream of new articles and scraping activity</div>
 
         <!-- Connection bar -->
@@ -153,7 +153,7 @@
         let articleCount = 0;
         const MAX_ITEMS = 200;
 
-        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function esc(s) { return gprEsc(s); }
 
         async function loadLanguages() {
             try {
@@ -328,12 +328,18 @@
         }
 
         // Sync with global category
+        function updateFeedHeading(cat) {
+            const labels = {gaming_news:'News',gaming_vc:'VC',gaming_streamer:'Streamer'};
+            document.getElementById('pageTitle').textContent = labels[cat] ? `${labels[cat]} Live Feed` : 'Live Feed';
+        }
         setTimeout(() => {
             const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
-            if (gCat) document.getElementById('f-source').value = gCat;
+            if (gCat) { document.getElementById('f-source').value = gCat; updateFeedHeading(gCat); }
         }, 50);
         window.addEventListener('gpr-category-change', e => {
-            document.getElementById('f-source').value = e.detail.category || '';
+            const cat = e.detail.category || '';
+            document.getElementById('f-source').value = cat;
+            updateFeedHeading(cat);
         });
 
         loadLanguages();

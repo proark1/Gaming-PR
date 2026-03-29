@@ -56,7 +56,7 @@
         .articles-list { display: flex; flex-direction: column; gap: 12px; }
         .article-card {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 20px; transition: border-color .2s, background .2s; cursor: default;
+            padding: 20px; transition: border-color .2s, background .2s; cursor: pointer;
             display: grid; grid-template-columns: 1fr auto; gap: 16px;
         }
         .article-card:hover { border-color: rgba(124,92,255,0.4); background: var(--bg-card-hover); }
@@ -82,7 +82,7 @@
 
         /* Detail modal */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 250;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 250;
             display: none; align-items: center; justify-content: center; padding: 24px;
         }
         .modal-overlay.open { display: flex; }
@@ -367,6 +367,8 @@
         }
 
         // Enter key to search
+        const debouncedSearch = typeof gprDebounce === 'function' ? gprDebounce(resetAndLoad, 400) : resetAndLoad;
+        document.getElementById('f-search').addEventListener('input', debouncedSearch);
         document.getElementById('f-search').addEventListener('keydown', e => { if (e.key === 'Enter') resetAndLoad(); });
 
         // Sync with global category

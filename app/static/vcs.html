@@ -189,7 +189,7 @@
                 <thead>
                     <tr>
                         <th class="cb-cell"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
-                        <th class="sortable" onclick="sortBy('name')">VC Firm</th>
+                        <th class="sortable" onclick="sortBy('name')">VC Firm <span class="sort-indicator active" id="sortInd">&#9650;</span></th>
                         <th>Region</th>
                         <th>Country</th>
                         <th>Priority</th>
@@ -481,6 +481,8 @@
 
         function sortBy(field) {
             if (sortField === field) sortDir *= -1; else { sortField = field; sortDir = 1; }
+            const ind = document.getElementById('sortInd');
+            if (ind) { ind.innerHTML = sortDir === 1 ? '&#9650;' : '&#9660;'; }
             filterAndRender();
         }
 
