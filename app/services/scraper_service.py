@@ -26,7 +26,7 @@ from app.models.scrape_job import ScrapeJob
 from app.scrapers.base import BaseScraper
 from app.scrapers.generic_rss import RssScraper
 from app.scrapers.site_specific.generic_html import GenericHtmlScraper
-from app.scrapers.content_extractor import extract_full_article
+from app.scrapers.content_extractor import extract_full_article, detect_contact_form_url
 from app.scrapers.dedup import compute_simhash, is_duplicate
 from app.scrapers.robots import can_fetch
 from app.scrapers.sitemap import discover_sitemap_urls, parse_sitemap
@@ -316,6 +316,21 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
         except Exception as e:
             logger.error(f"Error processing article {url}: {e}")
             result["errors"].append(f"{url}: {e}")
+
+    # Detect contact/submit form URL if not already known (all categories)
+    if not outlet.contact_form_url:
+        try:
+            form_url = detect_contact_form_url(
+                outlet.url,
+                timeout=settings.SCRAPE_REQUEST_TIMEOUT,
+                language=outlet.language,
+                use_stealth=settings.ENABLE_STEALTH_HEADERS,
+            )
+            if form_url:
+                outlet.contact_form_url = form_url
+                logger.info(f"Contact form URL found for {outlet.name}: {form_url}")
+        except Exception as e:
+            logger.debug(f"Contact form detection failed for {outlet.name}: {e}")
 
     db.commit()
     result["duration_seconds"] = round(time.monotonic() - start, 2)
