@@ -194,6 +194,8 @@
         function filterOutletPicker() {
             const cat = document.getElementById('category-select').value;
             const filtered = cat ? allOutlets.filter(o => o.category === cat) : allOutlets;
+            loadStats();
+            loadJobs();
             const sel = document.getElementById('outlet-select');
             sel.innerHTML = `<option value="">— Pick source (${filtered.length} of ${allOutlets.length}) —</option>`;
             // Group by category
@@ -214,19 +216,18 @@
         // ─── Stats ───
         async function loadStats() {
             try {
-                const res = await fetch('/api/scraper/stats');
+                const cat = document.getElementById('category-select').value;
+                const url = '/api/scraper/stats' + (cat ? '?category=' + encodeURIComponent(cat) : '');
+                const res = await fetch(url);
                 const s = await res.json();
-                const langCount = Object.keys(s.articles_by_language || {}).length;
                 const lastJob = (s.recent_jobs || [])[0];
-                const newsCount = allOutlets.filter(o => o.category === 'gaming_news').length;
-                const vcCount = allOutlets.filter(o => o.category === 'gaming_vc').length;
-                const streamerCount = allOutlets.filter(o => o.category === 'gaming_streamer').length;
+                const catOutlets = cat ? allOutlets.filter(o => o.category === cat) : allOutlets;
+                const outletCount = catOutlets.length;
+                const catLabel = {gaming_news:'News Outlets', gaming_vc:'VC Sources', gaming_streamer:'Streamers'}[cat] || 'Total Sources';
                 document.getElementById('stats').innerHTML = `
                     <div class="stat-card"><div class="stat-label">Total Scraped</div><div class="stat-value" style="color:var(--accent-light)">${(s.total_articles||0).toLocaleString()}</div></div>
                     <div class="stat-card"><div class="stat-label">Full Content</div><div class="stat-value" style="color:var(--green)">${(s.full_content_articles||0).toLocaleString()}</div><div class="stat-sub">${s.total_articles ? Math.round(s.full_content_articles/s.total_articles*100) : 0}%</div></div>
-                    <div class="stat-card"><div class="stat-label">News Outlets</div><div class="stat-value" style="color:var(--cyan)">${newsCount}</div></div>
-                    <div class="stat-card"><div class="stat-label">Gaming VCs</div><div class="stat-value" style="color:var(--green)">${vcCount}</div></div>
-                    <div class="stat-card"><div class="stat-label">Streamers</div><div class="stat-value" style="color:var(--orange)">${streamerCount}</div></div>
+                    <div class="stat-card"><div class="stat-label">${catLabel}</div><div class="stat-value" style="color:var(--cyan)">${outletCount}</div></div>
                     <div class="stat-card"><div class="stat-label">Last Job</div><div class="stat-value" style="font-size:0.9rem;color:var(--text-primary)">${lastJob ? timeAgo(lastJob.started_at) : 'Never'}</div><div class="stat-sub">${lastJob ? lastJob.status : '-'}</div></div>
                 `;
             } catch (e) {}
@@ -284,9 +285,29 @@
         async function loadJobs() {
             const el = document.getElementById('jobs-table');
             try {
-                const res = await fetch('/api/scraper/jobs?limit=20');
-                const jobs = await res.json();
-                if (!jobs.length) { el.innerHTML = '<div class="empty">No scrape jobs yet. Click "Scrape All Sources" to start.</div>'; return; }
+                const cat = document.getElementById('category-select').value;
+                const catOutletIds = cat ? new Set(allOutlets.filter(o => o.category === cat).map(o => o.id)) : null;
+                const res = await fetch('/api/scraper/jobs?limit=50');
+                let jobs = await res.json();
+
+                // Filter jobs by category
+                if (catOutletIds) {
+                    jobs = jobs.filter(j => {
+                        // scrape_all jobs (no outlet_id): include if they have outlet_results for this category
+                        if (!j.outlet_id) {
+                            return !j.outlet_results || j.outlet_results.some(r => catOutletIds.has(r.outlet_id));
+                        }
+                        return catOutletIds.has(j.outlet_id);
+                    });
+                    // Filter outlet_results breakdown to matching category
+                    jobs.forEach(j => {
+                        if (j.outlet_results) {
+                            j.outlet_results = j.outlet_results.filter(r => !r.outlet_id || catOutletIds.has(r.outlet_id));
+                        }
+                    });
+                }
+
+                if (!jobs.length) { el.innerHTML = `<div class="empty">No scrape jobs yet${cat ? ' for this category' : ''}. Click "Scrape All Sources" to start.</div>`; return; }
                 el.innerHTML = `<table>
                     <thead><tr><th>ID</th><th>Type</th><th>Status</th><th>When</th><th>Duration</th><th>Outlets</th><th>Found</th><th>New</th><th>Full</th><th>Errors</th></tr></thead>
                     <tbody>${jobs.map(j => {

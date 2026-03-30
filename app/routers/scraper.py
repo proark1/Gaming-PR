@@ -159,22 +159,24 @@ def get_article_history(article_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/stats")
-def scraper_stats(db: Session = Depends(get_db)):
-    """Get scraper statistics."""
-    # Single aggregate query instead of 2 separate scalar queries
-    counts = db.query(
+def scraper_stats(category: Optional[str] = None, db: Session = Depends(get_db)):
+    """Get scraper statistics, optionally filtered by outlet category."""
+    base_q = db.query(ScrapedArticle)
+    if category:
+        base_q = base_q.join(GamingOutlet).filter(GamingOutlet.category == category)
+    counts = base_q.with_entities(
         func.count(ScrapedArticle.id).label("total"),
         func.sum(case((ScrapedArticle.is_full_content == True, 1), else_=0)).label("full_content"),
     ).one()
     total_articles = counts.total or 0
     full_content = counts.full_content or 0
     by_language = dict(
-        db.query(ScrapedArticle.language, func.count(ScrapedArticle.id))
+        base_q.with_entities(ScrapedArticle.language, func.count(ScrapedArticle.id))
         .group_by(ScrapedArticle.language)
         .all()
     )
     by_type = dict(
-        db.query(ScrapedArticle.article_type, func.count(ScrapedArticle.id))
+        base_q.with_entities(ScrapedArticle.article_type, func.count(ScrapedArticle.id))
         .filter(ScrapedArticle.article_type.isnot(None))
         .group_by(ScrapedArticle.article_type)
         .all()
