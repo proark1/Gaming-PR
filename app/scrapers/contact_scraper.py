@@ -204,7 +204,50 @@ def _extract_social_links(soup: BeautifulSoup) -> dict:
     return found
 
 
-def scrape_outlet_contact(outlet_url: str, timeout: int = 15) -> dict:
+def _validate_social_url(url: str, timeout: int = 6) -> bool:
+    """
+    Verify a social/contact URL actually resolves and isn't a 404/error page.
+
+    Logic:
+    - 404 → definitely dead, discard
+    - 200 → live, keep
+    - 403/429/999 → platform blocking bots but profile likely exists, keep
+    - connection error / timeout → can't verify; keep (URL was found on their own page)
+
+    Uses HEAD first (fast), falls back to streaming GET if HEAD is disallowed.
+    """
+    from app.utils.url_safety import is_safe_url
+    if not url or not is_safe_url(url):
+        return False
+    try:
+        headers = get_stealth_headers(url)
+        resp = requests.head(url, headers=headers, timeout=timeout, allow_redirects=True)
+        if resp.status_code == 405:
+            # Server doesn't allow HEAD — try GET without reading body
+            resp = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True, stream=True)
+            resp.close()
+        if resp.status_code == 404:
+            logger.debug(f"Social URL 404, discarding: {url}")
+            return False
+        return True
+    except Exception as e:
+        # Network error / timeout — URL was on their own site so keep it
+        logger.debug(f"Could not validate social URL {url}: {e}")
+        return True
+
+
+def _validate_socials(socials: dict, timeout: int = 6) -> dict:
+    """Validate all found social links, removing any that return 404."""
+    validated = {}
+    for platform, url in socials.items():
+        if url and _validate_social_url(url, timeout=timeout):
+            validated[platform] = url
+        else:
+            logger.info(f"Dropping invalid social link [{platform}]: {url}")
+    return validated
+
+
+
     """
     Scrape contact info from an outlet's website.
 
@@ -272,6 +315,9 @@ def scrape_outlet_contact(outlet_url: str, timeout: int = 15) -> dict:
     best_phone = None
     if all_phones:
         best_phone = next(iter(all_phones))
+
+    # Validate social links — drop any that return 404 or are unreachable
+    all_socials = _validate_socials(all_socials, timeout=min(timeout, 8))
 
     return {
         "contact_email": best_email,

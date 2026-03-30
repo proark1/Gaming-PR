@@ -443,15 +443,29 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
             except Exception as e:
                 logger.debug(f"Contact form detection failed for {outlet.name}: {e}")
 
-        # Update social links (only if not already set)
+        # Update social links — prefer freshly scraped (already validated) value;
+        # if a new value was found, always use it (replaces stale/broken stored URL).
+        # If no new value found but an existing one is stored, re-validate it and
+        # clear it if it now returns 404.
+        from app.scrapers.contact_scraper import _validate_social_url
         social_fields = [
             "social_twitter", "social_facebook", "social_youtube",
             "social_linkedin", "social_instagram", "social_tiktok", "social_discord", "social_twitch",
         ]
         for field in social_fields:
-            if contact.get(field) and not getattr(outlet, field, None):
-                setattr(outlet, field, contact[field])
-                changed = True
+            new_val = contact.get(field)
+            existing_val = getattr(outlet, field, None)
+            if new_val:
+                # New validated value — always set it (may update stale URL)
+                if new_val != existing_val:
+                    setattr(outlet, field, new_val)
+                    changed = True
+            elif existing_val:
+                # No new value found; re-validate what's stored and clear if broken
+                if not _validate_social_url(existing_val):
+                    setattr(outlet, field, None)
+                    changed = True
+                    logger.info(f"Cleared stale social link {field} for {outlet.name}: {existing_val}")
 
         if changed:
             db.commit()
