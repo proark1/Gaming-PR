@@ -51,6 +51,13 @@
         .email-cell a:hover { text-decoration: underline; }
         .phone-cell { font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
         .no-data { color: var(--text-muted); font-size: 0.75rem; }
+        .contact-cell { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+        .contact-link { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 5px; font-size: 0.72rem; font-weight: 600; text-decoration: none; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-secondary); white-space: nowrap; }
+        .contact-link:hover { color: var(--text-primary); border-color: var(--accent); }
+        .contact-link.email { color: var(--accent-light); border-color: rgba(124,92,255,0.3); }
+        .contact-link.twitter { color: #1d9bf0; border-color: rgba(29,155,240,0.3); }
+        .contact-link.linkedin { color: #0a66c2; border-color: rgba(10,102,194,0.3); }
+        .contact-link.web { color: var(--cyan); border-color: rgba(6,182,212,0.3); }
 
         /* Detail panel (slide-in from right) */
         .detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; }
@@ -181,14 +188,13 @@
                         <th>Language</th>
                         <th>Country</th>
                         <th>Category</th>
-                        <th>Email</th>
-                        <th>Phone</th>
+                        <th>Contact</th>
                         <th>Status</th>
                         <th>Articles</th>
                     </tr>
                 </thead>
                 <tbody id="outlet-tbody">
-                    <tr><td colspan="9"><div class="loading"><div class="spinner"></div> Loading outlets...</div></td></tr>
+                    <tr><td colspan="8"><div class="loading"><div class="spinner"></div> Loading outlets...</div></td></tr>
                 </tbody>
             </table>
         </div>
@@ -287,7 +293,7 @@
         }
 
         async function loadOutlets() {
-            document.getElementById('outlet-tbody').innerHTML = '<tr><td colspan="9"><div class="loading"><div class="spinner"></div> Loading...</div></td></tr>';
+            document.getElementById('outlet-tbody').innerHTML = '<tr><td colspan="8"><div class="loading"><div class="spinner"></div> Loading...</div></td></tr>';
             const params = new URLSearchParams();
             const search = document.getElementById('f-search').value.trim();
             const category = document.getElementById('f-category').value;
@@ -304,7 +310,7 @@
                 renderTable();
                 loadStats();
             } catch (err) {
-                document.getElementById('outlet-tbody').innerHTML = `<tr><td colspan="9"><div class="empty-state" style="color:var(--red)">Failed: ${err.message}</div></td></tr>`;
+                document.getElementById('outlet-tbody').innerHTML = `<tr><td colspan="8"><div class="empty-state" style="color:var(--red)">Failed: ${err.message}</div></td></tr>`;
             }
         }
 
@@ -319,7 +325,7 @@
             });
             const tbody = document.getElementById('outlet-tbody');
             if (!sorted.length) {
-                tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">No outlets found</div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No outlets found</div></td></tr>';
                 return;
             }
             tbody.innerHTML = sorted.map(o => `
@@ -329,8 +335,15 @@
                     <td><span class="badge badge-accent">${o.language}</span></td>
                     <td>${esc(o.country || o.region || '-')}</td>
                     <td>${o.category ? `<span class="badge badge-cyan">${esc(o.category)}</span>` : '<span class="no-data">-</span>'}</td>
-                    <td class="email-cell">${o.contact_email ? `<a href="mailto:${esc(o.contact_email)}">${esc(o.contact_email)}</a>` : '<span class="no-data">-</span>'}</td>
-                    <td class="phone-cell">${o.contact_phone ? esc(o.contact_phone) : '<span class="no-data">-</span>'}</td>
+                    <td>${(() => {
+                        const links = [];
+                        if (o.contact_email) links.push(`<a class="contact-link email" href="mailto:${esc(o.contact_email.split(',')[0].trim())}">✉ Email</a>`);
+                        if (o.social_twitter) links.push(`<a class="contact-link twitter" href="${esc(o.social_twitter)}" target="_blank" rel="noopener">𝕏 Twitter</a>`);
+                        if (o.social_linkedin) links.push(`<a class="contact-link linkedin" href="${esc(o.social_linkedin)}" target="_blank" rel="noopener">in LinkedIn</a>`);
+                        if (o.contact_page_url) links.push(`<a class="contact-link web" href="${esc(o.contact_page_url)}" target="_blank" rel="noopener">↗ Contact</a>`);
+                        if (o.contact_form_url && !o.contact_page_url) links.push(`<a class="contact-link web" href="${esc(o.contact_form_url)}" target="_blank" rel="noopener">↗ Form</a>`);
+                        return links.length ? `<div class="contact-cell">${links.join('')}</div>` : '<span class="no-data">N/A</span>';
+                    })()}</td>
                     <td>${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">off</span>'}</td>
                     <td>${(o.total_articles_scraped || 0).toLocaleString()}</td>
                 </tr>

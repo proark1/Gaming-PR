@@ -91,6 +91,15 @@
         .email-cell a { color: inherit; text-decoration: none; }
         .email-cell a:hover { text-decoration: underline; }
         .no-data { color: var(--text-muted); font-size: 0.75rem; }
+        .contact-cell { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+        .contact-link { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 5px; font-size: 0.72rem; font-weight: 600; text-decoration: none; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-secondary); white-space: nowrap; }
+        .contact-link:hover { color: var(--text-primary); border-color: var(--accent); }
+        .contact-link.email { color: var(--accent-light); border-color: rgba(124,92,255,0.3); }
+        .contact-link.twitter { color: #1d9bf0; border-color: rgba(29,155,240,0.3); }
+        .contact-link.youtube { color: #ff0000; border-color: rgba(255,0,0,0.25); }
+        .contact-link.discord { color: #5865f2; border-color: rgba(88,101,242,0.3); }
+        .contact-link.tiktok { color: #fe2c55; border-color: rgba(254,44,85,0.3); }
+        .contact-link.web { color: var(--cyan); border-color: rgba(6,182,212,0.3); }
         .tbtn-accent { background: var(--accent); color: #fff; }
         .tbtn-accent:hover { opacity: 0.85; }
         .tbtn-accent:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -178,7 +187,7 @@
                         <th>Platform</th>
                         <th>Language</th>
                         <th>Country</th>
-                        <th>Email</th>
+                        <th>Contact</th>
                         <th>Status</th>
                         <th>Content</th>
                         <th>Last Scraped</th>
@@ -301,7 +310,16 @@
                     <td><span class="platform-badge ${pClass}">${pLabel}</span></td>
                     <td>${esc(s.language || '')}</td>
                     <td>${esc(s.country || s.region || '')}</td>
-                    <td class="email-cell">${s.contact_email ? `<a href="mailto:${esc(s.contact_email.split(',')[0].trim())}">${esc(s.contact_email.split(',')[0].trim())}</a>` : '<span class="no-data">-</span>'}</td>
+                    <td>${(() => {
+                        const links = [];
+                        if (s.contact_email) links.push(`<a class="contact-link email" href="mailto:${esc(s.contact_email.split(',')[0].trim())}">✉ Email</a>`);
+                        if (s.social_twitter) links.push(`<a class="contact-link twitter" href="${esc(s.social_twitter)}" target="_blank" rel="noopener">𝕏 Twitter</a>`);
+                        if (s.social_youtube) links.push(`<a class="contact-link youtube" href="${esc(s.social_youtube)}" target="_blank" rel="noopener">▶ YouTube</a>`);
+                        if (s.social_discord) links.push(`<a class="contact-link discord" href="${esc(s.social_discord)}" target="_blank" rel="noopener">Discord</a>`);
+                        if (s.social_tiktok) links.push(`<a class="contact-link tiktok" href="${esc(s.social_tiktok)}" target="_blank" rel="noopener">TikTok</a>`);
+                        if (s.contact_page_url) links.push(`<a class="contact-link web" href="${esc(s.contact_page_url)}" target="_blank" rel="noopener">↗ Contact</a>`);
+                        return links.length ? `<div class="contact-cell">${links.join('')}</div>` : '<span class="no-data">N/A</span>';
+                    })()}</td>
                     <td>${statusBadge}</td>
                     <td class="mono" style="font-size:0.82rem">${s.total_articles_scraped || 0}</td>
                     <td style="font-size:0.78rem;color:var(--text-muted)">${lastScraped}</td>
