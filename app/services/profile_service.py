@@ -88,25 +88,41 @@ def compile_investor_profile(investor: GamingInvestor) -> str:
     return json.dumps({k: v for k, v in profile.items() if v is not None and v != [] and v != {}}, ensure_ascii=False)
 
 
+import logging as _logging
+_log = _logging.getLogger(__name__)
+
+
 def save_outlet_profile(db: Session, outlet: GamingOutlet) -> None:
     """Compile and save outreach_profile on the outlet record."""
-    outlet.outreach_profile = compile_outlet_profile(outlet)
-    db.add(outlet)
-    db.commit()
-    db.refresh(outlet)
+    try:
+        outlet.outreach_profile = compile_outlet_profile(outlet)
+        db.add(outlet)
+        db.commit()
+        db.refresh(outlet)
+    except Exception as e:
+        db.rollback()
+        _log.warning(f"Could not save outlet profile for {outlet.id}: {e}")
 
 
 def save_streamer_profile(db: Session, streamer: Streamer) -> None:
     """Compile and save outreach_profile on the streamer record."""
-    streamer.outreach_profile = compile_streamer_profile(streamer)
-    db.add(streamer)
-    db.commit()
-    db.refresh(streamer)
+    try:
+        streamer.outreach_profile = compile_streamer_profile(streamer)
+        db.add(streamer)
+        db.commit()
+        db.refresh(streamer)
+    except Exception as e:
+        db.rollback()
+        _log.warning(f"Could not save streamer profile for {streamer.id}: {e}")
 
 
 def save_investor_profile(db: Session, investor: GamingInvestor) -> None:
     """Compile and save outreach_profile on the investor record."""
-    investor.outreach_profile = compile_investor_profile(investor)
-    db.add(investor)
-    db.commit()
-    db.refresh(investor)
+    try:
+        investor.outreach_profile = compile_investor_profile(investor)
+        db.add(investor)
+        db.commit()
+        db.refresh(investor)
+    except Exception as e:
+        db.rollback()
+        _log.warning(f"Could not save investor profile for {investor.id}: {e}")

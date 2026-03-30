@@ -126,8 +126,21 @@ def _auto_migrate_columns():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    _auto_migrate_columns()
+    logger.info("Startup: creating tables...")
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Startup: tables ready.")
+    except Exception as e:
+        logger.error(f"Startup: create_all failed (will retry on next deploy): {e}")
+
+    logger.info("Startup: running column migrations...")
+    try:
+        _auto_migrate_columns()
+        logger.info("Startup: column migrations complete.")
+    except Exception as e:
+        logger.error(f"Startup: migrations failed (will retry on next deploy): {e}")
+
+    logger.info("Startup: seeding database...")
     db = SessionLocal()
     try:
         outlets_added = seed_outlets(db)
@@ -141,6 +154,8 @@ async def lifespan(app: FastAPI):
         admin = seed_admin_user(db, email="assad.dar@gmail.com", username="assad_dar")
         if admin:
             logger.info(f"Admin user ready: {admin.email} (id={admin.id})")
+    except Exception as e:
+        logger.error(f"Startup: seeding failed: {e}")
     finally:
         db.close()
 

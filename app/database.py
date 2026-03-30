@@ -18,6 +18,10 @@ else:
         "max_overflow": 30,    # was 20 — headroom for translation threads + API requests
         "pool_pre_ping": True,
         "pool_recycle": 300,
+        "connect_args": {
+            "connect_timeout": 10,              # fail fast if DB unreachable
+            "options": "-c lock_timeout=5s",    # don't block forever waiting for table locks
+        },
     }
 
 engine = create_engine(
