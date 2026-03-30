@@ -379,15 +379,12 @@
         document.getElementById('f-search').addEventListener('keydown', e => { if (e.key === 'Enter') resetAndLoad(); });
 
         // Sync with global category
-        setTimeout(() => {
-            const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
-            if (gCat) document.getElementById('f-source').value = gCat;
+        const _initCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+        if (_initCat) {
+            document.getElementById('f-source').value = _initCat;
             const h1 = document.querySelector('h1');
-            if (h1 && gCat) {
-                const labels = {gaming_news:'Scraped Articles', gaming_vc:'VC Posts & News', gaming_streamer:'Streamer Content'};
-                h1.textContent = labels[gCat] || 'Scraped Content';
-            }
-        }, 50);
+            if (h1) { const labels = {gaming_news:'Scraped Articles', gaming_vc:'VC Posts & News', gaming_streamer:'Streamer Content'}; h1.textContent = labels[_initCat] || 'Scraped Content'; }
+        }
         window.addEventListener('gpr-category-change', e => {
             const cat = e.detail.category || '';
             document.getElementById('f-source').value = cat;

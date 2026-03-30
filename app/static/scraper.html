@@ -411,10 +411,8 @@
             const suffix = labels[cat] ? ` — ${labels[cat]}` : '';
             document.getElementById('pageTitle').textContent = 'Scraper Console' + suffix;
         }
-        setTimeout(() => {
-            const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
-            if (gCat) { document.getElementById('category-select').value = gCat; updateScraperHeading(gCat); }
-        }, 50);
+        const _initCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+        if (_initCat) { document.getElementById('category-select').value = _initCat; updateScraperHeading(_initCat); }
         window.addEventListener('gpr-category-change', e => {
             const cat = e.detail.category || '';
             document.getElementById('category-select').value = cat;

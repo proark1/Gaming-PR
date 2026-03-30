@@ -342,10 +342,8 @@
             const labels = {gaming_news:'News',gaming_vc:'VC',gaming_streamer:'Streamer'};
             document.getElementById('pageTitle').textContent = labels[cat] ? `${labels[cat]} Live Feed` : 'Live Feed';
         }
-        setTimeout(() => {
-            const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
-            if (gCat) { document.getElementById('f-source').value = gCat; updateFeedHeading(gCat); }
-        }, 50);
+        const _initCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+        if (_initCat) { document.getElementById('f-source').value = _initCat; updateFeedHeading(_initCat); }
         window.addEventListener('gpr-category-change', e => {
             const cat = e.detail.category || '';
             document.getElementById('f-source').value = cat;
