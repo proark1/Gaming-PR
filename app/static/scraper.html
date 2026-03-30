@@ -116,7 +116,13 @@
 
         <!-- Console log -->
         <div class="card">
-            <div class="card-header"><span>Activity Log</span><button class="act-btn" onclick="clearLog()">Clear</button></div>
+            <div class="card-header">
+                <span id="console-heading">Activity Log</span>
+                <div class="console-header-meta">
+                    <span class="console-line-count" id="console-line-count">0 lines</span>
+                    <button class="act-btn" onclick="clearLog()">Clear</button>
+                </div>
+            </div>
         </div>
         <div class="console" id="console"></div>
 
@@ -170,6 +176,11 @@
         function nowTime() { return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
 
         // ─── Console Log ───
+        function updateLineCount() {
+            const con = document.getElementById('console');
+            const cnt = document.getElementById('console-line-count');
+            if (cnt) cnt.textContent = con.children.length + ' lines';
+        }
         function log(msg, cls = '') {
             const con = document.getElementById('console');
             const line = document.createElement('div');
@@ -179,8 +190,21 @@
             con.scrollTop = con.scrollHeight;
             // Cap at 200 lines
             while (con.children.length > 200) con.firstChild.remove();
+            updateLineCount();
         }
-        function clearLog() { document.getElementById('console').innerHTML = ''; log('Console cleared', 'log-dim'); }
+        function clearLog() {
+            document.getElementById('console').innerHTML = '';
+            updateLineCount();
+            log('Console cleared', 'log-dim');
+        }
+
+        // Update category badge in console heading
+        function updateConsoleHeading() {
+            const cat = document.getElementById('category-select').value;
+            const catBadges = {gaming_news:'<span class="badge badge-cyan">News</span>', gaming_vc:'<span class="badge badge-green">VC</span>', gaming_streamer:'<span class="badge badge-orange">Streamer</span>'};
+            const heading = document.getElementById('console-heading');
+            if (heading) heading.innerHTML = 'Activity Log ' + (catBadges[cat] || '');
+        }
 
         // ─── Load Outlets for picker ───
         const CATEGORY_LABELS = { gaming_news: 'News', gaming_vc: 'VC', gaming_streamer: 'Streamer' };
@@ -194,6 +218,9 @@
         function filterOutletPicker() {
             const cat = document.getElementById('category-select').value;
             const filtered = cat ? allOutlets.filter(o => o.category === cat) : allOutlets;
+            updateConsoleHeading();
+            loadStats();
+            loadJobs();
             const sel = document.getElementById('outlet-select');
             sel.innerHTML = `<option value="">— Pick source (${filtered.length} of ${allOutlets.length}) —</option>`;
             // Group by category
@@ -291,7 +318,7 @@
                     <thead><tr><th>ID</th><th>Type</th><th>Status</th><th>When</th><th>Duration</th><th>Outlets</th><th>Found</th><th>New</th><th>Full</th><th>Errors</th></tr></thead>
                     <tbody>${jobs.map(j => {
                         const hasDetails = j.outlet_results && j.outlet_results.length > 0;
-                        return `<tr class="${hasDetails ? 'expandable' : ''}" onclick="${hasDetails ? `toggleJob(${j.id})` : ''}">
+                        return `<tr class="${hasDetails ? 'expandable' : ''} status-${j.status}" onclick="${hasDetails ? `toggleJob(${j.id})` : ''}">
                             <td style="font-family:'JetBrains Mono',monospace;font-size:0.74rem">#${j.id}${hasDetails ? ' &#9660;' : ''}</td>
                             <td>${esc(j.job_type)}</td>
                             <td>${statusBadge(j.status)}</td>

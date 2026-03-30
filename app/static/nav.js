@@ -517,6 +517,72 @@
         return function (...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), ms); };
     };
 
+    /**
+     * Build active filter chips HTML.
+     * @param {Object} filters  - { key: value } pairs (only truthy values shown)
+     * @param {Object} labels   - { key: 'Human Label' } display names
+     * @param {Function} onRemove - called with key when × is clicked (set on window as string name)
+     * @returns {string} HTML for <div class="filter-chips">...</div>
+     */
+    window.gprBuildFilterChips = function (filters, labels, onRemove) {
+        const chips = [];
+        for (const [key, val] of Object.entries(filters)) {
+            if (!val) continue;
+            const label = (labels && labels[key]) ? labels[key] : key;
+            const removeCall = typeof onRemove === 'string' ? `${onRemove}('${gprEsc(key)}')` : '';
+            chips.push(
+                `<span class="filter-chip">` +
+                `${gprEsc(label)}: <strong>${gprEsc(String(val))}</strong>` +
+                (removeCall ? `<button class="filter-chip-remove" onclick="${removeCall}" title="Remove filter">×</button>` : '') +
+                `</span>`
+            );
+        }
+        if (!chips.length) return '';
+        return `<div class="filter-chips">${chips.join('')}</div>`;
+    };
+
+    /**
+     * Make a section collapsible with a toggle header.
+     * @param {HTMLElement} headerEl - clicking this toggles the section
+     * @param {HTMLElement} bodyEl   - the collapsible content element
+     * @param {boolean} startOpen    - initial state (default true)
+     */
+    window.gprCollapsible = function (headerEl, bodyEl, startOpen = true) {
+        headerEl.classList.add('section-toggle');
+        if (!headerEl.querySelector('.section-toggle-chevron')) {
+            const chevron = document.createElement('span');
+            chevron.className = 'section-toggle-chevron';
+            chevron.textContent = '▼';
+            headerEl.appendChild(chevron);
+        }
+        bodyEl.classList.add('section-body');
+        // Set initial state
+        if (startOpen) {
+            headerEl.classList.add('open');
+            bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+            bodyEl.style.opacity = '1';
+        } else {
+            bodyEl.classList.add('collapsed');
+            bodyEl.style.maxHeight = '0';
+            bodyEl.style.opacity = '0';
+        }
+        headerEl.addEventListener('click', () => {
+            const isOpen = headerEl.classList.toggle('open');
+            if (isOpen) {
+                bodyEl.classList.remove('collapsed');
+                bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+                bodyEl.style.opacity = '1';
+            } else {
+                bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px'; // set explicit before animating
+                requestAnimationFrame(() => {
+                    bodyEl.classList.add('collapsed');
+                    bodyEl.style.maxHeight = '0';
+                    bodyEl.style.opacity = '0';
+                });
+            }
+        });
+    };
+
     // ─── Auth state ───
     window.gprGetToken = function () { return localStorage.getItem('gpr_token'); };
 

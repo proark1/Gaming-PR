@@ -169,7 +169,7 @@
                 document.getElementById('btn-next').disabled = articles.length < PAGE_SIZE;
 
                 if (!articles.length) {
-                    el.innerHTML = '<div class="empty"><div style="font-size:2rem;margin-bottom:10px">&#9997;&#65039;</div><div style="font-size:1.05rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px">No articles yet</div><div>Create your first article to start auto-translating</div></div>';
+                    el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#9997;&#65039;</div><div class="empty-title">No articles yet</div><div class="empty-desc">Create your first article to start auto-translating</div></div>';
                     return;
                 }
 

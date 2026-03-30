@@ -97,12 +97,12 @@
                 document.getElementById('content').innerHTML = `
                     <!-- Stat cards -->
                     <div class="stat-grid">
-                        <div class="stat-card">
+                        <div class="stat-card stat-card--hero">
                             <div class="stat-label">Total Scraped</div>
                             <div class="stat-value accent">${fmt(o.total_articles)}</div>
                             <div class="stat-sub">${fmt(o.full_content_articles)} full content (${o.extraction_rate_pct}%)</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card stat-card--hero">
                             <div class="stat-label">Last 24 Hours</div>
                             <div class="stat-value green">${fmt(o.articles_last_24h)}</div>
                             <div class="stat-sub">${fmt(o.articles_last_7d)} in last 7 days</div>
@@ -223,7 +223,7 @@
                         <table>
                             <thead><tr><th>Job ID</th><th>Type</th><th>Status</th><th>Started</th><th>Duration</th><th>Found</th><th>New</th><th>Errors</th></tr></thead>
                             <tbody>
-                                ${dash.recent_jobs.map(j => `<tr>
+                                ${dash.recent_jobs.map(j => `<tr class="status-${j.status}">
                                     <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem">#${j.id}</td>
                                     <td>${j.type}</td>
                                     <td>${statusBadge(j.status)}</td>
