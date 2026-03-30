@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy import func, case
 from sqlalchemy.orm import Session, joinedload, contains_eager
 
@@ -250,3 +250,31 @@ def scrape_schedule(db: Session = Depends(get_db)):
         "adaptive_scheduling_enabled": settings.ENABLE_ADAPTIVE_SCHEDULING,
         "outlets": get_schedule_info(db),
     }
+
+
+@router.get("/interval")
+def get_scrape_interval():
+    """Get the current auto-scrape interval in minutes."""
+    from app import scheduler_ref
+    sched = scheduler_ref.scheduler
+    if sched is None:
+        return {"interval_minutes": None}
+    job = sched.get_job("auto_scrape")
+    if job is None:
+        return {"interval_minutes": None}
+    interval = getattr(job.trigger, "interval", None)
+    minutes = int(interval.total_seconds() / 60) if interval else None
+    return {"interval_minutes": minutes}
+
+
+@router.patch("/interval")
+def set_scrape_interval(minutes: int = Body(..., embed=True), _user=Depends(get_current_user)):
+    """Change the auto-scrape interval at runtime (1–1440 minutes)."""
+    from app import scheduler_ref
+    if minutes < 1 or minutes > 1440:
+        raise HTTPException(status_code=400, detail="minutes must be between 1 and 1440")
+    sched = scheduler_ref.scheduler
+    if sched is None:
+        raise HTTPException(status_code=503, detail="Scheduler not running")
+    sched.reschedule_job("auto_scrape", trigger="interval", minutes=minutes)
+    return {"interval_minutes": minutes, "status": "updated"}

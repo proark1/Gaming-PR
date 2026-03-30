@@ -285,7 +285,6 @@
                 contentLinks: [
                     ['/articles', ICONS.articles, 'Scraped Articles', 'articles'],
                     ['/manage/messages', ICONS.message, 'My Messages', 'manage-messages'],
-                    ['/manage/articles', ICONS.edit, 'My Articles', 'manage-articles'],
                     ['/translations', ICONS.globe, 'Translations', 'translations'],
                 ],
                 sourceLabel: 'Sources',
@@ -385,7 +384,7 @@
             <div class="sb-cat-switcher">
                 <div class="sb-cat-label">Focus</div>
                 <div class="sb-cat-pills">
-                    <button class="sb-cat-pill${initCat === 'gaming_news' ? ' active' : ''}" data-cat="gaming_news" onclick="gprSetCategory('gaming_news')">News</button>
+                    <button class="sb-cat-pill${initCat === 'gaming_news' ? ' active' : ''}" data-cat="gaming_news" onclick="gprSetCategory('gaming_news')">News Outlet</button>
                     <button class="sb-cat-pill${initCat === 'gaming_vc' ? ' active' : ''}" data-cat="gaming_vc" onclick="gprSetCategory('gaming_vc')">VCs</button>
                     <button class="sb-cat-pill${initCat === 'gaming_streamer' ? ' active' : ''}" data-cat="gaming_streamer" onclick="gprSetCategory('gaming_streamer')">Streamers</button>
                 </div>
@@ -502,7 +501,7 @@
     /** Category badge HTML */
     window.gprCatBadge = function (category) {
         const map = {
-            gaming_news: { label: 'News', color: 'cyan' },
+            gaming_news: { label: 'News Outlet', color: 'cyan' },
             gaming_vc: { label: 'VC', color: 'green' },
             gaming_streamer: { label: 'Streamer', color: 'orange' },
         };

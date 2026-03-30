@@ -191,6 +191,8 @@ async def lifespan(app: FastAPI):
         )
 
     scheduler.start()
+    from app import scheduler_ref
+    scheduler_ref.scheduler = scheduler
     logger.info(
         f"Scheduler started. Scraping every {settings.SCRAPE_INTERVAL_MINUTES} minutes. "
         f"Adaptive scheduling: {'ON' if settings.ENABLE_ADAPTIVE_SCHEDULING else 'OFF'}. "

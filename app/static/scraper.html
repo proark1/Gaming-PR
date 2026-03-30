@@ -152,6 +152,21 @@
                     <div class="sb-body" id="retry-queue"><div class="loading"><div class="spinner"></div></div></div>
                 </div>
 
+                <!-- Scraper Interval -->
+                <div class="sb-card">
+                    <div class="sb-header"><span>Scrape Interval</span></div>
+                    <div class="sb-body">
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <input type="number" id="intervalInput" min="1" max="1440"
+                                   style="width:70px;background:var(--bg-input,#1a1a2e);border:1px solid var(--border);border-radius:4px;padding:4px 8px;color:var(--text);font-size:0.85rem"
+                                   placeholder="30">
+                            <span style="color:var(--text-muted);font-size:0.8rem">min</span>
+                            <button class="act-btn" onclick="saveInterval()">Save</button>
+                        </div>
+                        <div id="intervalStatus" style="font-size:0.75rem;color:var(--text-muted);margin-top:6px"></div>
+                    </div>
+                </div>
+
                 <!-- Schedule -->
                 <div class="sb-card">
                     <div class="sb-header"><span>Scrape Schedule</span></div>
@@ -423,6 +438,41 @@
             }
         }
 
+        // ─── Interval ───
+        async function loadInterval() {
+            try {
+                const res = await fetch('/api/scraper/interval');
+                const data = await res.json();
+                if (data.interval_minutes) {
+                    document.getElementById('intervalInput').value = data.interval_minutes;
+                    document.getElementById('intervalStatus').textContent = `Currently: every ${data.interval_minutes} min`;
+                }
+            } catch (e) {}
+        }
+
+        async function saveInterval() {
+            const minutes = parseInt(document.getElementById('intervalInput').value);
+            if (!minutes || minutes < 1) return;
+            const statusEl = document.getElementById('intervalStatus');
+            try {
+                const res = await gprFetch('/api/scraper/interval', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ minutes })
+                });
+                if (res && res.ok) {
+                    statusEl.textContent = `Saved — scraping every ${minutes} min`;
+                    statusEl.style.color = 'var(--success, #22c55e)';
+                } else {
+                    statusEl.textContent = 'Failed to save';
+                    statusEl.style.color = 'var(--error, #ef4444)';
+                }
+            } catch (e) {
+                statusEl.textContent = 'Error: ' + e.message;
+                statusEl.style.color = 'var(--error, #ef4444)';
+            }
+        }
+
         // ─── Schedule ───
         async function loadSchedule() {
             const el = document.getElementById('schedule');
@@ -446,6 +496,7 @@
             loadCircuitBreakers();
             loadRetryQueue();
             loadSchedule();
+            loadInterval();
         }
 
         // ─── Init ───
