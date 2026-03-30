@@ -49,6 +49,9 @@ class GamingOutlet(Base):
     # Flexible config per outlet
     scraper_config = Column(JSON, nullable=True, default=dict)
 
+    # Outreach profile (JSON string compiled from structured fields)
+    outreach_profile = Column(Text, nullable=True)
+
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

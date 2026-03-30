@@ -72,6 +72,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_MINUTES: int = 1440  # 24 hours
 
+    # Claude AI (for personalized outreach)
+    ANTHROPIC_API_KEY: str = ""
+
     # Email service (external)
     EMAIL_SERVICE_URL: str = "http://localhost:3000"
     EMAIL_SERVICE_API_KEY: str = ""

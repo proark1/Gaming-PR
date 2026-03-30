@@ -245,7 +245,17 @@
                     } catch (e) { return { ...m, translations: [] }; }
                 }));
 
-                el.innerHTML = withTranslations.map(m => {
+                // Also fetch personalization counts
+                const withPersonalizations = await Promise.all(withTranslations.map(async (m) => {
+                    try {
+                        const pRes = await fetch(`/api/messages/${m.id}/personalizations`);
+                        const pList = await pRes.json();
+                        const pCompleted = pList.filter(p => p.status === 'completed').length;
+                        return { ...m, pTotal: pList.length, pCompleted };
+                    } catch (e) { return { ...m, pTotal: 0, pCompleted: 0 }; }
+                }));
+
+                el.innerHTML = withPersonalizations.map(m => {
                     const completed = m.translations.filter(t => t.status === 'completed').length;
                     const failed = m.translations.filter(t => t.status === 'failed').length;
                     const pending = m.translations.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
@@ -255,6 +265,7 @@
                             <div class="msg-actions">
                                 <button class="act-btn" onclick="openEdit(${m.id})" ${!isLoggedIn()?'disabled':''}>Edit</button>
                                 <button class="act-btn" onclick="viewTranslations(${m.id})">Translations</button>
+                                <button class="act-btn" onclick="viewIndividual(${m.id})">Individual</button>
                                 <button class="act-btn danger" onclick="deleteMessage(${m.id})" ${!isLoggedIn()?'disabled':''}>Delete</button>
                             </div>
                         </div>
@@ -270,6 +281,7 @@
                             ${pending > 0 ? `<span class="badge badge-sm badge-orange">${pending} pending</span>` : ''}
                             ${failed > 0 ? `<span class="badge badge-sm badge-red">${failed} failed</span>` : ''}
                             ${m.translations.length === 0 ? '<span style="font-size:0.75rem;color:var(--text-muted)">Translations queued…</span>' : ''}
+                            ${m.pTotal > 0 ? `<span class="badge badge-sm badge-accent">${m.pCompleted}/${m.pTotal} personalized</span>` : ''}
                         </div>
                     </div>`;
                 }).join('');
@@ -369,6 +381,10 @@
 
         function viewTranslations(id) {
             window.location.href = `/message-translations?message_id=${id}`;
+        }
+
+        function viewIndividual(id) {
+            window.location.href = `/individual-messages?message_id=${id}`;
         }
 
         updateCatUI();

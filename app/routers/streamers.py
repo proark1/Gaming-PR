@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.streamer import Streamer
+from app.services.profile_service import save_streamer_profile
 from app.schemas.streamer import (
     StreamerCreate,
     StreamerUpdate,
@@ -111,6 +112,7 @@ def create_streamer(payload: StreamerCreate, db: Session = Depends(get_db)):
     db.add(streamer)
     db.commit()
     db.refresh(streamer)
+    save_streamer_profile(db, streamer)
     return streamer
 
 
@@ -123,6 +125,17 @@ def update_streamer(streamer_id: int, payload: StreamerUpdate, db: Session = Dep
         setattr(streamer, field, value)
     db.commit()
     db.refresh(streamer)
+    save_streamer_profile(db, streamer)
+    return streamer
+
+
+@router.post("/{streamer_id}/refresh-profile", response_model=StreamerResponse)
+def refresh_streamer_profile(streamer_id: int, db: Session = Depends(get_db)):
+    """Recompile and save the outreach profile from current streamer data."""
+    streamer = db.query(Streamer).filter(Streamer.id == streamer_id).first()
+    if not streamer:
+        raise HTTPException(status_code=404, detail="Streamer not found")
+    save_streamer_profile(db, streamer)
     return streamer
 
 

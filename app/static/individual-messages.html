@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Individual Messages · Gaming PR</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h1 { font-size: 1.4rem; margin: 0 0 0.25rem; color: var(--fg); }
+    .page-header .subtitle { color: var(--fg-muted); font-size: 0.85rem; }
+    .back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+    .back-link:hover { text-decoration: underline; }
+
+    /* Source message card */
+    .source-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .source-card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+    .source-title { font-weight: 600; font-size: 1rem; color: var(--fg); }
+    .source-body { color: var(--fg-muted); font-size: 0.85rem; line-height: 1.5; margin-top: 0.5rem;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Toolbar */
+    .toolbar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .toolbar-right { margin-left: auto; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn { padding: 0.45rem 1rem; border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem;
+      font-weight: 600; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-secondary { background: var(--surface-2, #2a2a3a); color: var(--fg); border: 1px solid var(--border); }
+    .btn-warn { background: var(--danger, #e53e3e); color: #fff; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    select.filter-select {
+      background: var(--surface); color: var(--fg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.4rem 0.75rem; font-size: 0.85rem; cursor: pointer;
+    }
+
+    /* Stats row */
+    .stats-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .stat-pill {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      padding: 0.35rem 0.9rem; font-size: 0.82rem; color: var(--fg-muted);
+    }
+    .stat-pill strong { color: var(--fg); }
+    .stat-pill.completed { border-color: var(--success, #38a169); }
+    .stat-pill.failed { border-color: var(--danger, #e53e3e); }
+    .stat-pill.pending { border-color: var(--warning, #d69e2e); }
+
+    /* Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1rem;
+    }
+
+    /* Contact card */
+    .contact-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .contact-card.status-completed { border-left-color: var(--success, #38a169); }
+    .contact-card.status-failed { border-left-color: var(--danger, #e53e3e); }
+    .contact-card.status-pending { border-left-color: var(--warning, #d69e2e); }
+
+    .card-top { display: flex; align-items: flex-start; gap: 0.5rem; flex-wrap: wrap; }
+    .card-name { font-weight: 600; font-size: 0.95rem; color: var(--fg); flex: 1; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .badge {
+      display: inline-flex; align-items: center; padding: 0.15rem 0.5rem;
+      border-radius: 10px; font-size: 0.7rem; font-weight: 700; white-space: nowrap;
+    }
+    .badge-lang { background: #1a3a4a; color: #64c8e8; }
+    .badge-outlet { background: #0d2d1a; color: #4ade80; }
+    .badge-streamer { background: #2d1a0d; color: #fb923c; }
+    .badge-vc { background: #1a0d2d; color: #c084fc; }
+    .badge-completed { background: #0d2d1a; color: #4ade80; }
+    .badge-failed { background: #2d0d0d; color: #f87171; }
+    .badge-pending { background: #2d2200; color: #fbbf24; }
+
+    .card-personalized-title {
+      font-weight: 600; font-size: 0.85rem; color: var(--fg);
+      border-top: 1px solid var(--border); padding-top: 0.5rem;
+    }
+    .card-personalized-body {
+      font-size: 0.82rem; color: var(--fg-muted); line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    .card-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem; }
+    .card-btn {
+      padding: 0.3rem 0.65rem; border-radius: 5px; border: 1px solid var(--border);
+      background: var(--surface-2, #2a2a3a); color: var(--fg-muted); cursor: pointer;
+      font-size: 0.75rem; transition: color 0.2s, border-color 0.2s;
+    }
+    .card-btn:hover { color: var(--fg); border-color: var(--accent); }
+
+    .card-meta { font-size: 0.72rem; color: var(--fg-muted); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--fg-muted); }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .empty-state h3 { margin: 0 0 0.5rem; color: var(--fg); }
+    .empty-state p { margin: 0; font-size: 0.85rem; }
+
+    /* Polling indicator */
+    .poll-indicator {
+      display: none; align-items: center; gap: 0.5rem;
+      font-size: 0.82rem; color: var(--accent);
+    }
+    .poll-indicator.active { display: flex; }
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--fg); padding: 0.75rem 1.25rem; border-radius: 8px;
+      font-size: 0.85rem; z-index: 1000; opacity: 0;
+      transition: opacity 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+
+<main class="main-content">
+  <div class="page-header">
+    <a href="/manage/messages" class="back-link">← Back to My Messages</a>
+    <h1 id="page-title">Individual Messages</h1>
+    <div class="subtitle" id="page-subtitle">Personalized outreach for each contact</div>
+  </div>
+
+  <!-- Source message card -->
+  <div class="source-card" id="source-card" style="display:none">
+    <div class="source-card-header">
+      <span class="source-title" id="source-title"></span>
+      <span class="badge" id="source-cat-badge"></span>
+      <span class="badge badge-lang" id="source-lang-badge"></span>
+    </div>
+    <div class="source-body" id="source-body"></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="btn btn-primary" id="btn-generate-all" onclick="generateAll()">⚡ Generate All</button>
+    <button class="btn btn-secondary" id="btn-retry-failed" onclick="retryFailed()">↺ Retry Failed</button>
+    <div class="poll-indicator" id="poll-indicator">
+      <div class="spinner"></div> Generating…
+    </div>
+    <div class="toolbar-right">
+      <select class="filter-select" id="filter-status" onchange="applyFilters()">
+        <option value="">All Statuses</option>
+        <option value="completed">Completed</option>
+        <option value="pending">Pending</option>
+        <option value="failed">Failed</option>
+      </select>
+      <select class="filter-select" id="filter-type" onchange="applyFilters()">
+        <option value="">All Types</option>
+        <option value="outlet">Outlets</option>
+        <option value="streamer">Streamers</option>
+        <option value="vc">VCs</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row" id="stats-row"></div>
+
+  <!-- Cards grid -->
+  <div class="cards-grid" id="cards-grid">
+    <div class="empty-state">
+      <div class="icon">✉️</div>
+      <h3>Loading…</h3>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="/static/nav.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const messageId = parseInt(params.get('message_id') || '0', 10);
+  let allPersonalizations = [];
+  let pollTimer = null;
+
+  const CAT_BADGES = {
+    gaming_news: { label: 'News', cls: 'badge-outlet' },
+    gaming_streamer: { label: 'Streamers', cls: 'badge-streamer' },
+    gaming_vc: { label: 'VCs', cls: 'badge-vc' },
+  };
+
+  function fmtAgo(iso) {
+    if (!iso) return '';
+    const d = new Date(iso + (iso.endsWith('Z') ? '' : 'Z'));
+    const sec = Math.floor((Date.now() - d) / 1000);
+    if (sec < 60) return `${sec}s ago`;
+    if (sec < 3600) return `${Math.floor(sec/60)}m ago`;
+    if (sec < 86400) return `${Math.floor(sec/3600)}h ago`;
+    return `${Math.floor(sec/86400)}d ago`;
+  }
+
+  async function init() {
+    if (!messageId) {
+      document.getElementById('cards-grid').innerHTML =
+        '<div class="empty-state"><div class="icon">⚠️</div><h3>No message_id in URL</h3><p>Add ?message_id=X to the URL</p></div>';
+      return;
+    }
+    await loadMessage();
+    await loadPersonalizations();
+  }
+
+  async function loadMessage() {
+    try {
+      const r = await fetch(`/api/messages/${messageId}?include_translations=false`);
+      if (!r.ok) throw new Error('Message not found');
+      const msg = await r.json();
+      document.getElementById('page-title').textContent = `Individual Messages for: "${msg.title}"`;
+      document.getElementById('source-title').textContent = msg.title;
+      document.getElementById('source-body').textContent = msg.body;
+      const cat = CAT_BADGES[msg.category] || { label: msg.category, cls: '' };
+      const catBadge = document.getElementById('source-cat-badge');
+      catBadge.textContent = cat.label;
+      catBadge.className = `badge ${cat.cls}`;
+      document.getElementById('source-lang-badge').textContent = msg.source_language.toUpperCase();
+      document.getElementById('source-card').style.display = '';
+    } catch (e) {
+      showToast('Failed to load message: ' + e.message, true);
+    }
+  }
+
+  async function loadPersonalizations() {
+    const status = document.getElementById('filter-status').value;
+    const type = document.getElementById('filter-type').value;
+    let url = `/api/messages/${messageId}/personalizations`;
+    const qs = [];
+    if (status) qs.push(`status=${status}`);
+    if (type) qs.push(`target_type=${type}`);
+    if (qs.length) url += '?' + qs.join('&');
+
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(await r.text());
+      allPersonalizations = await r.json();
+      renderStats();
+      renderCards();
+      checkPollNeeded();
+    } catch (e) {
+      showToast('Failed to load personalizations: ' + e.message, true);
+    }
+  }
+
+  function renderStats() {
+    // Always fetch all (unfiltered) for stats
+    fetch(`/api/messages/${messageId}/personalizations`).then(r => r.json()).then(all => {
+      const total = all.length;
+      const completed = all.filter(p => p.status === 'completed').length;
+      const pending = all.filter(p => p.status === 'pending').length;
+      const failed = all.filter(p => p.status === 'failed').length;
+      document.getElementById('stats-row').innerHTML = `
+        <div class="stat-pill completed"><strong>${completed}</strong> Generated</div>
+        <div class="stat-pill pending"><strong>${pending}</strong> Pending</div>
+        <div class="stat-pill failed"><strong>${failed}</strong> Failed</div>
+        <div class="stat-pill"><strong>${total}</strong> Total</div>
+      `;
+    }).catch(() => {});
+  }
+
+  function renderCards() {
+    const grid = document.getElementById('cards-grid');
+    if (!allPersonalizations.length) {
+      grid.innerHTML = `<div class="empty-state">
+        <div class="icon">✉️</div>
+        <h3>No personalized messages yet</h3>
+        <p>Click "Generate All" to create personalized outreach for every contact in this category.</p>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = allPersonalizations.map(p => {
+      const typeCls = p.target_type === 'outlet' ? 'badge-outlet'
+                    : p.target_type === 'streamer' ? 'badge-streamer' : 'badge-vc';
+      const statusCls = `badge-${p.status}`;
+      const cardCls = `status-${p.status}`;
+      const hasContent = p.personalized_title || p.personalized_body;
+      return `<div class="contact-card ${cardCls}" id="card-${p.id}">
+        <div class="card-top">
+          <div class="card-name" title="${esc(p.target_name)}">${esc(p.target_name)}</div>
+          <span class="badge badge-lang">${esc(p.target_language.toUpperCase())}</span>
+          <span class="badge ${typeCls}">${esc(p.target_type)}</span>
+          <span class="badge ${statusCls}">${esc(p.status)}</span>
+        </div>
+        ${hasContent ? `
+        <div class="card-personalized-title">${esc(p.personalized_title)}</div>
+        <div class="card-personalized-body">${esc(p.personalized_body)}</div>
+        ` : p.status === 'failed' ? `<div class="card-meta" style="color:var(--danger,#e53e3e)">Error: ${esc(p.error_message || 'Unknown error')}</div>` : `<div class="card-meta">Waiting to generate…</div>`}
+        <div class="card-actions">
+          ${hasContent ? `
+          <button class="card-btn" onclick="copyText(${JSON.stringify(p.personalized_title)})">📋 Copy Title</button>
+          <button class="card-btn" onclick="copyText(${JSON.stringify(p.personalized_body)})">📋 Copy Body</button>
+          ` : ''}
+          <button class="card-btn" onclick="regenerate('${esc(p.target_type)}', ${p.target_id})">🔁 Regenerate</button>
+        </div>
+        <div class="card-meta">${p.updated_at ? 'Updated ' + fmtAgo(p.updated_at) : ''}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function applyFilters() {
+    loadPersonalizations();
+  }
+
+  async function generateAll() {
+    const btn = document.getElementById('btn-generate-all');
+    btn.disabled = true;
+    try {
+      const r = await fetch(`/api/messages/${messageId}/personalize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ target_ids: null }),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const data = await r.json();
+      showToast(`Queued ${data.queued} contacts for personalization`);
+      startPolling();
+    } catch (e) {
+      showToast('Error: ' + e.message, true);
+      btn.disabled = false;
+    }
+  }
+
+  async function retryFailed() {
+    try {
+      const r = await fetch(`/api/messages/${messageId}/personalizations/retry`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      showToast('Retrying failed personalizations…');
+      startPolling();
+    } catch (e) {
+      showToast('Error: ' + e.message, true);
+    }
+  }
+
+  async function regenerate(targetType, targetId) {
+    try {
+      const r = await fetch(`/api/messages/${messageId}/personalize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ target_ids: [targetId] }),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      showToast('Regenerating…');
+      startPolling();
+    } catch (e) {
+      showToast('Error: ' + e.message, true);
+    }
+  }
+
+  function startPolling() {
+    document.getElementById('poll-indicator').classList.add('active');
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+      await loadPersonalizations();
+      const pending = allPersonalizations.filter(p => p.status === 'pending').length;
+      if (pending === 0) {
+        stopPolling();
+      }
+    }, 3000);
+  }
+
+  function stopPolling() {
+    clearInterval(pollTimer);
+    pollTimer = null;
+    document.getElementById('poll-indicator').classList.remove('active');
+    document.getElementById('btn-generate-all').disabled = false;
+    loadPersonalizations();
+  }
+
+  function checkPollNeeded() {
+    const pending = allPersonalizations.filter(p => p.status === 'pending').length;
+    if (pending > 0 && !pollTimer) startPolling();
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied!')).catch(() => {
+      showToast('Copy failed', true);
+    });
+  }
+
+  function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function authHeaders() {
+    const token = localStorage.getItem('gpr_token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
+  let _toastTimer;
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderColor = isError ? 'var(--danger,#e53e3e)' : 'var(--border)';
+    t.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Bootstrap
+  if (typeof gprInitNav === 'function') gprInitNav();
+  init();
+</script>
+</body>
+</html>

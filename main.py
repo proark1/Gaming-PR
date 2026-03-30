@@ -14,6 +14,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.config import SUPPORTED_LANGUAGES, settings
 from app.database import Base, engine, SessionLocal
 from app.routers import articles, outlets, scraper, translations, messages
+from app.models.personalization import MessagePersonalization  # ensures table is created
 from app.routers.monitoring import router as monitoring_router
 from app.routers.webhooks import router as webhooks_router
 from app.routers.export import router as export_router
@@ -85,6 +86,9 @@ def _auto_migrate_columns():
         ("gaming_outlets", "social_discord", "VARCHAR(500)"),
         ("gaming_outlets", "social_twitch", "VARCHAR(500)"),
         ("users", "is_admin", "BOOLEAN DEFAULT FALSE"),
+        ("gaming_outlets", "outreach_profile", "TEXT"),
+        ("streamers", "outreach_profile", "TEXT"),
+        ("gaming_investors", "outreach_profile", "TEXT"),
     ]
     with engine.connect() as conn:
         for table, column, col_type in migrations:
@@ -313,6 +317,11 @@ def manage_messages_page():
 @app.get("/message-translations", response_class=HTMLResponse)
 def message_translations_page():
     return _serve_page("message-translations.html")
+
+
+@app.get("/individual-messages", response_class=HTMLResponse)
+def individual_messages_page():
+    return _serve_page("individual-messages.html")
 
 
 @app.get("/translations", response_class=HTMLResponse)

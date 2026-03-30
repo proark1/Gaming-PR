@@ -85,6 +85,9 @@ class Streamer(Base):
     is_verified = Column(Boolean, default=False)              # data manually verified
     notes = Column(Text, nullable=True)
 
+    # Outreach profile (JSON string compiled from structured fields)
+    outreach_profile = Column(Text, nullable=True)
+
     # Freshness tracking
     last_stats_updated_at = Column(DateTime, nullable=True)
     twitch_last_live_at = Column(DateTime, nullable=True)

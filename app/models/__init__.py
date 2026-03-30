@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.investor import GamingInvestor
 from app.models.streamer import Streamer
 from app.models.message import Message, MessageTranslation
+from app.models.personalization import MessagePersonalization
 
 __all__ = [
     "GamingOutlet", "Article", "ArticleTranslation",
@@ -15,4 +16,5 @@ __all__ = [
     "ConnectedDomain", "SentEmail", "User",
     "GamingInvestor", "Streamer",
     "Message", "MessageTranslation",
+    "MessagePersonalization",
 ]

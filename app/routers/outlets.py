@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models.outlet import GamingOutlet
 from app.schemas.outlet import OutletCreate, OutletUpdate, OutletResponse, OutletStatsResponse
 from app.routers.auth import get_current_user, get_admin_user
+from app.services.profile_service import save_outlet_profile
 
 router = APIRouter(prefix="/api/outlets", tags=["outlets"])
 
@@ -77,6 +78,7 @@ def create_outlet(data: OutletCreate, db: Session = Depends(get_db), _user=Depen
     db.add(outlet)
     db.commit()
     db.refresh(outlet)
+    save_outlet_profile(db, outlet)
     return outlet
 
 
@@ -91,6 +93,17 @@ def update_outlet(outlet_id: int, data: OutletUpdate, db: Session = Depends(get_
         setattr(outlet, field, value)
     db.commit()
     db.refresh(outlet)
+    save_outlet_profile(db, outlet)
+    return outlet
+
+
+@router.post("/{outlet_id}/refresh-profile", response_model=OutletResponse)
+def refresh_outlet_profile(outlet_id: int, db: Session = Depends(get_db)):
+    """Recompile and save the outreach profile from current outlet data."""
+    outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
+    if not outlet:
+        raise HTTPException(status_code=404, detail="Outlet not found")
+    save_outlet_profile(db, outlet)
     return outlet
 
 

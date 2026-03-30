@@ -461,6 +461,10 @@
                 </div>` : ''}
 
                 <div class="dp-section">
+                    <div class="dp-section-title">Outreach Profile <button style="float:right;font-size:0.7rem;padding:2px 8px;cursor:pointer;border:1px solid var(--border);border-radius:4px;background:none;color:var(--text-muted)" onclick="refreshOutletProfile(${o.id})">↺ Refresh</button></div>
+                    ${o.outreach_profile ? `<pre style="font-size:0.75rem;color:var(--text-secondary);background:var(--bg-primary);padding:10px;border-radius:6px;overflow:auto;max-height:200px;white-space:pre-wrap;word-break:break-word">${esc(JSON.stringify(JSON.parse(o.outreach_profile), null, 2))}</pre>` : `<div style="color:var(--text-muted);font-size:0.82rem">No profile yet. Click ↺ Refresh to compile from current data.</div>`}
+                </div>
+                <div class="dp-section">
                     <div class="dp-section-title">Actions</div>
                     <div class="dp-actions">
                         <a class="dp-btn dp-btn-primary" href="${esc(o.url)}" target="_blank">Visit Website</a>
@@ -508,6 +512,16 @@
         function closeDetail() {
             document.getElementById('detail-overlay').classList.remove('open');
             document.getElementById('detail-panel').classList.remove('open');
+        }
+
+        async function refreshOutletProfile(id) {
+            try {
+                const r = await fetch(`/api/outlets/${id}/refresh-profile`, { method: 'POST' });
+                if (!r.ok) throw new Error(await r.text());
+                const updated = await r.json();
+                const idx = allOutlets.findIndex(x => x.id === id);
+                if (idx !== -1) { allOutlets[idx] = updated; openDetail(id); }
+            } catch (e) { alert('Failed to refresh profile: ' + e.message); }
         }
 
         async function scrapeOutlet(id, name) {

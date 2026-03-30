@@ -417,6 +417,10 @@
                     <div class="dp-section-title">Recent Posts & News</div>
                     <div id="detailArticles"><div style="color:var(--text-muted);font-size:0.82rem">Loading...</div></div>
                 </div>
+                <div class="dp-section">
+                    <div class="dp-section-title">Outreach Profile <button style="float:right;font-size:0.7rem;padding:2px 8px;cursor:pointer;border:1px solid var(--border);border-radius:4px;background:none;color:var(--text-muted)" onclick="refreshVCProfile(${v.id})">↺ Refresh</button></div>
+                    ${v.outreach_profile ? `<pre style="font-size:0.75rem;color:var(--text-secondary);background:var(--bg-primary);padding:10px;border-radius:6px;overflow:auto;max-height:200px;white-space:pre-wrap;word-break:break-word">${esc(JSON.stringify(JSON.parse(v.outreach_profile), null, 2))}</pre>` : `<div style="color:var(--text-muted);font-size:0.82rem">No profile yet. Click ↺ Refresh to compile from current data.</div>`}
+                </div>
                 <div class="dp-actions">
                     <button class="dp-btn dp-btn-green" onclick="scrapeOne(${v.id})">Scrape Content</button>
                     <button class="dp-btn dp-btn-primary" onclick="scrapeOne(${v.id})">Scrape Contacts</button>
@@ -454,6 +458,16 @@
         function closeDetail() {
             document.getElementById('detailOverlay').classList.remove('open');
             document.getElementById('detailPanel').classList.remove('open');
+        }
+
+        async function refreshVCProfile(id) {
+            try {
+                const r = await fetch(`/api/outlets/${id}/refresh-profile`, { method: 'POST' });
+                if (!r.ok) throw new Error(await r.text());
+                const updated = await r.json();
+                const idx = allVCs.findIndex(x => x.id === id);
+                if (idx !== -1) { allVCs[idx] = updated; showDetail(id); }
+            } catch (e) { alert('Failed to refresh profile: ' + e.message); }
         }
 
         function toggleSelect(id, checked) {

@@ -51,6 +51,9 @@ class GamingInvestor(Base):
     crunchbase_url = Column(String(2048), nullable=True)
     pitchbook_url = Column(String(2048), nullable=True)
 
+    # Outreach profile (JSON string compiled from structured fields)
+    outreach_profile = Column(Text, nullable=True)
+
     # State
     is_active = Column(Boolean, default=True, index=True)
     is_gaming_focused = Column(Boolean, default=True)  # True = gaming is primary focus

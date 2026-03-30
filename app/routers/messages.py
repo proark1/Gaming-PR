@@ -10,6 +10,7 @@ from app.schemas.message import (
     MessageWithTranslations,
     MessageTranslationResponse,
 )
+from app.schemas.personalization import MessagePersonalizationResponse, PersonalizeRequest
 from app.services.message_translation_service import (
     create_message,
     get_message,
@@ -18,7 +19,12 @@ from app.services.message_translation_service import (
     delete_message,
     translate_message,
 )
+from app.services.personalization_service import (
+    generate_personalizations,
+    retry_failed_personalizations,
+)
 from app.models.message import Message, MessageTranslation
+from app.models.personalization import MessagePersonalization
 from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/messages", tags=["messages"])
@@ -102,3 +108,88 @@ def retry_translations(message_id: int, background_tasks: BackgroundTasks, db: S
 
     background_tasks.add_task(_run)
     return message.translations
+
+
+# ─── Personalization endpoints ───
+
+@router.post("/{message_id}/personalize")
+def personalize_message(
+    message_id: int,
+    request: PersonalizeRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    """Trigger personalization generation for all (or selected) contacts. Runs in background."""
+    message = db.query(Message).filter(Message.id == message_id).first()
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    from app.services.personalization_service import get_contacts_for_message
+    contacts = get_contacts_for_message(db, message)
+    if request.target_ids is not None:
+        contacts = [c for c in contacts if c["id"] in request.target_ids]
+
+    def _run():
+        from app.database import SessionLocal
+        session = SessionLocal()
+        try:
+            generate_personalizations(session, message_id, target_ids=request.target_ids)
+        finally:
+            session.close()
+
+    background_tasks.add_task(_run)
+    return {"queued": len(contacts), "message": "Personalization started in background"}
+
+
+@router.get("/{message_id}/personalizations", response_model=list[MessagePersonalizationResponse])
+def list_personalizations(
+    message_id: int,
+    status: Optional[str] = None,
+    target_type: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """List personalized messages for a specific message, with optional status/type filters."""
+    message = db.query(Message).filter(Message.id == message_id).first()
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    q = db.query(MessagePersonalization).filter(MessagePersonalization.message_id == message_id)
+    if status:
+        q = q.filter(MessagePersonalization.status == status)
+    if target_type:
+        q = q.filter(MessagePersonalization.target_type == target_type)
+    return q.order_by(MessagePersonalization.target_name).all()
+
+
+@router.post("/{message_id}/personalizations/retry", response_model=list[MessagePersonalizationResponse])
+def retry_personalizations(
+    message_id: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    """Retry failed/pending personalizations for a message."""
+    message = db.query(Message).filter(Message.id == message_id).first()
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    pending = (
+        db.query(MessagePersonalization)
+        .filter(
+            MessagePersonalization.message_id == message_id,
+            MessagePersonalization.status.in_(["failed", "pending"]),
+        )
+        .all()
+    )
+
+    def _run():
+        from app.database import SessionLocal
+        session = SessionLocal()
+        try:
+            retry_failed_personalizations(session, message_id)
+        finally:
+            session.close()
+
+    background_tasks.add_task(_run)
+    return pending

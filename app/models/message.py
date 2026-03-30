@@ -19,6 +19,7 @@ class Message(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     translations = relationship("MessageTranslation", back_populates="message", cascade="all, delete-orphan")
+    personalizations = relationship("MessagePersonalization", back_populates="message", cascade="all, delete-orphan")
 
 
 class MessageTranslation(Base):

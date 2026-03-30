@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.investor import GamingInvestor
 from app.schemas.investor import InvestorCreate, InvestorUpdate, InvestorResponse
+from app.services.profile_service import save_investor_profile
 
 router = APIRouter(prefix="/api/investors", tags=["investors"])
 
@@ -85,6 +86,7 @@ def create_investor(payload: InvestorCreate, db: Session = Depends(get_db)):
     db.add(investor)
     db.commit()
     db.refresh(investor)
+    save_investor_profile(db, investor)
     return investor
 
 
@@ -97,6 +99,17 @@ def update_investor(investor_id: int, payload: InvestorUpdate, db: Session = Dep
         setattr(investor, field, value)
     db.commit()
     db.refresh(investor)
+    save_investor_profile(db, investor)
+    return investor
+
+
+@router.post("/{investor_id}/refresh-profile", response_model=InvestorResponse)
+def refresh_investor_profile(investor_id: int, db: Session = Depends(get_db)):
+    """Recompile and save the outreach profile from current investor data."""
+    investor = db.query(GamingInvestor).filter(GamingInvestor.id == investor_id).first()
+    if not investor:
+        raise HTTPException(status_code=404, detail="Investor not found")
+    save_investor_profile(db, investor)
     return investor
 
 
