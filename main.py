@@ -13,7 +13,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import SUPPORTED_LANGUAGES, settings
 from app.database import Base, engine, SessionLocal
-from app.routers import articles, outlets, scraper, translations
+from app.routers import articles, outlets, scraper, translations, messages
 from app.routers.monitoring import router as monitoring_router
 from app.routers.webhooks import router as webhooks_router
 from app.routers.export import router as export_router
@@ -233,6 +233,7 @@ app.include_router(email_router)
 app.include_router(auth_router)
 app.include_router(investors_router)
 app.include_router(streamers_router)
+app.include_router(messages.router)
 
 # Serve shared static assets (nav.js, etc.)
 _static_dir = Path(__file__).parent / "app" / "static"
@@ -302,6 +303,16 @@ def feed_page():
 @app.get("/manage/articles", response_class=HTMLResponse)
 def manage_articles_page():
     return _serve_page("manage-articles.html")
+
+
+@app.get("/manage/messages", response_class=HTMLResponse)
+def manage_messages_page():
+    return _serve_page("manage-messages.html")
+
+
+@app.get("/message-translations", response_class=HTMLResponse)
+def message_translations_page():
+    return _serve_page("message-translations.html")
 
 
 @app.get("/translations", response_class=HTMLResponse)

@@ -152,6 +152,9 @@
             </label>
         </div>
 
+        <!-- Export summary -->
+        <div id="export-summary" style="margin-bottom:14px;font-size:0.84rem;color:var(--text-muted);padding:8px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);display:none"></div>
+
         <!-- Download -->
         <div class="download-row">
             <button class="download-btn" id="download-btn" onclick="doExport()">Download JSON</button>
@@ -239,6 +242,28 @@
         function updateUrl() {
             const url = window.location.origin + getExportUrl();
             document.getElementById('api-url').textContent = url;
+            updateExportSummary();
+        }
+
+        function updateExportSummary() {
+            const SOURCE_LABELS = {gaming_news:'News Outlets', gaming_vc:'Gaming VCs', gaming_streamer:'Streamers'};
+            const lang = document.getElementById('f-language').value;
+            const source = document.getElementById('f-source').value;
+            const type = document.getElementById('f-type').value;
+            const days = document.getElementById('f-days').value;
+            const limit = document.getElementById('f-limit').value;
+            const parts = [];
+            if (source) parts.push(SOURCE_LABELS[source] || source);
+            else parts.push('All Sources');
+            if (lang) parts.push('Language: ' + lang.toUpperCase());
+            if (type) parts.push('Type: ' + type);
+            if (days) parts.push('Last ' + days + ' days');
+            if (limit) parts.push('Up to ' + parseInt(limit).toLocaleString() + ' articles');
+            const el = document.getElementById('export-summary');
+            if (el) {
+                el.textContent = 'Exporting: ' + parts.join(' · ');
+                el.style.display = '';
+            }
         }
 
         function copyUrl() {

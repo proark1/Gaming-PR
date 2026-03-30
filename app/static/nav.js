@@ -274,6 +274,7 @@
         webhook: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
         download: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
         docs: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+        message: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
     };
 
     function buildNavHtml(cat) {
@@ -283,6 +284,7 @@
                 contentLabel: 'Content',
                 contentLinks: [
                     ['/articles', ICONS.articles, 'Scraped Articles', 'articles'],
+                    ['/manage/messages', ICONS.message, 'My Messages', 'manage-messages'],
                     ['/manage/articles', ICONS.edit, 'My Articles', 'manage-articles'],
                     ['/translations', ICONS.globe, 'Translations', 'translations'],
                 ],
@@ -295,6 +297,7 @@
                 contentLabel: 'Content',
                 contentLinks: [
                     ['/articles', ICONS.articles, 'VC Posts & News', 'articles'],
+                    ['/manage/messages', ICONS.message, 'My Messages', 'manage-messages'],
                 ],
                 sourceLabel: 'Sources',
                 sourceLinks: [
@@ -305,6 +308,7 @@
                 contentLabel: 'Content',
                 contentLinks: [
                     ['/articles', ICONS.articles, 'Videos & Streams', 'articles'],
+                    ['/manage/messages', ICONS.message, 'My Messages', 'manage-messages'],
                 ],
                 sourceLabel: 'Sources',
                 sourceLinks: [
@@ -315,6 +319,7 @@
                 contentLabel: 'Content',
                 contentLinks: [
                     ['/articles', ICONS.articles, 'Scraped Content', 'articles'],
+                    ['/manage/messages', ICONS.message, 'My Messages', 'manage-messages'],
                     ['/manage/articles', ICONS.edit, 'My Articles', 'manage-articles'],
                     ['/translations', ICONS.globe, 'Translations', 'translations'],
                 ],
@@ -515,6 +520,72 @@
     window.gprDebounce = function (fn, ms) {
         let timer;
         return function (...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), ms); };
+    };
+
+    /**
+     * Build active filter chips HTML.
+     * @param {Object} filters  - { key: value } pairs (only truthy values shown)
+     * @param {Object} labels   - { key: 'Human Label' } display names
+     * @param {Function} onRemove - called with key when × is clicked (set on window as string name)
+     * @returns {string} HTML for <div class="filter-chips">...</div>
+     */
+    window.gprBuildFilterChips = function (filters, labels, onRemove) {
+        const chips = [];
+        for (const [key, val] of Object.entries(filters)) {
+            if (!val) continue;
+            const label = (labels && labels[key]) ? labels[key] : key;
+            const removeCall = typeof onRemove === 'string' ? `${onRemove}('${gprEsc(key)}')` : '';
+            chips.push(
+                `<span class="filter-chip">` +
+                `${gprEsc(label)}: <strong>${gprEsc(String(val))}</strong>` +
+                (removeCall ? `<button class="filter-chip-remove" onclick="${removeCall}" title="Remove filter">×</button>` : '') +
+                `</span>`
+            );
+        }
+        if (!chips.length) return '';
+        return `<div class="filter-chips">${chips.join('')}</div>`;
+    };
+
+    /**
+     * Make a section collapsible with a toggle header.
+     * @param {HTMLElement} headerEl - clicking this toggles the section
+     * @param {HTMLElement} bodyEl   - the collapsible content element
+     * @param {boolean} startOpen    - initial state (default true)
+     */
+    window.gprCollapsible = function (headerEl, bodyEl, startOpen = true) {
+        headerEl.classList.add('section-toggle');
+        if (!headerEl.querySelector('.section-toggle-chevron')) {
+            const chevron = document.createElement('span');
+            chevron.className = 'section-toggle-chevron';
+            chevron.textContent = '▼';
+            headerEl.appendChild(chevron);
+        }
+        bodyEl.classList.add('section-body');
+        // Set initial state
+        if (startOpen) {
+            headerEl.classList.add('open');
+            bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+            bodyEl.style.opacity = '1';
+        } else {
+            bodyEl.classList.add('collapsed');
+            bodyEl.style.maxHeight = '0';
+            bodyEl.style.opacity = '0';
+        }
+        headerEl.addEventListener('click', () => {
+            const isOpen = headerEl.classList.toggle('open');
+            if (isOpen) {
+                bodyEl.classList.remove('collapsed');
+                bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+                bodyEl.style.opacity = '1';
+            } else {
+                bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px'; // set explicit before animating
+                requestAnimationFrame(() => {
+                    bodyEl.classList.add('collapsed');
+                    bodyEl.style.maxHeight = '0';
+                    bodyEl.style.opacity = '0';
+                });
+            }
+        });
     };
 
     // ─── Auth state ───

@@ -146,7 +146,7 @@
         <div class="stats-bar" id="stats-bar"></div>
 
         <!-- Toolbar: filters + actions -->
-        <div class="toolbar">
+        <div class="toolbar" id="outlet-toolbar">
             <div class="fg">
                 <span class="fg-label">Search</span>
                 <input id="f-search" type="text" placeholder="Search outlet name...">
@@ -168,7 +168,7 @@
                 <span class="fg-label">Status</span>
                 <select id="f-active"><option value="">All</option><option value="true">Active</option><option value="false">Inactive</option></select>
             </div>
-            <button class="tbtn tbtn-primary" onclick="loadOutlets()">Filter</button>
+            <button class="tbtn tbtn-primary" onclick="loadOutletsAndChips()">Filter</button>
             <button class="tbtn tbtn-ghost" onclick="clearFilters()">Clear</button>
             <div class="toolbar-right">
                 <span class="selected-count" id="sel-count"></span>
@@ -178,19 +178,21 @@
             </div>
         </div>
 
+        <div id="outlet-filter-chips"></div>
+
         <!-- Table -->
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
                         <th class="cb-cell"><input type="checkbox" id="select-all" onchange="toggleAll(this.checked)"></th>
-                        <th class="sortable" onclick="sortBy('name')">Outlet</th>
-                        <th>Language</th>
+                        <th class="sortable" id="sort-name" onclick="sortBy('name')">Outlet</th>
+                        <th class="sortable" id="sort-language" onclick="sortBy('language')">Language</th>
                         <th>Country</th>
-                        <th>Category</th>
+                        <th class="sortable" id="sort-category" onclick="sortBy('category')">Category</th>
                         <th>Contact</th>
-                        <th>Status</th>
-                        <th>Articles</th>
+                        <th class="sortable" id="sort-is_active" onclick="sortBy('is_active')">Status</th>
+                        <th class="sortable" id="sort-total_articles_scraped" onclick="sortBy('total_articles_scraped')">Articles</th>
                     </tr>
                 </thead>
                 <tbody id="outlet-tbody">
@@ -277,7 +279,7 @@
                 const s = await res.json();
                 const withEmail = allOutlets.filter(o => o.contact_email).length;
                 document.getElementById('stats-bar').innerHTML = `
-                    <div class="stat-pill"><span class="label">Total Outlets</span><span class="value accent">${s.total_outlets}</span></div>
+                    <div class="stat-pill stat-card--hero"><span class="label">Total Outlets</span><span class="value accent">${s.total_outlets}</span></div>
                     <div class="stat-pill"><span class="label">Active</span><span class="value green">${s.active_outlets}</span></div>
                     <div class="stat-pill"><span class="label">With Email</span><span class="value accent">${withEmail}</span></div>
                     <div class="stat-pill"><span class="label">With Failures</span><span class="value orange">${s.outlets_with_failures}</span></div>
@@ -289,6 +291,9 @@
         function sortBy(field) {
             if (sortField === field) sortAsc = !sortAsc;
             else { sortField = field; sortAsc = true; }
+            document.querySelectorAll('th.sortable').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+            const activeTh = document.getElementById('sort-' + field);
+            if (activeTh) activeTh.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
             renderTable();
         }
 
@@ -342,7 +347,10 @@
                         if (o.social_linkedin) links.push(`<a class="contact-link linkedin" href="${esc(o.social_linkedin)}" target="_blank" rel="noopener">in LinkedIn</a>`);
                         if (o.contact_page_url) links.push(`<a class="contact-link web" href="${esc(o.contact_page_url)}" target="_blank" rel="noopener">↗ Contact</a>`);
                         if (o.contact_form_url && !o.contact_page_url) links.push(`<a class="contact-link web" href="${esc(o.contact_form_url)}" target="_blank" rel="noopener">↗ Form</a>`);
-                        return links.length ? `<div class="contact-cell">${links.join('')}</div>` : '<span class="no-data">N/A</span>';
+                        if (!links.length) return '<span class="no-data">N/A</span>';
+                        const visible = links.slice(0, 2).join('');
+                        const extra = links.length > 2 ? `<span class="contact-more-badge" onclick="openDetail(${o.id})" title="See all contacts">+${links.length-2} more</span>` : '';
+                        return `<div class="contact-cell">${visible}${extra}</div>`;
                     })()}</td>
                     <td>${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">off</span>'}</td>
                     <td>${(o.total_articles_scraped || 0).toLocaleString()}</td>
@@ -627,8 +635,33 @@
             document.getElementById('f-category').value = '';
             document.getElementById('f-language').value = '';
             document.getElementById('f-active').value = '';
+            const container = document.getElementById('outlet-filter-chips');
+            if (container) container.innerHTML = '';
             loadOutlets();
         }
+
+        function renderOutletFilterChips() {
+            const CAT_LABELS = {gaming_news:'News Outlets', gaming_vc:'Gaming VCs', gaming_streamer:'Streamers'};
+            const search = document.getElementById('f-search').value.trim();
+            const category = document.getElementById('f-category').value;
+            const language = document.getElementById('f-language').value;
+            const active = document.getElementById('f-active').value;
+            const chips = [];
+            if (search) chips.push(`<span class="filter-chip">Search: <strong>${esc(search)}</strong><button class="filter-chip-remove" onclick="clearOutletFilter('search')">×</button></span>`);
+            if (category) chips.push(`<span class="filter-chip">Type: <strong>${esc(CAT_LABELS[category] || category)}</strong><button class="filter-chip-remove" onclick="clearOutletFilter('category')">×</button></span>`);
+            if (language) chips.push(`<span class="filter-chip">Language: <strong>${esc(language)}</strong><button class="filter-chip-remove" onclick="clearOutletFilter('language')">×</button></span>`);
+            if (active) chips.push(`<span class="filter-chip">Status: <strong>${esc(active === 'true' ? 'Active' : 'Inactive')}</strong><button class="filter-chip-remove" onclick="clearOutletFilter('active')">×</button></span>`);
+            const container = document.getElementById('outlet-filter-chips');
+            if (container) container.innerHTML = chips.length ? `<div class="filter-chips">${chips.join('')}</div>` : '';
+        }
+
+        window.clearOutletFilter = function(key) {
+            const map = {search:'f-search', category:'f-category', language:'f-language', active:'f-active'};
+            if (map[key]) { const el = document.getElementById(map[key]); if (el) el.value = ''; }
+            loadOutletsAndChips();
+        };
+
+        function loadOutletsAndChips() { loadOutlets().then(() => renderOutletFilterChips()); }
 
         document.getElementById('f-search').addEventListener('keydown', e => { if (e.key === 'Enter') loadOutlets(); });
         document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDetail(); closeEmailModal(); } });

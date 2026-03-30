@@ -99,6 +99,7 @@
             <div class="conn-stats">
                 <span>Events: <strong id="event-count">0</strong></span>
                 <span>Articles: <strong id="article-count">0</strong></span>
+                <span id="conn-filter-summary" style="display:none;font-size:0.78rem;color:var(--text-muted)"></span>
             </div>
             <button class="conn-btn connect" id="conn-btn" onclick="toggleConnection()">Connect</button>
         </div>
@@ -168,24 +169,40 @@
             } catch (e) {}
         }
 
+        function buildFilterSummary() {
+            const SOURCE_LABELS = {gaming_news:'News', gaming_vc:'VCs', gaming_streamer:'Streamers'};
+            const parts = [];
+            const lang = document.getElementById('f-language').value;
+            const source = document.getElementById('f-source').value;
+            const type = document.getElementById('f-type').value;
+            if (source) parts.push('Source: ' + (SOURCE_LABELS[source] || source));
+            if (lang) parts.push('Lang: ' + lang.toUpperCase());
+            if (type) parts.push('Type: ' + type);
+            return parts.length ? 'Filtering: ' + parts.join(' · ') : 'Listening for all events';
+        }
+
         function setConnectionState(state) {
             const dot = document.getElementById('conn-dot');
             const text = document.getElementById('conn-text');
             const btn = document.getElementById('conn-btn');
+            const filterSummary = document.getElementById('conn-filter-summary');
             dot.className = 'conn-dot ' + state;
             if (state === 'connected') {
                 text.textContent = 'Connected';
                 btn.textContent = 'Disconnect';
                 btn.className = 'conn-btn disconnect';
+                if (filterSummary) { filterSummary.textContent = buildFilterSummary(); filterSummary.style.display = ''; }
             } else if (state === 'connecting') {
                 text.textContent = 'Connecting...';
                 btn.textContent = 'Connecting...';
                 btn.disabled = true;
+                if (filterSummary) filterSummary.style.display = 'none';
             } else {
                 text.textContent = 'Disconnected';
                 btn.textContent = 'Connect';
                 btn.className = 'conn-btn connect';
                 btn.disabled = false;
+                if (filterSummary) filterSummary.style.display = 'none';
             }
         }
 
@@ -249,7 +266,9 @@
             if (empty) empty.remove();
 
             const item = document.createElement('div');
-            item.className = `feed-item type-${msg.type || 'unknown'}`;
+            const CAT_BORDERS = {gaming_news:'cat-border-news', gaming_vc:'cat-border-vc', gaming_streamer:'cat-border-streamer'};
+            const catBorderCls = (msg.type === 'new_article' && msg.data?.outlet_category) ? CAT_BORDERS[msg.data.outlet_category] || '' : '';
+            item.className = `feed-item type-${msg.type || 'unknown'} ${catBorderCls}`;
 
             const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
             const data = msg.data || {};

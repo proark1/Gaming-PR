@@ -170,6 +170,8 @@
             <button class="filter-btn secondary" onclick="clearFilters()">Clear</button>
         </div>
 
+        <div id="active-filter-chips"></div>
+
         <div id="result-bar" class="result-bar" style="display:none">
             <div class="result-count" id="result-count"></div>
             <div class="pagination">
@@ -261,37 +263,42 @@
 
                 const CAT_LABELS = {gaming_news:'News', gaming_vc:'VC', gaming_streamer:'Streamer'};
                 const CAT_CLASSES = {gaming_news:'badge-cyan', gaming_vc:'badge-green', gaming_streamer:'badge-orange'};
+                const CAT_BORDERS = {gaming_news:'cat-border-news', gaming_vc:'cat-border-vc', gaming_streamer:'cat-border-streamer'};
                 list.innerHTML = articles.map(a => {
                     const catLabel = a.outlet_category ? CAT_LABELS[a.outlet_category] || a.outlet_category : null;
                     const catClass = a.outlet_category ? CAT_CLASSES[a.outlet_category] || 'badge-accent' : '';
+                    const catBorder = a.outlet_category ? CAT_BORDERS[a.outlet_category] || '' : '';
                     return `
-                    <div class="article-card" onclick="openArticle(${a.id})">
+                    <div class="article-card ${catBorder}" onclick="openArticle(${a.id})">
                         <div>
                             <div class="article-title">
                                 <a href="${escapeHtml(a.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${escapeHtml(a.title)}</a>
                             </div>
                             <div class="article-meta">
-                                ${a.outlet_name ? `<span style="font-weight:600">${escapeHtml(a.outlet_name)}</span><span class="sep">|</span>` : ''}
+                                ${a.outlet_name ? `<span style="font-weight:600">${escapeHtml(a.outlet_name)}</span>` : ''}
                                 ${catLabel ? `<span class="badge ${catClass}">${catLabel}</span>` : ''}
-                                ${a.author ? `<span>${escapeHtml(a.author)}</span><span class="sep">|</span>` : ''}
-                                <span>${timeAgo(a.published_at || a.scraped_at)}</span>
                                 <span class="sep">|</span>
-                                <span class="badge badge-accent">${a.language || '?'}</span>
-                                ${a.article_type ? `<span class="badge badge-cyan">${a.article_type}</span>` : ''}
+                                <span>${timeAgo(a.published_at || a.scraped_at)}</span>
+                            </div>
+                            <div class="article-meta" style="margin-top:4px">
+                                <span class="tag tag--lang">${escapeHtml(a.language || '?')}</span>
+                                ${a.article_type ? `<span class="tag tag--type">${escapeHtml(a.article_type)}</span>` : ''}
                                 ${a.is_full_content ? '<span class="badge badge-green">full</span>' : '<span class="badge badge-orange">partial</span>'}
                                 ${a.word_count ? `<span>${a.word_count.toLocaleString()} words</span>` : ''}
-                                ${a.reading_time_minutes ? `<span>${a.reading_time_minutes} min read</span>` : ''}
+                                ${a.reading_time_minutes ? `<span>${a.reading_time_minutes} min</span>` : ''}
+                                ${a.author ? `<span class="sep">|</span><span>${escapeHtml(a.author)}</span>` : ''}
                             </div>
                             ${a.summary ? `<div class="article-summary">${escapeHtml(a.summary)}</div>` : ''}
                             <div class="article-tags">
-                                ${(a.categories || []).slice(0,3).map(c => `<span class="tag">${escapeHtml(c)}</span>`).join('')}
-                                ${(a.game_titles || []).slice(0,3).map(g => `<span class="tag">${escapeHtml(g)}</span>`).join('')}
-                                ${(a.platforms || []).slice(0,3).map(p => `<span class="tag">${escapeHtml(p)}</span>`).join('')}
+                                ${(a.categories || []).slice(0,3).map(c => `<span class="tag tag--category">${escapeHtml(c)}</span>`).join('')}
+                                ${(a.game_titles || []).slice(0,3).map(g => `<span class="tag tag--game">${escapeHtml(g)}</span>`).join('')}
+                                ${(a.platforms || []).slice(0,3).map(p => `<span class="tag tag--platform">${escapeHtml(p)}</span>`).join('')}
                             </div>
                         </div>
                         ${a.featured_image_url ? `<img class="article-thumb" src="${escapeHtml(a.featured_image_url)}" alt="" onerror="this.style.display='none'">` : ''}
                     </div>
                 `}).join('');
+                renderFilterChips();
             } catch (err) {
                 list.innerHTML = `<div class="empty-state">
                     <div style="color:var(--red);font-weight:600;margin-bottom:8px">Failed to load articles</div>
@@ -343,10 +350,10 @@
                     <div class="modal-section">
                         <div class="modal-section-title">Tags & Classification</div>
                         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
-                            ${(a.categories||[]).map(c => `<span class="tag">${escapeHtml(c)}</span>`).join('')}
+                            ${(a.categories||[]).map(c => `<span class="tag tag--category">${escapeHtml(c)}</span>`).join('')}
                             ${(a.tags||[]).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
-                            ${(a.game_titles||[]).map(g => `<span class="tag" style="background:rgba(236,72,153,0.1);color:var(--pink)">${escapeHtml(g)}</span>`).join('')}
-                            ${(a.platforms||[]).map(p => `<span class="tag" style="background:var(--cyan-dim);color:var(--cyan)">${escapeHtml(p)}</span>`).join('')}
+                            ${(a.game_titles||[]).map(g => `<span class="tag tag--game">${escapeHtml(g)}</span>`).join('')}
+                            ${(a.platforms||[]).map(p => `<span class="tag tag--platform">${escapeHtml(p)}</span>`).join('')}
                         </div>
                     </div>` : ''}
 
@@ -370,8 +377,33 @@
             document.getElementById('f-language').value = '';
             document.getElementById('f-type').value = '';
             document.getElementById('f-full').value = '';
+            document.getElementById('active-filter-chips').innerHTML = '';
             resetAndLoad();
         }
+
+        function renderFilterChips() {
+            const SOURCE_LABELS = {gaming_news:'News Outlets', gaming_vc:'Gaming VCs', gaming_streamer:'Streamers'};
+            const filters = {
+                search: document.getElementById('f-search').value.trim(),
+                source: SOURCE_LABELS[document.getElementById('f-source').value] || document.getElementById('f-source').value,
+                language: document.getElementById('f-language').value,
+                type: document.getElementById('f-type').value,
+            };
+            const labels = {search:'Search', source:'Source', language:'Language', type:'Type'};
+            const removeMap = {search:'f-search', source:'f-source', language:'f-language', type:'f-type'};
+            const chips = [];
+            for (const [key, val] of Object.entries(filters)) {
+                if (!val) continue;
+                chips.push(`<span class="filter-chip">${escapeHtml(labels[key])}: <strong>${escapeHtml(String(val))}</strong><button class="filter-chip-remove" onclick="removeFilter('${key}')" title="Remove">×</button></span>`);
+            }
+            document.getElementById('active-filter-chips').innerHTML = chips.length ? `<div class="filter-chips">${chips.join('')}</div>` : '';
+        }
+
+        window.removeFilter = function(key) {
+            const map = {search:'f-search', source:'f-source', language:'f-language', type:'f-type', full:'f-full'};
+            if (map[key]) { const el = document.getElementById(map[key]); if (el) el.value = ''; }
+            resetAndLoad();
+        };
 
         // Enter key to search
         const debouncedSearch = typeof gprDebounce === 'function' ? gprDebounce(resetAndLoad, 400) : resetAndLoad;

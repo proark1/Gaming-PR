@@ -133,7 +133,7 @@
         <div class="subtitle">Track top gaming content creators across Twitch, YouTube, and more</div>
 
         <div class="stats-bar" id="statsBar">
-            <div class="stat-pill"><span class="label">Total Streamers</span><span class="value accent" id="statTotal">-</span></div>
+            <div class="stat-pill stat-card--hero"><span class="label">Total Streamers</span><span class="value accent" id="statTotal">-</span></div>
             <div class="stat-pill"><span class="label">Active</span><span class="value green" id="statActive">-</span></div>
             <div class="stat-pill"><span class="label">Twitch</span><span class="value" id="statTwitch" style="color:#bf94ff">-</span></div>
             <div class="stat-pill"><span class="label">YouTube</span><span class="value" id="statYoutube" style="color:#ff6b6b">-</span></div>
@@ -168,7 +168,7 @@
                     <option value="inactive">Inactive</option>
                 </select>
             </div>
-            <button class="tbtn tbtn-primary" onclick="loadStreamers()">Filter</button>
+            <button class="tbtn tbtn-primary" onclick="loadStreamersAndChips()">Filter</button>
             <button class="tbtn tbtn-ghost" onclick="clearFilters()">Clear</button>
             <div class="toolbar-right">
                 <span class="selected-count" id="selectedCount"></span>
@@ -178,19 +178,21 @@
             </div>
         </div>
 
+        <div id="streamer-filter-chips"></div>
+
         <div class="table-wrap">
             <table style="width:100%;border-collapse:collapse;">
                 <thead>
                     <tr>
                         <th class="cb-cell"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
-                        <th class="sortable" onclick="sortBy('name')">Streamer <span class="sort-indicator active" id="sortInd">&#9650;</span></th>
-                        <th>Platform</th>
-                        <th>Language</th>
+                        <th class="sortable" id="sort-name" onclick="sortBy('name')">Streamer</th>
+                        <th class="sortable" id="sort-platform" onclick="sortBy('platform')">Platform</th>
+                        <th class="sortable" id="sort-language" onclick="sortBy('language')">Language</th>
                         <th>Country</th>
                         <th>Contact</th>
-                        <th>Status</th>
-                        <th>Content</th>
-                        <th>Last Scraped</th>
+                        <th class="sortable" id="sort-is_active" onclick="sortBy('is_active')">Status</th>
+                        <th class="sortable" id="sort-total_articles_scraped" onclick="sortBy('total_articles_scraped')">Content</th>
+                        <th class="sortable" id="sort-last_scraped_at" onclick="sortBy('last_scraped_at')">Last Scraped</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -304,13 +306,7 @@
                     ? `<img src="${esc(favicon)}" onerror="this.outerHTML='<span class=fallback-icon>${initial}</span>'">`
                     : `<span class="fallback-icon">${initial}</span>`;
 
-                return `<tr>
-                    <td class="cb-cell"><input type="checkbox" ${checked} onchange="toggleSelect(${s.id}, this.checked)"></td>
-                    <td><div class="name-cell" onclick="showDetail(${s.id})">${icon} ${esc(s.name)}</div></td>
-                    <td><span class="platform-badge ${pClass}">${pLabel}</span></td>
-                    <td>${esc(s.language || '')}</td>
-                    <td>${esc(s.country || s.region || '')}</td>
-                    <td>${(() => {
+                const contactCell = (() => {
                         const links = [];
                         if (s.contact_email) links.push(`<a class="contact-link email" href="mailto:${esc(s.contact_email.split(',')[0].trim())}">✉ Email</a>`);
                         if (s.social_twitter) links.push(`<a class="contact-link twitter" href="${esc(s.social_twitter)}" target="_blank" rel="noopener">𝕏 Twitter</a>`);
@@ -318,11 +314,21 @@
                         if (s.social_discord) links.push(`<a class="contact-link discord" href="${esc(s.social_discord)}" target="_blank" rel="noopener">Discord</a>`);
                         if (s.social_tiktok) links.push(`<a class="contact-link tiktok" href="${esc(s.social_tiktok)}" target="_blank" rel="noopener">TikTok</a>`);
                         if (s.contact_page_url) links.push(`<a class="contact-link web" href="${esc(s.contact_page_url)}" target="_blank" rel="noopener">↗ Contact</a>`);
-                        return links.length ? `<div class="contact-cell">${links.join('')}</div>` : '<span class="no-data">N/A</span>';
-                    })()}</td>
+                        if (!links.length) return '<span class="no-data">N/A</span>';
+                        const visible = links.slice(0, 2).join('');
+                        const extra = links.length > 2 ? `<span class="contact-more-badge" onclick="showDetail(${s.id})" title="See all contacts">+${links.length - 2} more</span>` : '';
+                        return `<div class="contact-cell">${visible}${extra}</div>`;
+                    })();
+                return `<tr>
+                    <td class="cb-cell"><input type="checkbox" ${checked} onchange="toggleSelect(${s.id}, this.checked)"></td>
+                    <td><div class="name-cell" onclick="showDetail(${s.id})">${icon} ${esc(s.name)}</div></td>
+                    <td><span class="platform-badge ${pClass}">${pLabel}</span></td>
+                    <td>${esc(s.language || '')}</td>
+                    <td>${esc(s.country || s.region || '')}</td>
+                    <td>${contactCell}</td>
                     <td>${statusBadge}</td>
                     <td class="mono" style="font-size:0.82rem">${s.total_articles_scraped || 0}</td>
-                    <td style="font-size:0.78rem;color:var(--text-muted)">${lastScraped}</td>
+                    <td style="font-size:0.78rem;color:var(--text-muted)">${lastScraped} <span class="row-action" onclick="showDetail(${s.id})">View →</span></td>
                 </tr>`;
             }).join('');
         }
@@ -494,16 +500,41 @@
 
         function sortBy(field) {
             if (sortField === field) sortDir *= -1; else { sortField = field; sortDir = 1; }
-            const ind = document.getElementById('sortInd');
-            if (ind) { ind.innerHTML = sortDir === 1 ? '&#9650;' : '&#9660;'; }
+            document.querySelectorAll('th.sortable').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+            const activeTh = document.getElementById('sort-' + field);
+            if (activeTh) activeTh.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
             filterAndRender();
         }
+
+        function renderStreamerFilterChips() {
+            const search = document.getElementById('searchInput').value.trim();
+            const platform = document.getElementById('platformFilter').value;
+            const lang = document.getElementById('langFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            const chips = [];
+            if (search) chips.push(`<span class="filter-chip">Search: <strong>${esc(search)}</strong><button class="filter-chip-remove" onclick="clearStreamerFilter('search')">×</button></span>`);
+            if (platform) chips.push(`<span class="filter-chip">Platform: <strong>${esc(platform)}</strong><button class="filter-chip-remove" onclick="clearStreamerFilter('platform')">×</button></span>`);
+            if (lang) chips.push(`<span class="filter-chip">Language: <strong>${esc(lang)}</strong><button class="filter-chip-remove" onclick="clearStreamerFilter('lang')">×</button></span>`);
+            if (status) chips.push(`<span class="filter-chip">Status: <strong>${esc(status)}</strong><button class="filter-chip-remove" onclick="clearStreamerFilter('status')">×</button></span>`);
+            const container = document.getElementById('streamer-filter-chips');
+            if (container) container.innerHTML = chips.length ? `<div class="filter-chips">${chips.join('')}</div>` : '';
+        }
+
+        window.clearStreamerFilter = function(key) {
+            const map = {search:'searchInput', platform:'platformFilter', lang:'langFilter', status:'statusFilter'};
+            if (map[key]) { const el = document.getElementById(map[key]); if (el) el.value = ''; }
+            loadStreamersAndChips();
+        };
+
+        function loadStreamersAndChips() { loadStreamers().then(() => renderStreamerFilterChips()); }
 
         function clearFilters() {
             document.getElementById('searchInput').value = '';
             document.getElementById('platformFilter').value = '';
             document.getElementById('langFilter').value = '';
             document.getElementById('statusFilter').value = '';
+            const container = document.getElementById('streamer-filter-chips');
+            if (container) container.innerHTML = '';
             loadStreamers();
         }
 

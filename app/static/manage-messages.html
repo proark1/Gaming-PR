@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Messages — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .container { max-width: 1100px; }
+        .header-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 16px; }
+        .add-btn { background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; box-shadow: 0 4px 16px rgba(124,92,255,0.3); flex-shrink: 0; }
+        .add-btn:hover { transform: translateY(-1px); }
+
+        /* Category tabs */
+        .cat-tabs { display: flex; gap: 4px; margin-bottom: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; }
+        .cat-tab { flex: 1; padding: 8px 14px; border-radius: calc(var(--radius) - 2px); border: none; background: none; color: var(--text-muted); font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; text-align: center; }
+        .cat-tab:hover { color: var(--text-primary); background: rgba(124,92,255,0.08); }
+        .cat-tab.active { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(124,92,255,0.4); }
+
+        .cat-desc { font-size: 0.82rem; color: var(--text-muted); padding: 8px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .cat-desc-icon { font-size: 1.1rem; }
+
+        /* Card list */
+        .msg-list { display: flex; flex-direction: column; gap: 12px; }
+        .msg-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; transition: border-color .2s, background .2s; border-left: 3px solid transparent; }
+        .msg-card:hover { border-color: rgba(124,92,255,0.3); background: var(--bg-card-hover); }
+        .msg-card.cat-gaming_news { border-left-color: var(--cyan); }
+        .msg-card.cat-gaming_streamer { border-left-color: var(--orange); }
+        .msg-card.cat-gaming_vc { border-left-color: var(--green); }
+
+        .msg-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+        .msg-title { font-size: 1.05rem; font-weight: 600; line-height: 1.4; }
+        .msg-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.78rem; color: var(--text-muted); align-items: center; margin-bottom: 8px; }
+        .msg-body-preview { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 10px; }
+        .msg-translations { display: flex; flex-wrap: wrap; gap: 5px; }
+        .msg-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+        .badge-sm { padding: 2px 7px; font-size: 0.68rem; }
+
+        .act-btn { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .act-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .act-btn.danger:hover { border-color: var(--red); color: var(--red); }
+        .act-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Pagination */
+        .pagination { display: flex; gap: 8px; margin-top: 16px; align-items: center; }
+        .page-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--text-primary); }
+        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .page-info { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Modal */
+        .form-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
+        .form-overlay.active { display: flex; }
+        .form-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 620px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        .form-modal h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; }
+        .form-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .fg textarea { min-height: 200px; resize: vertical; line-height: 1.6; }
+        .submit-btn { width: 100%; padding: 11px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; font-family: inherit; margin-top: 8px; transition: all .2s; }
+        .submit-btn:hover { transform: translateY(-1px); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .form-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .form-error.visible { display: block; }
+        .form-success { background: var(--green-dim); border: 1px solid rgba(34,197,94,0.3); color: var(--green); padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .form-success.visible { display: block; }
+
+        .login-notice { text-align: center; padding: 12px; background: var(--orange-dim); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; color: var(--orange); font-size: 0.84rem; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="manage-messages"></script>
+
+    <div class="container">
+        <div class="header-row">
+            <div>
+                <h1>My Messages</h1>
+                <div class="subtitle">Write pitch templates and auto-translate them for your target contacts</div>
+            </div>
+            <button class="add-btn" onclick="openForm()">+ New Message</button>
+        </div>
+
+        <!-- Category tabs -->
+        <div class="cat-tabs">
+            <button class="cat-tab" id="tab-gaming_news" onclick="switchTab('gaming_news')">📰 News Outlets</button>
+            <button class="cat-tab" id="tab-gaming_streamer" onclick="switchTab('gaming_streamer')">🎮 Streamers</button>
+            <button class="cat-tab" id="tab-gaming_vc" onclick="switchTab('gaming_vc')">💰 Gaming VCs</button>
+        </div>
+
+        <div class="cat-desc" id="cat-desc">
+            <span class="cat-desc-icon"></span>
+            <span id="cat-desc-text"></span>
+        </div>
+
+        <div id="login-notice" class="login-notice" style="display:none">Log in to create, edit, or delete messages.</div>
+
+        <div id="msg-list" class="msg-list">
+            <div class="loading"><div class="spinner"></div> Loading messages...</div>
+        </div>
+
+        <div class="pagination">
+            <button class="page-btn" id="btn-prev" onclick="prevPage()" disabled>Previous</button>
+            <span class="page-info" id="page-info"></span>
+            <button class="page-btn" id="btn-next" onclick="nextPage()">Next</button>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="form-overlay" id="formOverlay" onclick="if(event.target===this)closeForm()">
+        <div class="form-modal">
+            <button class="close-btn" onclick="closeForm()">&times;</button>
+            <h2 id="form-title">New Message</h2>
+            <div class="form-error" id="formError"></div>
+            <div class="form-success" id="formSuccess"></div>
+            <form onsubmit="handleSubmit(event)">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="f-category">
+                <div class="fg">
+                    <label>Title</label>
+                    <input type="text" id="f-title" placeholder="Message subject / pitch title" required>
+                </div>
+                <div class="fg">
+                    <label>Author Name <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+                    <input type="text" id="f-author" placeholder="Your name or company">
+                </div>
+                <div class="fg">
+                    <label>Source Language</label>
+                    <select id="f-lang"></select>
+                    <div class="hint" id="lang-hint">The message will be auto-translated to the languages used by your target contacts</div>
+                </div>
+                <div class="fg">
+                    <label>Message Body</label>
+                    <textarea id="f-body" placeholder="Write your pitch or outreach message here..." required></textarea>
+                </div>
+                <button type="submit" class="submit-btn" id="submitBtn">Create Message</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const CAT_DESCRIPTIONS = {
+            gaming_news: {
+                icon: '📰',
+                text: 'Pitch messages for news outlets — translated to each outlet\'s language so your game gets covered in gaming media worldwide.',
+            },
+            gaming_streamer: {
+                icon: '🎮',
+                text: 'Outreach messages for streamers — translated to each streamer\'s language to invite them to play your game.',
+            },
+            gaming_vc: {
+                icon: '💰',
+                text: 'Investment pitches for gaming VCs — translated to languages used by firms across the regions you want to raise from.',
+            },
+        };
+
+        let activeCategory = localStorage.getItem('gpr_category') || 'gaming_news';
+        // Normalize: only accept known categories
+        if (!CAT_DESCRIPTIONS[activeCategory]) activeCategory = 'gaming_news';
+
+        let currentSkip = 0;
+        const PAGE_SIZE = 20;
+        let lastCount = 0;
+
+        function authHeaders() {
+            const t = gprGetToken();
+            return t ? { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' } : null;
+        }
+        function isLoggedIn() { return !!gprGetToken(); }
+        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function timeAgo(iso) {
+            if (!iso) return 'N/A';
+            const d = (Date.now() - new Date(iso).getTime()) / 1000;
+            if (d < 60) return Math.round(d) + 's ago';
+            if (d < 3600) return Math.round(d/60) + 'm ago';
+            if (d < 86400) return Math.round(d/3600) + 'h ago';
+            return Math.round(d/86400) + 'd ago';
+        }
+        function statusBadge(s) {
+            const m = { completed: 'green', pending: 'orange', failed: 'red', in_progress: 'cyan' };
+            return `<span class="badge badge-sm badge-${m[s]||'accent'}">${s}</span>`;
+        }
+
+        function updateCatUI() {
+            // Tabs
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            const activeTab = document.getElementById('tab-' + activeCategory);
+            if (activeTab) activeTab.classList.add('active');
+
+            // Description
+            const desc = CAT_DESCRIPTIONS[activeCategory] || CAT_DESCRIPTIONS.gaming_news;
+            document.querySelector('.cat-desc-icon').textContent = desc.icon;
+            document.getElementById('cat-desc-text').textContent = desc.text;
+        }
+
+        function switchTab(cat) {
+            activeCategory = cat;
+            currentSkip = 0;
+            updateCatUI();
+            loadMessages();
+        }
+
+        async function loadLanguages() {
+            try {
+                const res = await fetch('/api/languages');
+                const langs = await res.json();
+                const sel = document.getElementById('f-lang');
+                sel.innerHTML = '';
+                for (const [code, name] of Object.entries(langs)) {
+                    const opt = document.createElement('option');
+                    opt.value = code; opt.textContent = `${name} (${code})`;
+                    if (code === 'en') opt.selected = true;
+                    sel.appendChild(opt);
+                }
+            } catch (e) {}
+        }
+
+        async function loadMessages() {
+            const el = document.getElementById('msg-list');
+            el.innerHTML = '<div class="loading"><div class="spinner"></div> Loading messages...</div>';
+            document.getElementById('login-notice').style.display = isLoggedIn() ? 'none' : 'block';
+
+            try {
+                const res = await fetch(`/api/messages/?category=${activeCategory}&skip=${currentSkip}&limit=${PAGE_SIZE}`);
+                const messages = await res.json();
+                lastCount = messages.length;
+
+                document.getElementById('page-info').textContent = messages.length
+                    ? `Showing ${currentSkip + 1}–${currentSkip + messages.length}`
+                    : 'No messages';
+                document.getElementById('btn-prev').disabled = currentSkip === 0;
+                document.getElementById('btn-next').disabled = messages.length < PAGE_SIZE;
+
+                if (!messages.length) {
+                    el.innerHTML = '<div class="empty-state"><div class="empty-icon">✉️</div><div class="empty-title">No messages yet</div><div class="empty-desc">Create your first message to start auto-translating for your target contacts</div></div>';
+                    return;
+                }
+
+                const withTranslations = await Promise.all(messages.map(async (m) => {
+                    try {
+                        const tRes = await fetch(`/api/messages/${m.id}?include_translations=true`);
+                        const full = await tRes.json();
+                        return { ...m, translations: full.translations || [] };
+                    } catch (e) { return { ...m, translations: [] }; }
+                }));
+
+                el.innerHTML = withTranslations.map(m => {
+                    const completed = m.translations.filter(t => t.status === 'completed').length;
+                    const failed = m.translations.filter(t => t.status === 'failed').length;
+                    const pending = m.translations.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
+                    return `<div class="msg-card cat-${esc(m.category)}">
+                        <div class="msg-top">
+                            <div class="msg-title">${esc(m.title)}</div>
+                            <div class="msg-actions">
+                                <button class="act-btn" onclick="openEdit(${m.id})" ${!isLoggedIn()?'disabled':''}>Edit</button>
+                                <button class="act-btn" onclick="viewTranslations(${m.id})">Translations</button>
+                                <button class="act-btn danger" onclick="deleteMessage(${m.id})" ${!isLoggedIn()?'disabled':''}>Delete</button>
+                            </div>
+                        </div>
+                        <div class="msg-meta">
+                            ${m.author_name ? `<span>${esc(m.author_name)}</span>` : ''}
+                            <span class="badge badge-accent">${m.source_language}</span>
+                            <span>Created ${timeAgo(m.created_at)}</span>
+                            <span>Updated ${timeAgo(m.updated_at)}</span>
+                        </div>
+                        <div class="msg-body-preview">${esc(m.body)}</div>
+                        <div class="msg-translations">
+                            ${completed > 0 ? `<span class="badge badge-sm badge-green">${completed} translated</span>` : ''}
+                            ${pending > 0 ? `<span class="badge badge-sm badge-orange">${pending} pending</span>` : ''}
+                            ${failed > 0 ? `<span class="badge badge-sm badge-red">${failed} failed</span>` : ''}
+                            ${m.translations.length === 0 ? '<span style="font-size:0.75rem;color:var(--text-muted)">Translations queued…</span>' : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (err) {
+                el.innerHTML = `<div class="empty" style="color:var(--red)">Failed: ${esc(err.message)}</div>`;
+            }
+        }
+
+        function prevPage() { currentSkip = Math.max(0, currentSkip - PAGE_SIZE); loadMessages(); }
+        function nextPage() { currentSkip += PAGE_SIZE; loadMessages(); }
+
+        // ─── Create / Edit ───
+        let editingId = null;
+
+        function openForm() {
+            if (!isLoggedIn()) return gprOpenModal('login');
+            editingId = null;
+            document.getElementById('form-title').textContent = 'New Message';
+            document.getElementById('submitBtn').textContent = 'Create Message';
+            document.getElementById('edit-id').value = '';
+            document.getElementById('f-category').value = activeCategory;
+            document.getElementById('f-title').value = '';
+            document.getElementById('f-author').value = '';
+            document.getElementById('f-lang').value = 'en';
+            document.getElementById('f-body').value = '';
+            document.getElementById('formError').classList.remove('visible');
+            document.getElementById('formSuccess').classList.remove('visible');
+            document.getElementById('formOverlay').classList.add('active');
+        }
+
+        async function openEdit(id) {
+            if (!isLoggedIn()) return gprOpenModal('login');
+            try {
+                const res = await fetch(`/api/messages/${id}?include_translations=false`);
+                const m = await res.json();
+                editingId = id;
+                document.getElementById('form-title').textContent = 'Edit Message';
+                document.getElementById('submitBtn').textContent = 'Save Changes';
+                document.getElementById('edit-id').value = id;
+                document.getElementById('f-category').value = m.category;
+                document.getElementById('f-title').value = m.title || '';
+                document.getElementById('f-author').value = m.author_name || '';
+                document.getElementById('f-lang').value = m.source_language || 'en';
+                document.getElementById('f-body').value = m.body || '';
+                document.getElementById('formError').classList.remove('visible');
+                document.getElementById('formSuccess').classList.remove('visible');
+                document.getElementById('formOverlay').classList.add('active');
+            } catch (e) { alert('Failed to load message: ' + e.message); }
+        }
+
+        function closeForm() { document.getElementById('formOverlay').classList.remove('active'); }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            document.getElementById('formError').classList.remove('visible');
+
+            const payload = {
+                title: document.getElementById('f-title').value,
+                body: document.getElementById('f-body').value,
+                source_language: document.getElementById('f-lang').value,
+                category: document.getElementById('f-category').value || activeCategory,
+                author_name: document.getElementById('f-author').value || null,
+            };
+
+            const isEdit = !!editingId;
+            const url = isEdit ? `/api/messages/${editingId}` : '/api/messages/';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, { method, headers: h, body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed');
+                const suc = document.getElementById('formSuccess');
+                suc.textContent = isEdit ? 'Message updated! Translations will re-run.' : 'Message created! Translations started.';
+                suc.classList.add('visible');
+                setTimeout(() => { closeForm(); loadMessages(); }, 1200);
+            } catch (err) {
+                const el = document.getElementById('formError');
+                el.textContent = err.message; el.classList.add('visible');
+            } finally { btn.disabled = false; btn.textContent = isEdit ? 'Save Changes' : 'Create Message'; }
+        }
+
+        async function deleteMessage(id) {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            if (!confirm('Delete this message and all its translations?')) return;
+            try {
+                const res = await fetch(`/api/messages/${id}`, { method: 'DELETE', headers: h });
+                if (!res.ok && res.status !== 204) { const d = await res.json(); throw new Error(d.detail || 'Failed'); }
+                loadMessages();
+            } catch (e) { alert('Failed: ' + e.message); }
+        }
+
+        function viewTranslations(id) {
+            window.location.href = `/message-translations?message_id=${id}`;
+        }
+
+        updateCatUI();
+        loadLanguages();
+        loadMessages();
+    </script>
+</body>
+</html>

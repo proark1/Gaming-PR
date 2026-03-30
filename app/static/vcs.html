@@ -136,7 +136,7 @@
         <div class="subtitle">Track venture capital firms investing in gaming companies</div>
 
         <div class="stats-bar" id="statsBar">
-            <div class="stat-pill"><span class="label">Total VCs</span><span class="value accent" id="statTotal">-</span></div>
+            <div class="stat-pill stat-card--hero"><span class="label">Total VCs</span><span class="value accent" id="statTotal">-</span></div>
             <div class="stat-pill"><span class="label">Active</span><span class="value green" id="statActive">-</span></div>
             <div class="stat-pill"><span class="label">Regions</span><span class="value cyan" id="statRegions">-</span></div>
             <div class="stat-pill"><span class="label">Posts Scraped</span><span class="value accent" id="statScraped">-</span></div>
@@ -181,7 +181,7 @@
                     <option value="inactive">Inactive</option>
                 </select>
             </div>
-            <button class="tbtn tbtn-primary" onclick="loadVCs()">Filter</button>
+            <button class="tbtn tbtn-primary" onclick="loadVCsAndChips()">Filter</button>
             <button class="tbtn tbtn-ghost" onclick="clearFilters()">Clear</button>
             <div class="toolbar-right">
                 <span class="selected-count" id="selectedCount"></span>
@@ -191,19 +191,21 @@
             </div>
         </div>
 
+        <div id="vc-filter-chips"></div>
+
         <div class="table-wrap">
             <table style="width:100%;border-collapse:collapse;">
                 <thead>
                     <tr>
                         <th class="cb-cell"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
-                        <th class="sortable" onclick="sortBy('name')">VC Firm <span class="sort-indicator active" id="sortInd">&#9650;</span></th>
-                        <th>Region</th>
+                        <th class="sortable" id="sort-name" onclick="sortBy('name')">VC Firm</th>
+                        <th class="sortable" id="sort-region" onclick="sortBy('region')">Region</th>
                         <th>Country</th>
-                        <th>Priority</th>
+                        <th class="sortable" id="sort-priority" onclick="sortBy('priority')">Priority</th>
                         <th>Contact</th>
-                        <th>Status</th>
-                        <th>Posts</th>
-                        <th>Last Scraped</th>
+                        <th class="sortable" id="sort-is_active" onclick="sortBy('is_active')">Status</th>
+                        <th class="sortable" id="sort-total_articles_scraped" onclick="sortBy('total_articles_scraped')">Posts</th>
+                        <th class="sortable" id="sort-last_scraped_at" onclick="sortBy('last_scraped_at')">Last Scraped</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -300,24 +302,28 @@
                     ? `<img src="${esc(favicon)}" onerror="this.outerHTML='<span class=fallback-icon>${initial}</span>'">`
                     : `<span class="fallback-icon">${initial}</span>`;
 
-                return `<tr>
-                    <td class="cb-cell"><input type="checkbox" ${checked} onchange="toggleSelect(${v.id}, this.checked)"></td>
-                    <td><div class="name-cell" onclick="showDetail(${v.id})">${icon} ${esc(v.name)}</div></td>
-                    <td><span class="region-badge">${esc(v.region || '')}</span></td>
-                    <td>${esc(v.country || '')}</td>
-                    <td><span class="tier-badge ${tierClass}">Tier ${v.priority || '?'}</span></td>
-                    <td>${(() => {
+                const contactCell = (() => {
                         const links = [];
                         if (v.contact_email) links.push(`<a class="contact-link email" href="mailto:${esc(v.contact_email.split(',')[0].trim())}">✉ Email</a>`);
                         if (v.social_linkedin) links.push(`<a class="contact-link linkedin" href="${esc(v.social_linkedin)}" target="_blank" rel="noopener">in LinkedIn</a>`);
                         if (v.social_twitter) links.push(`<a class="contact-link twitter" href="${esc(v.social_twitter)}" target="_blank" rel="noopener">𝕏 Twitter</a>`);
                         if (v.contact_page_url) links.push(`<a class="contact-link web" href="${esc(v.contact_page_url)}" target="_blank" rel="noopener">↗ Contact</a>`);
                         if (v.contact_form_url && !v.contact_page_url) links.push(`<a class="contact-link web" href="${esc(v.contact_form_url)}" target="_blank" rel="noopener">↗ Form</a>`);
-                        return links.length ? `<div class="contact-cell">${links.join('')}</div>` : '<span class="no-data">N/A</span>';
-                    })()}</td>
+                        if (!links.length) return '<span class="no-data">N/A</span>';
+                        const visible = links.slice(0, 2).join('');
+                        const extra = links.length > 2 ? `<span class="contact-more-badge" onclick="showDetail(${v.id})" title="See all contacts">+${links.length - 2} more</span>` : '';
+                        return `<div class="contact-cell">${visible}${extra}</div>`;
+                    })();
+                return `<tr>
+                    <td class="cb-cell"><input type="checkbox" ${checked} onchange="toggleSelect(${v.id}, this.checked)"></td>
+                    <td><div class="name-cell" onclick="showDetail(${v.id})">${icon} ${esc(v.name)}</div></td>
+                    <td><span class="region-badge">${esc(v.region || '')}</span></td>
+                    <td>${esc(v.country || '')}</td>
+                    <td><span class="tier-badge ${tierClass}">Tier ${v.priority || '?'}</span></td>
+                    <td>${contactCell}</td>
                     <td>${statusBadge}</td>
                     <td class="mono" style="font-size:0.82rem">${v.total_articles_scraped || 0}</td>
-                    <td style="font-size:0.78rem;color:var(--text-muted)">${lastScraped}</td>
+                    <td style="font-size:0.78rem;color:var(--text-muted)">${lastScraped} <span class="row-action" onclick="showDetail(${v.id})">View →</span></td>
                 </tr>`;
             }).join('');
         }
@@ -496,16 +502,44 @@
 
         function sortBy(field) {
             if (sortField === field) sortDir *= -1; else { sortField = field; sortDir = 1; }
-            const ind = document.getElementById('sortInd');
-            if (ind) { ind.innerHTML = sortDir === 1 ? '&#9650;' : '&#9660;'; }
+            // Update all sortable header classes
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+            const activeTh = document.getElementById('sort-' + field);
+            if (activeTh) activeTh.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
             filterAndRender();
         }
+
+        function renderVCFilterChips() {
+            const search = document.getElementById('searchInput').value.trim();
+            const region = document.getElementById('regionFilter').value;
+            const priority = document.getElementById('priorityFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            const chips = [];
+            if (search) chips.push(`<span class="filter-chip">Search: <strong>${esc(search)}</strong><button class="filter-chip-remove" onclick="clearVCFilter('search')">×</button></span>`);
+            if (region) chips.push(`<span class="filter-chip">Region: <strong>${esc(region)}</strong><button class="filter-chip-remove" onclick="clearVCFilter('region')">×</button></span>`);
+            if (priority) chips.push(`<span class="filter-chip">Priority: <strong>Tier ${esc(priority)}</strong><button class="filter-chip-remove" onclick="clearVCFilter('priority')">×</button></span>`);
+            if (status) chips.push(`<span class="filter-chip">Status: <strong>${esc(status)}</strong><button class="filter-chip-remove" onclick="clearVCFilter('status')">×</button></span>`);
+            const container = document.getElementById('vc-filter-chips');
+            if (container) container.innerHTML = chips.length ? `<div class="filter-chips">${chips.join('')}</div>` : '';
+        }
+
+        window.clearVCFilter = function(key) {
+            const map = {search:'searchInput', region:'regionFilter', priority:'priorityFilter', status:'statusFilter'};
+            if (map[key]) { const el = document.getElementById(map[key]); if (el) el.value = ''; }
+            loadVCsAndChips();
+        };
+
+        function loadVCsAndChips() { loadVCs().then(() => renderVCFilterChips()); }
 
         function clearFilters() {
             document.getElementById('searchInput').value = '';
             document.getElementById('regionFilter').value = '';
             document.getElementById('priorityFilter').value = '';
             document.getElementById('statusFilter').value = '';
+            const container = document.getElementById('vc-filter-chips');
+            if (container) container.innerHTML = '';
             loadVCs();
         }
 

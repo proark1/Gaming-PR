@@ -179,8 +179,10 @@
 
                 <!-- API Token -->
                 <div class="token-section">
+                    <div class="divider"></div>
+                    <h3 style="font-size:var(--text-md);font-weight:700;margin-bottom:14px;color:var(--text-secondary)">API Token</h3>
                     <div class="token-card">
-                        <div class="token-title">API Token</div>
+                        <div class="token-title">Bearer Token</div>
                         <div class="token-desc">Use this Bearer token to authenticate API requests. Include it in the Authorization header.</div>
                         <div class="token-box">
                             <span class="token-text" id="token-display">${esc(maskedToken)}</span>
@@ -192,7 +194,9 @@
 
                 <!-- Quick links -->
                 <div class="quick-section">
-                    <div class="quick-title">Quick Actions</div>
+                    <div class="divider"></div>
+                    <h3 style="font-size:var(--text-md);font-weight:700;margin-bottom:14px;color:var(--text-secondary)">Quick Links</h3>
+                    <div class="quick-title" style="display:none">Quick Actions</div>
                     <div class="quick-grid">
                         <a class="quick-card" href="/manage/articles">
                             <span class="quick-icon">&#9997;&#65039;</span>
@@ -223,7 +227,8 @@
 
                 <!-- Danger zone -->
                 <div class="danger-section">
-                    <div class="danger-title">Session</div>
+                    <div class="divider"></div>
+                    <h3 style="font-size:var(--text-md);font-weight:700;margin-bottom:12px;color:var(--red)">Session</h3>
                     <button class="logout-btn-lg" onclick="gprLogout(); loadProfile();">Log out</button>
                 </div>
             `;
