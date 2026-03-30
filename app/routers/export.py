@@ -128,11 +128,12 @@ def export_rss(
     outlet_id: Optional[int] = None,
     article_type: Optional[str] = None,
     outlet_category: Optional[str] = None,
+    days: Optional[int] = Query(default=7, ge=1, le=365),
     limit: int = Query(default=50, le=200),
     db: Session = Depends(get_db),
 ):
     """Generate an RSS 2.0 feed of scraped articles."""
-    articles = _build_query(db, language, outlet_id, article_type, days=7, outlet_category=outlet_category, limit=limit).all()
+    articles = _build_query(db, language, outlet_id, article_type, days=days, outlet_category=outlet_category, limit=limit).all()
 
     rss = Element("rss", version="2.0")
     rss.set("xmlns:media", "http://search.yahoo.com/mrss/")

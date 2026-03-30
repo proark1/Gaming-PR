@@ -330,14 +330,12 @@
         });
 
         // Sync with global category
-        setTimeout(() => {
-            const gCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
-            if (gCat) {
-                document.getElementById('f-source').value = gCat;
-                const labels = {gaming_news:'News',gaming_vc:'VC',gaming_streamer:'Streamer'};
-                if (labels[gCat]) document.getElementById('pageTitle').textContent = `Export ${labels[gCat]} Data`;
-            }
-        }, 50);
+        const _initCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+        if (_initCat) {
+            document.getElementById('f-source').value = _initCat;
+            const labels = {gaming_news:'News',gaming_vc:'VC',gaming_streamer:'Streamer'};
+            if (labels[_initCat]) document.getElementById('pageTitle').textContent = `Export ${labels[_initCat]} Data`;
+        }
         window.addEventListener('gpr-category-change', e => {
             const cat = e.detail.category || '';
             document.getElementById('f-source').value = cat;
