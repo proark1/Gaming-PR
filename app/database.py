@@ -12,10 +12,9 @@ if settings.DATABASE_URL.startswith("sqlite"):
     from sqlalchemy.pool import StaticPool
     engine_kwargs = {"poolclass": StaticPool}
 else:
-    # PostgreSQL: fail fast if DB is unreachable or a table lock can't be acquired
+    # PostgreSQL: fail fast if DB is unreachable
     connect_args = {
         "connect_timeout": 10,           # don't hang forever if DB is unreachable
-        "options": "-c lock_timeout=5s", # don't block forever waiting for table locks
     }
     engine_kwargs = {
         "pool_size": 20,       # was 10 — supports SCRAPE_CONCURRENCY=10 × 3 inner workers

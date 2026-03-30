@@ -91,6 +91,16 @@ def _auto_migrate_columns():
         ("gaming_investors", "outreach_profile", "TEXT"),
     ]
     with engine.connect() as conn:
+        # Set a short lock timeout only for this migration connection so ALTER TABLE
+        # doesn't hang indefinitely waiting for locks held by a concurrent process.
+        # Applies only to this connection — normal app connections are unaffected.
+        is_pg = not settings.DATABASE_URL.startswith("sqlite")
+        if is_pg:
+            try:
+                conn.execute(text("SET lock_timeout = '5000ms'"))
+            except Exception:
+                pass
+
         for table, column, col_type in migrations:
             if table not in inspector.get_table_names():
                 continue
