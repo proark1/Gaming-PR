@@ -39,7 +39,7 @@ def notify_outlet_failed(db: Session, outlet_data: dict):
 
 def _dispatch(db: Session, event_type: str, payload: dict):
     """Find matching webhooks and dispatch notifications."""
-    webhooks = db.query(Webhook).filter(Webhook.is_active == True).all()
+    webhooks = db.query(Webhook).filter(Webhook.is_active.is_(True)).all()
 
     for webhook in webhooks:
         if not _matches_webhook(webhook, event_type, payload):

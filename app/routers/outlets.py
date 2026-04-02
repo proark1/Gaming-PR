@@ -35,7 +35,7 @@ def list_outlets(
 @router.get("/stats", response_model=OutletStatsResponse)
 def outlet_stats(db: Session = Depends(get_db)):
     total = db.query(func.count(GamingOutlet.id)).scalar()
-    active = db.query(func.count(GamingOutlet.id)).filter(GamingOutlet.is_active == True).scalar()
+    active = db.query(func.count(GamingOutlet.id)).filter(GamingOutlet.is_active.is_(True)).scalar()
     by_lang = dict(
         db.query(GamingOutlet.language, func.count(GamingOutlet.id))
         .group_by(GamingOutlet.language)

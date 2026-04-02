@@ -65,7 +65,7 @@ def get_outlets_due_for_scrape(db: Session) -> list[GamingOutlet]:
     now = datetime.now(timezone.utc)
     outlets = (
         db.query(GamingOutlet)
-        .filter(GamingOutlet.is_active == True)
+        .filter(GamingOutlet.is_active.is_(True))
         .order_by(GamingOutlet.priority.asc())
         .all()
     )
@@ -91,7 +91,7 @@ def get_schedule_info(db: Session) -> list[dict]:
     now = datetime.now(timezone.utc)
     outlets = (
         db.query(GamingOutlet)
-        .filter(GamingOutlet.is_active == True)
+        .filter(GamingOutlet.is_active.is_(True))
         .order_by(GamingOutlet.priority.asc())
         .all()
     )

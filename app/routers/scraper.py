@@ -155,7 +155,7 @@ def get_article_history(article_id: int, db: Session = Depends(get_db)):
 def scraper_stats(db: Session = Depends(get_db)):
     """Get scraper statistics."""
     total_articles = db.query(func.count(ScrapedArticle.id)).scalar()
-    full_content = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.is_full_content == True).scalar()
+    full_content = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.is_full_content.is_(True)).scalar()
     by_language = dict(
         db.query(ScrapedArticle.language, func.count(ScrapedArticle.id))
         .group_by(ScrapedArticle.language)

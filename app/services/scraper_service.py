@@ -350,7 +350,7 @@ async def _scrape_all_async(db: Session, extract_content: bool, adaptive: bool =
     else:
         outlets = (
             db.query(GamingOutlet)
-            .filter(GamingOutlet.is_active == True)
+            .filter(GamingOutlet.is_active.is_(True))
             .order_by(GamingOutlet.priority.asc())
             .all()
         )

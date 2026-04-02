@@ -173,7 +173,7 @@ async def live_feed(
                 msg = json.loads(data)
                 if msg.get("type") == "update_filters":
                     new_filters = msg.get("filters", {})
-                    async with ws_manager._lock:
+                    async with ws_manager._get_lock():
                         ws_manager._connections[websocket] = new_filters
                     await websocket.send_json({
                         "type": "filters_updated",
