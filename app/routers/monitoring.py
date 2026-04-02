@@ -26,17 +26,17 @@ def dashboard(db: Session = Depends(get_db)):
 
     # Overall counts
     total_outlets = db.query(func.count(GamingOutlet.id)).scalar()
-    active_outlets = db.query(func.count(GamingOutlet.id)).filter(GamingOutlet.is_active == True).scalar()
+    active_outlets = db.query(func.count(GamingOutlet.id)).filter(GamingOutlet.is_active.is_(True)).scalar()
     total_articles = db.query(func.count(ScrapedArticle.id)).scalar()
     articles_24h = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.scraped_at >= last_24h).scalar()
     articles_7d = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.scraped_at >= last_7d).scalar()
-    full_content_count = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.is_full_content == True).scalar()
+    full_content_count = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.is_full_content.is_(True)).scalar()
 
     # Coverage by language
     lang_coverage = {}
     for lang_code, lang_name in SUPPORTED_LANGUAGES.items():
         outlet_count = db.query(func.count(GamingOutlet.id)).filter(
-            GamingOutlet.language == lang_code, GamingOutlet.is_active == True
+            GamingOutlet.language == lang_code, GamingOutlet.is_active.is_(True)
         ).scalar()
         article_count = db.query(func.count(ScrapedArticle.id)).filter(
             ScrapedArticle.language == lang_code

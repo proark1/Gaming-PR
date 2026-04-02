@@ -4,6 +4,7 @@ Retry queue for failed article extractions.
 Failed content extractions get queued for retry with exponential backoff.
 """
 import logging
+import threading
 import time
 from dataclasses import dataclass, field
 from collections import deque
@@ -37,6 +38,7 @@ class RetryQueue:
         self.max_size = max_size
         self._queue: deque[RetryItem] = deque(maxlen=max_size)
         self._seen_urls: set[str] = set()
+        self._lock = threading.Lock()
         self._stats = {
             "total_enqueued": 0,
             "total_retried": 0,
@@ -46,79 +48,86 @@ class RetryQueue:
 
     def enqueue(self, article_id: int, url: str, outlet_id: int, error: str = ""):
         """Add a failed article to the retry queue."""
-        if url in self._seen_urls:
-            return  # Already queued
+        with self._lock:
+            if url in self._seen_urls:
+                return  # Already queued
 
-        backoff = self.BACKOFF_SECONDS[0] if self.BACKOFF_SECONDS else 60
+            backoff = self.BACKOFF_SECONDS[0] if self.BACKOFF_SECONDS else 60
 
-        item = RetryItem(
-            article_id=article_id,
-            url=url,
-            outlet_id=outlet_id,
-            attempt=1,
-            next_retry_at=time.monotonic() + backoff,
-            last_error=error,
-        )
-        self._queue.append(item)
-        self._seen_urls.add(url)
-        self._stats["total_enqueued"] += 1
-        logger.debug(f"Enqueued retry for article {article_id}: {url}")
+            item = RetryItem(
+                article_id=article_id,
+                url=url,
+                outlet_id=outlet_id,
+                attempt=1,
+                next_retry_at=time.monotonic() + backoff,
+                last_error=error,
+            )
+            self._queue.append(item)
+            self._seen_urls.add(url)
+            self._stats["total_enqueued"] += 1
+            logger.debug(f"Enqueued retry for article {article_id}: {url}")
 
     def get_ready_items(self) -> list[RetryItem]:
         """Get all items that are ready for retry."""
-        now = time.monotonic()
-        ready = []
-        remaining = deque()
+        with self._lock:
+            now = time.monotonic()
+            ready = []
+            remaining = deque()
 
-        while self._queue:
-            item = self._queue.popleft()
-            if item.next_retry_at <= now:
-                ready.append(item)
-            else:
-                remaining.append(item)
+            while self._queue:
+                item = self._queue.popleft()
+                if item.next_retry_at <= now:
+                    ready.append(item)
+                else:
+                    remaining.append(item)
 
-        self._queue = remaining
-        return ready
+            self._queue = remaining
+            return ready
 
     def requeue(self, item: RetryItem, error: str = ""):
         """Re-queue an item after a failed retry attempt."""
-        item.attempt += 1
-        item.last_error = error
+        with self._lock:
+            item.attempt += 1
+            item.last_error = error
 
-        if item.attempt > item.max_attempts:
-            self._seen_urls.discard(item.url)
-            self._stats["total_exhausted"] += 1
-            logger.warning(f"Retry exhausted for {item.url} after {item.max_attempts} attempts")
-            return
+            if item.attempt > item.max_attempts:
+                self._seen_urls.discard(item.url)
+                self._stats["total_exhausted"] += 1
+                logger.warning(f"Retry exhausted for {item.url} after {item.max_attempts} attempts")
+                return
 
-        backoff_idx = min(item.attempt - 1, len(self.BACKOFF_SECONDS) - 1)
-        backoff = self.BACKOFF_SECONDS[backoff_idx]
-        item.next_retry_at = time.monotonic() + backoff
+            backoff_idx = min(item.attempt - 1, len(self.BACKOFF_SECONDS) - 1)
+            backoff = self.BACKOFF_SECONDS[backoff_idx]
+            item.next_retry_at = time.monotonic() + backoff
 
-        self._queue.append(item)
-        self._stats["total_retried"] += 1
+            self._queue.append(item)
+            self._stats["total_retried"] += 1
 
     def mark_success(self, item: RetryItem):
         """Mark a retry as successful."""
-        self._seen_urls.discard(item.url)
-        self._stats["total_succeeded"] += 1
-        logger.debug(f"Retry succeeded for {item.url} on attempt {item.attempt}")
+        with self._lock:
+            self._seen_urls.discard(item.url)
+            self._stats["total_succeeded"] += 1
+            logger.debug(f"Retry succeeded for {item.url} on attempt {item.attempt}")
 
     @property
     def pending_count(self) -> int:
-        return len(self._queue)
+        with self._lock:
+            return len(self._queue)
 
     @property
     def stats(self) -> dict:
-        return {
-            **self._stats,
-            "pending": self.pending_count,
-        }
+        with self._lock:
+            return {
+                **self._stats,
+                "pending": len(self._queue),
+            }
 
     def clear(self):
         """Clear the queue."""
-        self._queue.clear()
-        self._seen_urls.clear()
+        with self._lock:
+            self._queue.clear()
+            self._seen_urls.clear()
 
 
 # Global instance
