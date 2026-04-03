@@ -703,7 +703,7 @@ def _extract_engagement(soup: BeautifulSoup, result: dict):
 def _clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
     """Remove noise elements from the soup for cleaner content extraction."""
     import copy
-    cleaned = copy.copy(soup)
+    cleaned = copy.deepcopy(soup)
 
     for selector in STRIP_TAGS:
         for el in cleaned.select(selector):

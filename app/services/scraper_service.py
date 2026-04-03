@@ -141,6 +141,7 @@ def process_retry_queue(db: Session) -> dict:
                 failed += 1
 
         except Exception as e:
+            db.rollback()
             retry_queue.requeue(item, error=str(e))
             failed += 1
 

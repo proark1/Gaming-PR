@@ -125,5 +125,7 @@ def _deliver(webhook_id: int, url: str, secret: str, event_type: str, payload: d
             logger.warning(f"Webhook {webhook_id} delivery error: {e}")
 
         db.commit()
+    except Exception as e:
+        logger.error(f"Webhook {webhook_id} unhandled error: {e}")
     finally:
         db.close()
