@@ -13,6 +13,8 @@ from app.schemas.streamer import (
     StreamerResponse,
     StreamerDiscoverTwitchRequest,
     StreamerDiscoverYouTubeRequest,
+    StreamerDiscoverCategoryRequest,
+    StreamerDiscoverYouTubeSearchRequest,
     StreamerRefreshResponse,
 )
 
@@ -168,6 +170,63 @@ def discover_twitch(
         game_name=payload.game_name,
         limit=payload.limit,
         min_viewers=payload.min_viewers,
+    )
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.post("/discover/category")
+def discover_by_category(
+    payload: StreamerDiscoverCategoryRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Discover streamers across all games in a predefined category.
+
+    Available categories: fps, battle_royale, moba, mmorpg, survival, sports,
+    fighting, racing, horror, strategy, indie, mobile, vtuber, variety, esports.
+
+    Requires TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET environment variables.
+    """
+    from app.services.streamer_discovery import discover_by_category as _discover
+    result = _discover(
+        db,
+        category=payload.category,
+        limit_per_game=payload.limit_per_game,
+        min_viewers=payload.min_viewers,
+    )
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.get("/discover/categories")
+def list_discovery_categories():
+    """List all available streamer discovery categories and their games."""
+    from app.services.streamer_discovery import STREAMER_CATEGORIES
+    return {
+        cat: {"games": games, "game_count": len(games)}
+        for cat, games in sorted(STREAMER_CATEGORIES.items())
+    }
+
+
+@router.post("/discover/youtube/search")
+def discover_youtube_search(
+    payload: StreamerDiscoverYouTubeSearchRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Discover YouTube gaming channels by search query.
+
+    Searches YouTube for channels matching the query and upserts them.
+    No API key required.
+    """
+    from app.services.streamer_discovery import discover_youtube_by_search
+    result = discover_youtube_by_search(
+        db,
+        query=payload.query,
+        max_results=payload.max_results,
     )
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])

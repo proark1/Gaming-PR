@@ -245,6 +245,142 @@ def discover_from_twitch(
 
 
 # ---------------------------------------------------------------------------
+# Category / genre presets for batch discovery
+# ---------------------------------------------------------------------------
+
+STREAMER_CATEGORIES: dict[str, list[str]] = {
+    "fps": ["Valorant", "Counter-Strike", "Call of Duty: Warzone", "Apex Legends", "Overwatch 2", "Rainbow Six Siege", "Escape From Tarkov"],
+    "battle_royale": ["Fortnite", "PUBG: BATTLEGROUNDS", "Apex Legends", "Call of Duty: Warzone"],
+    "moba": ["League of Legends", "Dota 2", "SMITE"],
+    "mmorpg": ["World of Warcraft", "Final Fantasy XIV Online", "Lost Ark", "New World"],
+    "survival": ["Rust", "ARK: Survival Evolved", "Minecraft", "7 Days to Die", "DayZ", "Valheim"],
+    "sports": ["EA Sports FC 25", "NBA 2K25", "Madden NFL 25", "Rocket League"],
+    "fighting": ["Street Fighter 6", "TEKKEN 8", "Mortal Kombat 1", "Guilty Gear -Strive-"],
+    "racing": ["Forza Horizon 5", "Forza Motorsport", "Gran Turismo 7", "F1 24"],
+    "horror": ["Phasmophobia", "Dead by Daylight", "Lethal Company", "Outlast Trials"],
+    "strategy": ["Civilization VI", "Age of Empires IV", "Total War: Warhammer III", "Hearts of Iron IV"],
+    "indie": ["Hades II", "Celeste", "Hollow Knight", "Stardew Valley", "Balatro"],
+    "mobile": ["PUBG Mobile", "Mobile Legends: Bang Bang", "Free Fire", "Genshin Impact", "Honkai: Star Rail"],
+    "vtuber": ["Just Chatting", "Minecraft", "Valorant", "Horror"],
+    "variety": ["Just Chatting", "Minecraft", "GTA V", "Fortnite", "Variety"],
+    "esports": ["League of Legends", "Valorant", "Counter-Strike", "Dota 2", "Overwatch 2"],
+}
+
+
+def discover_by_category(
+    db: Session,
+    category: str,
+    limit_per_game: int = 20,
+    min_viewers: int = 100,
+    client_id: str = "",
+    client_secret: str = "",
+) -> dict:
+    """
+    Discover streamers across all games in a predefined category.
+
+    Iterates through the games mapped to the category and runs Twitch discovery
+    for each, deduplicating by twitch_username.
+
+    Returns a summary with total added/updated counts per game.
+    """
+    if not client_id or not client_secret:
+        import os
+        client_id = os.getenv("TWITCH_CLIENT_ID", "")
+        client_secret = os.getenv("TWITCH_CLIENT_SECRET", "")
+    if not client_id or not client_secret:
+        return {"error": "TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET not configured"}
+
+    category_lower = category.lower()
+    games = STREAMER_CATEGORIES.get(category_lower)
+    if not games:
+        return {
+            "error": f"Unknown category '{category}'. Available: {', '.join(sorted(STREAMER_CATEGORIES))}",
+        }
+
+    results = []
+    total_added = 0
+    total_updated = 0
+
+    for game_name in games:
+        result = discover_from_twitch(
+            db,
+            game_name=game_name,
+            limit=limit_per_game,
+            min_viewers=min_viewers,
+            client_id=client_id,
+            client_secret=client_secret,
+        )
+        results.append({
+            "game": game_name,
+            "added": result.get("added", 0),
+            "updated": result.get("updated", 0),
+            "streams_found": result.get("streams_found", 0),
+            "error": result.get("error"),
+        })
+        total_added += result.get("added", 0)
+        total_updated += result.get("updated", 0)
+
+    return {
+        "category": category,
+        "games_searched": len(games),
+        "total_added": total_added,
+        "total_updated": total_updated,
+        "per_game": results,
+    }
+
+
+def discover_youtube_by_search(
+    db: Session,
+    query: str,
+    max_results: int = 20,
+) -> dict:
+    """
+    Discover YouTube gaming channels by searching for gaming content.
+
+    Uses YouTube's public search page to find channels, then upserts them.
+    No API key required — relies on scraping search results.
+    """
+    search_url = f"https://www.youtube.com/results?search_query={requests.utils.quote(query + ' gaming')}&sp=EgIQAg%3D%3D"
+    try:
+        resp = _http.get(search_url, timeout=15)
+        resp.raise_for_status()
+        html = resp.text
+    except Exception as exc:
+        logger.warning("YouTube search failed for '%s': %s", query, exc)
+        return {"error": str(exc), "added": 0, "updated": 0}
+
+    # Extract channel IDs from search results
+    channel_ids = re.findall(r'"channelId":"(UC[a-zA-Z0-9_-]{22})"', html)
+    # Deduplicate while preserving order
+    seen = set()
+    unique_ids = []
+    for cid in channel_ids:
+        if cid not in seen:
+            seen.add(cid)
+            unique_ids.append(cid)
+    unique_ids = unique_ids[:max_results]
+
+    if not unique_ids:
+        return {"query": query, "added": 0, "updated": 0, "channels_found": 0}
+
+    added = 0
+    updated = 0
+    for channel_id in unique_ids:
+        result = discover_youtube_channel(db, channel_id)
+        if result.get("action") == "created":
+            added += 1
+        elif result.get("action") == "updated":
+            updated += 1
+
+    return {
+        "query": query,
+        "channels_found": len(unique_ids),
+        "added": added,
+        "updated": updated,
+    }
+
+
+# ---------------------------------------------------------------------------
 # YouTube helpers
 # ---------------------------------------------------------------------------
 

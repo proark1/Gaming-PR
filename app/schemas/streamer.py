@@ -148,6 +148,17 @@ class StreamerDiscoverYouTubeRequest(BaseModel):
     channel_id: str
 
 
+class StreamerDiscoverCategoryRequest(BaseModel):
+    category: str
+    limit_per_game: int = 20
+    min_viewers: int = 100
+
+
+class StreamerDiscoverYouTubeSearchRequest(BaseModel):
+    query: str
+    max_results: int = 20
+
+
 class StreamerRefreshResponse(BaseModel):
     streamer_id: int
     updated_fields: list[str]
