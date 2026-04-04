@@ -24,6 +24,9 @@ from app.routers.auth import router as auth_router
 from app.routers.investors import router as investors_router
 from app.routers.streamers import router as streamers_router
 from app.routers.campaigns import router as campaigns_router
+from app.routers.companies import router as companies_router
+from app.routers.matching import router as matching_router
+from app.routers.crm import router as crm_router
 from app.seed.outlets import seed_outlets
 from app.seed.investors import seed_investors
 from app.seed.streamers import seed_streamers
@@ -219,6 +222,24 @@ async def lifespan(app: FastAPI):
         replace_existing=True,
     )
 
+    # Influencer scoring and CRM jobs
+    from app.services.scoring_service import daily_score_and_snapshot_job
+    from app.services.crm_service import auto_update_stages_job
+    scheduler.add_job(
+        daily_score_and_snapshot_job,
+        "interval",
+        hours=24,
+        id="daily_score_snapshot",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        auto_update_stages_job,
+        "interval",
+        minutes=30,
+        id="auto_stage_updater",
+        replace_existing=True,
+    )
+
     scheduler.start()
     from app import scheduler_ref
     scheduler_ref.scheduler = scheduler
@@ -299,6 +320,9 @@ app.include_router(investors_router)
 app.include_router(streamers_router)
 app.include_router(messages.router)
 app.include_router(campaigns_router)
+app.include_router(companies_router)
+app.include_router(matching_router)
+app.include_router(crm_router)
 
 # Serve shared static assets (nav.js, etc.)
 _static_dir = Path(__file__).parent / "app" / "static"
@@ -393,6 +417,26 @@ def translations_page():
 @app.get("/campaigns", response_class=HTMLResponse)
 def campaigns_page():
     return _serve_page("campaigns.html")
+
+
+@app.get("/company-profile", response_class=HTMLResponse)
+def company_profile_page():
+    return _serve_page("company-profile.html")
+
+
+@app.get("/leaderboard", response_class=HTMLResponse)
+def leaderboard_page():
+    return _serve_page("leaderboard.html")
+
+
+@app.get("/matching", response_class=HTMLResponse)
+def matching_page():
+    return _serve_page("matching.html")
+
+
+@app.get("/crm", response_class=HTMLResponse)
+def crm_page():
+    return _serve_page("crm.html")
 
 
 @app.get("/profile", response_class=HTMLResponse)

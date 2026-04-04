@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streamer Leaderboard — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .container { max-width: 1300px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .filters select, .filters input { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.82rem; }
+        .filters select:focus, .filters input:focus { outline: none; border-color: var(--accent); }
+        .score-btn { background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none; padding: 8px 18px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .score-btn:hover { transform: translateY(-1px); }
+        .score-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .tier-badge { padding: 3px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tier-bronze { background: rgba(205,127,50,0.15); color: #cd7f32; }
+        .tier-silver { background: rgba(192,192,192,0.15); color: #c0c0c0; }
+        .tier-gold { background: rgba(255,215,0,0.15); color: #ffd700; }
+        .tier-platinum { background: rgba(124,92,255,0.15); color: #a78bfa; }
+        .tier-diamond { background: rgba(6,182,212,0.15); color: #06b6d4; }
+
+        .lb-table { width: 100%; border-collapse: collapse; }
+        .lb-table th { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+        .lb-table th:hover { color: var(--accent-light); }
+        .lb-table th.sorted { color: var(--accent-light); }
+        .lb-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.84rem; }
+        .lb-table tr:hover td { background: rgba(124,92,255,0.04); }
+        .rank-cell { font-weight: 800; color: var(--text-muted); width: 50px; }
+        .rank-cell.top1 { color: #ffd700; }
+        .rank-cell.top2 { color: #c0c0c0; }
+        .rank-cell.top3 { color: #cd7f32; }
+        .name-cell { font-weight: 600; }
+        .score-cell { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+        .score-bar { width: 60px; height: 6px; background: var(--bg-primary); border-radius: 3px; display: inline-block; vertical-align: middle; margin-left: 8px; }
+        .score-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #7c5cff, #ec4899); }
+        .num-cell { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: var(--text-secondary); }
+        .platform-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+        .plat-tag { padding: 2px 8px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; background: rgba(124,92,255,0.1); color: var(--accent-light); }
+
+        .compare-bar { position: fixed; bottom: 0; left: 240px; right: 0; background: var(--bg-secondary); border-top: 1px solid var(--border); padding: 12px 24px; display: none; align-items: center; justify-content: space-between; z-index: 50; }
+        .compare-bar.active { display: flex; }
+        .compare-bar .sel-count { font-size: 0.88rem; font-weight: 600; }
+        .compare-bar .cmp-btn { background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; font-size: 0.84rem; }
+        .compare-bar .clear-btn { background: none; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.84rem; }
+
+        .compare-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
+        .compare-overlay.active { display: flex; }
+        .compare-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 95%; max-width: 1000px; max-height: 85vh; overflow-y: auto; position: relative; }
+        .compare-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .compare-grid { display: grid; gap: 16px; margin-top: 16px; }
+        .compare-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center; }
+        .compare-card h3 { font-size: 1rem; margin-bottom: 12px; }
+        .compare-stat { margin-bottom: 8px; }
+        .compare-stat .label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; }
+        .compare-stat .value { font-size: 1.1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 12px 20px; border-radius: 10px; font-size: 0.84rem; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .chk { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+    </style>
+</head>
+<body>
+<script src="/static/nav.js" data-active="leaderboard"></script>
+
+<div class="container">
+    <div class="header-row">
+        <h1>Streamer Leaderboard</h1>
+        <div class="filters">
+            <select id="tier-filter" onchange="loadLeaderboard()">
+                <option value="">All Tiers</option>
+                <option value="diamond">Diamond</option>
+                <option value="platinum">Platinum</option>
+                <option value="gold">Gold</option>
+                <option value="silver">Silver</option>
+                <option value="bronze">Bronze</option>
+            </select>
+            <select id="platform-filter" onchange="loadLeaderboard()">
+                <option value="">All Platforms</option>
+                <option value="twitch">Twitch</option>
+                <option value="youtube">YouTube</option>
+                <option value="kick">Kick</option>
+                <option value="rumble">Rumble</option>
+                <option value="tiktok">TikTok</option>
+            </select>
+            <button class="score-btn" id="score-all-btn" onclick="scoreAll()">Recalculate All Scores</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div id="loading" class="loading">Loading leaderboard...</div>
+        <table class="lb-table" id="lb-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th style="width:50px;">#</th>
+                    <th style="width:30px;"></th>
+                    <th onclick="sortBy('name')">Name</th>
+                    <th onclick="sortBy('influence_score')">Score</th>
+                    <th onclick="sortBy('influence_tier')">Tier</th>
+                    <th onclick="sortBy('total_followers')">Followers</th>
+                    <th onclick="sortBy('engagement_rate')">Engagement</th>
+                    <th onclick="sortBy('estimated_cpm_usd')">Est. CPM</th>
+                    <th>Platforms</th>
+                </tr>
+            </thead>
+            <tbody id="lb-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="compare-bar" id="compare-bar">
+    <span class="sel-count"><span id="sel-count">0</span> selected (2-5 for comparison)</span>
+    <div style="display:flex;gap:8px;">
+        <button class="clear-btn" onclick="clearSelection()">Clear</button>
+        <button class="cmp-btn" id="cmp-btn" onclick="openCompare()" disabled>Compare</button>
+    </div>
+</div>
+
+<div class="compare-overlay" id="compare-overlay">
+    <div class="compare-modal">
+        <button class="close-btn" onclick="closeCompare()">&times;</button>
+        <h2>Streamer Comparison</h2>
+        <div class="compare-grid" id="compare-grid"></div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let streamers = [];
+let selected = new Set();
+let sortField = 'influence_score';
+let sortDir = -1;
+
+async function loadLeaderboard() {
+    const tier = document.getElementById('tier-filter').value;
+    const plat = document.getElementById('platform-filter').value;
+    let url = '/api/streamers/leaderboard?limit=200';
+    if (tier) url += `&tier=${tier}`;
+    if (plat) url += `&platform=${plat}`;
+    try {
+        const r = await fetch(url); streamers = await r.json();
+        renderTable();
+    } catch(e) { console.error(e); }
+}
+
+function renderTable() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('lb-table').style.display = 'table';
+    const body = document.getElementById('lb-body');
+    const sorted = [...streamers].sort((a,b) => {
+        let av = a[sortField] ?? 0, bv = b[sortField] ?? 0;
+        if (typeof av === 'string') return sortDir * av.localeCompare(bv);
+        return sortDir * (av - bv);
+    });
+    body.innerHTML = sorted.map((s, i) => {
+        const rank = i + 1;
+        const rankCls = rank <= 3 ? ` top${rank}` : '';
+        const tier = s.influence_tier || 'bronze';
+        const score = (s.influence_score || 0).toFixed(1);
+        const eng = s.engagement_rate ? (s.engagement_rate * 100).toFixed(2) + '%' : '-';
+        const cpm = s.estimated_cpm_usd ? '$' + s.estimated_cpm_usd.toFixed(2) : '-';
+        const followers = fmtNum(s.total_followers || 0);
+        const platforms = [];
+        if (s.twitch_username) platforms.push('Twitch');
+        if (s.youtube_channel_id) platforms.push('YouTube');
+        if (s.kick_username) platforms.push('Kick');
+        if (s.rumble_channel_id) platforms.push('Rumble');
+        if (s.tiktok_username) platforms.push('TikTok');
+        const chk = selected.has(s.id) ? 'checked' : '';
+        return `<tr>
+            <td class="rank-cell${rankCls}">${rank}</td>
+            <td><input type="checkbox" class="chk" ${chk} onchange="toggleSelect(${s.id})"></td>
+            <td class="name-cell">${esc(s.name)}</td>
+            <td class="score-cell">${score}<span class="score-bar"><span class="score-fill" style="width:${score}%"></span></span></td>
+            <td><span class="tier-badge tier-${tier}">${tier}</span></td>
+            <td class="num-cell">${followers}</td>
+            <td class="num-cell">${eng}</td>
+            <td class="num-cell">${cpm}</td>
+            <td><div class="platform-tags">${platforms.map(p => `<span class="plat-tag">${p}</span>`).join('')}</div></td>
+        </tr>`;
+    }).join('');
+}
+
+function sortBy(field) {
+    if (sortField === field) sortDir *= -1; else { sortField = field; sortDir = -1; }
+    renderTable();
+}
+
+function toggleSelect(id) {
+    if (selected.has(id)) selected.delete(id); else selected.add(id);
+    updateCompareBar();
+}
+
+function clearSelection() { selected.clear(); updateCompareBar(); renderTable(); }
+
+function updateCompareBar() {
+    const bar = document.getElementById('compare-bar');
+    const cnt = selected.size;
+    document.getElementById('sel-count').textContent = cnt;
+    bar.classList.toggle('active', cnt > 0);
+    document.getElementById('cmp-btn').disabled = cnt < 2 || cnt > 5;
+}
+
+async function openCompare() {
+    const ids = [...selected].join(',');
+    try {
+        const r = await fetch(`/api/streamers/compare?ids=${ids}`);
+        const data = await r.json();
+        const grid = document.getElementById('compare-grid');
+        grid.style.gridTemplateColumns = `repeat(${data.length}, 1fr)`;
+        grid.innerHTML = data.map(s => `
+            <div class="compare-card">
+                <h3>${esc(s.name)}</h3>
+                <span class="tier-badge tier-${s.influence_tier||'bronze'}">${s.influence_tier||'bronze'}</span>
+                <div class="compare-stat"><div class="label">Score</div><div class="value">${(s.influence_score||0).toFixed(1)}</div></div>
+                <div class="compare-stat"><div class="label">Followers</div><div class="value">${fmtNum(s.total_followers||0)}</div></div>
+                <div class="compare-stat"><div class="label">Engagement</div><div class="value">${s.engagement_rate ? (s.engagement_rate*100).toFixed(2)+'%' : '-'}</div></div>
+                <div class="compare-stat"><div class="label">Est. CPM</div><div class="value">${s.estimated_cpm_usd ? '$'+s.estimated_cpm_usd.toFixed(2) : '-'}</div></div>
+                <div class="compare-stat"><div class="label">Sponsorship</div><div class="value">${s.sponsorship_rate_usd ? '$'+s.sponsorship_rate_usd.toFixed(0) : '-'}</div></div>
+                <div class="compare-stat"><div class="label">Platforms</div><div class="value">${s.platform_count||1}</div></div>
+            </div>
+        `).join('');
+        document.getElementById('compare-overlay').classList.add('active');
+    } catch(e) { toast('Compare failed: ' + e.message); }
+}
+
+function closeCompare() { document.getElementById('compare-overlay').classList.remove('active'); }
+
+async function scoreAll() {
+    const btn = document.getElementById('score-all-btn'); btn.disabled = true; btn.textContent = 'Scoring...';
+    try {
+        const r = await fetch('/api/streamers/score-all', { method: 'POST' });
+        const d = await r.json();
+        toast(`Scored ${d.scored} streamers`);
+        loadLeaderboard();
+    } catch(e) { toast('Scoring failed'); }
+    finally { btn.disabled = false; btn.textContent = 'Recalculate All Scores'; }
+}
+
+function fmtNum(n) {
+    if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+    return String(n);
+}
+
+function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+
+loadLeaderboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Pipeline — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .container { max-width: 1400px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 4px; width: fit-content; }
+        .tab { padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; background: transparent; border: none; color: var(--text-muted); font-family: inherit; transition: all .2s; }
+        .tab:hover { color: var(--text-secondary); }
+        .tab.active { background: var(--accent); color: #fff; }
+
+        /* Pipeline board */
+        .pipeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; min-height: 400px; }
+        .pipe-col { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; min-height: 300px; }
+        .pipe-col-header { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .pipe-count { background: var(--bg-primary); padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; }
+        .pipe-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all .2s; }
+        .pipe-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+        .pipe-card .pc-name { font-size: 0.84rem; font-weight: 600; margin-bottom: 4px; }
+        .pipe-card .pc-type { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; padding: 2px 6px; border-radius: 8px; display: inline-block; margin-bottom: 6px; }
+        .pc-type-streamer { background: rgba(124,92,255,0.12); color: var(--accent-light); }
+        .pc-type-outlet { background: rgba(6,182,212,0.12); color: var(--cyan); }
+        .pc-type-vc { background: rgba(34,197,94,0.12); color: var(--green); }
+        .pipe-card .pc-meta { font-size: 0.74rem; color: var(--text-muted); }
+
+        /* Activity feed */
+        .activity-feed { max-width: 800px; }
+        .activity-item { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+        .activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+        .dot-email_sent { background: var(--accent); }
+        .dot-email_opened { background: var(--green); }
+        .dot-email_clicked { background: var(--cyan); }
+        .dot-note_added { background: var(--orange); }
+        .dot-stage_changed { background: #ec4899; }
+        .dot-campaign_added { background: var(--accent-light); }
+        .activity-body { flex: 1; }
+        .activity-body .ab-type { font-size: 0.78rem; font-weight: 600; margin-bottom: 2px; }
+        .activity-body .ab-detail { font-size: 0.82rem; color: var(--text-secondary); }
+        .activity-body .ab-time { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+
+        /* Timeline modal */
+        .timeline-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
+        .timeline-overlay.active { display: flex; }
+        .timeline-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 650px; max-height: 85vh; overflow-y: auto; position: relative; }
+        .timeline-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .timeline-modal h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+        .timeline-modal .stage-info { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; }
+        .stage-select { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 10px; border-radius: 6px; font-family: inherit; font-size: 0.8rem; margin-left: 8px; }
+        .note-row { display: flex; gap: 8px; margin: 16px 0; }
+        .note-row input { flex: 1; background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.84rem; }
+        .note-row input:focus { outline: none; border-color: var(--accent); }
+        .note-row button { background: var(--accent); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; font-size: 0.82rem; }
+        .tl-list { list-style: none; padding: 0; margin: 0; }
+        .tl-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 12px 20px; border-radius: 10px; font-size: 0.84rem; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 900px) { .pipeline { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 600px) { .pipeline { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+<script src="/static/nav.js" data-active="crm"></script>
+
+<div class="container">
+    <div class="header-row">
+        <h1>CRM Pipeline</h1>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('pipeline',this)">Pipeline</button>
+        <button class="tab" onclick="switchTab('activity',this)">Recent Activity</button>
+    </div>
+
+    <div id="panel-pipeline" class="panel active">
+        <div class="stats-row" id="stats-row"></div>
+        <div class="pipeline" id="pipeline-board">
+            <div class="loading">Loading pipeline...</div>
+        </div>
+    </div>
+
+    <div id="panel-activity" class="panel">
+        <div class="activity-feed" id="activity-feed">
+            <div class="loading">Loading activity...</div>
+        </div>
+    </div>
+</div>
+
+<div class="timeline-overlay" id="timeline-overlay">
+    <div class="timeline-modal">
+        <button class="close-btn" onclick="closeTimeline()">&times;</button>
+        <h2 id="tl-name"></h2>
+        <div class="stage-info">
+            Stage: <select class="stage-select" id="tl-stage" onchange="changeStage()">
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="responded">Responded</option>
+                <option value="negotiating">Negotiating</option>
+                <option value="partner">Partner</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+        <div class="note-row">
+            <input id="note-input" placeholder="Add a note...">
+            <button onclick="addNote()">Add Note</button>
+        </div>
+        <ul class="tl-list" id="tl-list"></ul>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const STAGES = ['new','contacted','responded','negotiating','partner','inactive'];
+const STAGE_LABELS = { new:'New', contacted:'Contacted', responded:'Responded', negotiating:'Negotiating', partner:'Partner', inactive:'Inactive' };
+let pipelineData = null;
+let currentContact = null;
+
+async function loadPipeline() {
+    try {
+        const r = await fetch('/api/crm/pipeline');
+        pipelineData = await r.json();
+        renderPipeline();
+    } catch(e) { console.error(e); }
+}
+
+function renderPipeline() {
+    const board = document.getElementById('pipeline-board');
+    const statsRow = document.getElementById('stats-row');
+
+    // Build cards grouped by stage
+    const byStage = {};
+    STAGES.forEach(s => byStage[s] = []);
+
+    ['streamer','outlet','vc'].forEach(type => {
+        const summary = pipelineData[type] || {};
+        Object.entries(summary).forEach(([stage, items]) => {
+            if (!byStage[stage]) byStage[stage] = [];
+            (Array.isArray(items) ? items : []).forEach(item => {
+                byStage[stage].push({ ...item, contact_type: type });
+            });
+        });
+    });
+
+    // Stats
+    const totalByStage = {};
+    STAGES.forEach(s => totalByStage[s] = byStage[s].length);
+    statsRow.innerHTML = STAGES.map(s => `
+        <div class="stat-card"><div class="stat-value">${totalByStage[s]}</div><div class="stat-label">${STAGE_LABELS[s]}</div></div>
+    `).join('');
+
+    // Columns
+    board.innerHTML = STAGES.map(stage => `
+        <div class="pipe-col">
+            <div class="pipe-col-header">
+                ${STAGE_LABELS[stage]}
+                <span class="pipe-count">${byStage[stage].length}</span>
+            </div>
+            ${byStage[stage].map(c => `
+                <div class="pipe-card" onclick="openTimeline('${c.contact_type}',${c.id},'${esc(c.name||'')}','${stage}')">
+                    <div class="pc-type pc-type-${c.contact_type}">${c.contact_type}</div>
+                    <div class="pc-name">${esc(c.name||'Unknown')}</div>
+                    <div class="pc-meta">${c.total_outreach_count||0} outreach</div>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+}
+
+async function loadActivity() {
+    const feed = document.getElementById('activity-feed');
+    try {
+        const r = await fetch('/api/crm/recent?limit=50');
+        const data = await r.json();
+        if (!data.length) { feed.innerHTML = '<div class="loading">No recent activity</div>'; return; }
+        feed.innerHTML = data.map(a => `
+            <div class="activity-item">
+                <div class="activity-dot dot-${a.activity_type}"></div>
+                <div class="activity-body">
+                    <div class="ab-type">${fmtType(a.activity_type)} — ${a.contact_type} #${a.contact_id}</div>
+                    <div class="ab-detail">${fmtDetails(a.details)}</div>
+                    <div class="ab-time">${timeAgo(a.created_at)}</div>
+                </div>
+            </div>
+        `).join('');
+    } catch(e) { feed.innerHTML = '<div class="loading">Failed to load activity</div>'; }
+}
+
+async function openTimeline(type, id, name, stage) {
+    currentContact = { type, id };
+    document.getElementById('tl-name').textContent = name;
+    document.getElementById('tl-stage').value = stage || 'new';
+    document.getElementById('note-input').value = '';
+    document.getElementById('timeline-overlay').classList.add('active');
+    await loadTimeline();
+}
+
+async function loadTimeline() {
+    if (!currentContact) return;
+    const list = document.getElementById('tl-list');
+    list.innerHTML = '<li class="loading">Loading...</li>';
+    try {
+        const r = await fetch(`/api/crm/timeline/${currentContact.type}/${currentContact.id}?limit=50`);
+        const data = await r.json();
+        if (!data.length) { list.innerHTML = '<li class="loading">No activity recorded</li>'; return; }
+        list.innerHTML = data.map(a => `
+            <li class="tl-item">
+                <div class="activity-dot dot-${a.activity_type}"></div>
+                <div class="activity-body">
+                    <div class="ab-type">${fmtType(a.activity_type)}</div>
+                    <div class="ab-detail">${fmtDetails(a.details)}</div>
+                    <div class="ab-time">${timeAgo(a.created_at)}</div>
+                </div>
+            </li>
+        `).join('');
+    } catch(e) { list.innerHTML = '<li class="loading">Failed to load</li>'; }
+}
+
+function closeTimeline() { document.getElementById('timeline-overlay').classList.remove('active'); currentContact = null; }
+
+async function changeStage() {
+    if (!currentContact) return;
+    const stage = document.getElementById('tl-stage').value;
+    try {
+        await fetch(`/api/crm/stage/${currentContact.type}/${currentContact.id}`, {
+            method: 'PUT', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ new_stage: stage })
+        });
+        toast('Stage updated'); loadTimeline(); loadPipeline();
+    } catch(e) { toast('Failed to update stage'); }
+}
+
+async function addNote() {
+    if (!currentContact) return;
+    const input = document.getElementById('note-input');
+    const text = input.value.trim(); if (!text) return;
+    try {
+        await fetch(`/api/crm/note/${currentContact.type}/${currentContact.id}`, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ note: text })
+        });
+        input.value = ''; toast('Note added'); loadTimeline();
+    } catch(e) { toast('Failed to add note'); }
+}
+
+function switchTab(tab, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+    if (tab === 'activity') loadActivity();
+}
+
+function fmtType(t) { return (t||'').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+function fmtDetails(d) {
+    if (!d) return '';
+    if (typeof d === 'string') return esc(d);
+    if (d.note) return esc(d.note);
+    if (d.old_stage) return `${d.old_stage} → ${d.new_stage}`;
+    if (d.campaign_name) return esc(d.campaign_name);
+    return JSON.stringify(d);
+}
+function timeAgo(ts) {
+    if (!ts) return '';
+    const d = new Date(ts); const now = new Date(); const s = Math.floor((now - d) / 1000);
+    if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s/60) + 'm ago';
+    if (s < 86400) return Math.floor(s/3600) + 'h ago'; return Math.floor(s/86400) + 'd ago';
+}
+function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+
+loadPipeline();
+</script>
+</body>
+</html>

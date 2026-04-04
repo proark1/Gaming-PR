@@ -54,6 +54,12 @@ class GamingInvestor(Base):
     # Outreach profile (JSON string compiled from structured fields)
     outreach_profile = Column(Text, nullable=True)
 
+    # CRM
+    relationship_stage = Column(String(30), nullable=True, default="new")
+    last_contacted_at = Column(DateTime, nullable=True)
+    last_responded_at = Column(DateTime, nullable=True)
+    total_outreach_count = Column(Integer, default=0)
+
     # State
     is_active = Column(Boolean, default=True, index=True)
     is_gaming_focused = Column(Boolean, default=True)  # True = gaming is primary focus

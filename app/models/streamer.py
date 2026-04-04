@@ -87,6 +87,14 @@ class Streamer(Base):
     total_followers = Column(BigInteger, nullable=True)          # sum across all platforms
     estimated_monthly_reach = Column(BigInteger, nullable=True)  # rough monthly impressions
 
+    # Influence scoring (computed by scoring_service)
+    engagement_rate = Column(Float, nullable=True)       # avg_viewers / followers
+    platform_count = Column(Integer, nullable=True)      # number of active platforms
+    influence_score = Column(Float, nullable=True)       # composite 0-100
+    influence_tier = Column(String(20), nullable=True)   # bronze/silver/gold/platinum/diamond
+    estimated_cpm_usd = Column(Float, nullable=True)     # cost per 1000 impressions
+    sponsorship_rate_usd = Column(Float, nullable=True)  # estimated per-stream sponsor cost
+
     # PR / contact
     contact_email = Column(String(500), nullable=True)
     agent_name = Column(String(500), nullable=True)
@@ -103,6 +111,12 @@ class Streamer(Base):
 
     # Outreach profile (JSON string compiled from structured fields)
     outreach_profile = Column(Text, nullable=True)
+
+    # CRM
+    relationship_stage = Column(String(30), nullable=True, default="new")
+    last_contacted_at = Column(DateTime, nullable=True)
+    last_responded_at = Column(DateTime, nullable=True)
+    total_outreach_count = Column(Integer, default=0)
 
     # Freshness tracking
     last_stats_updated_at = Column(DateTime, nullable=True)

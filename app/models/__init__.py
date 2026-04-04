@@ -10,6 +10,9 @@ from app.models.streamer import Streamer
 from app.models.message import Message, MessageTranslation
 from app.models.personalization import MessagePersonalization
 from app.models.campaign import Campaign, OutreachRecord, DoNotContact
+from app.models.company import CompanyProfile
+from app.models.streamer_snapshot import StreamerSnapshot
+from app.models.activity import ContactActivity
 
 __all__ = [
     "GamingOutlet", "Article", "ArticleTranslation",
@@ -19,4 +22,5 @@ __all__ = [
     "Message", "MessageTranslation",
     "MessagePersonalization",
     "Campaign", "OutreachRecord", "DoNotContact",
+    "CompanyProfile", "StreamerSnapshot", "ContactActivity",
 ]

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Matching — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .container { max-width: 1300px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+        .selector { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .selector select { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 10px 14px; border-radius: 10px; font-family: inherit; font-size: 0.88rem; min-width: 240px; }
+        .selector select:focus { outline: none; border-color: var(--accent); }
+        .match-btn { background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .match-btn:hover { transform: translateY(-1px); }
+        .match-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 4px; width: fit-content; }
+        .tab { padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; background: transparent; border: none; color: var(--text-muted); font-family: inherit; transition: all .2s; }
+        .tab:hover { color: var(--text-secondary); }
+        .tab.active { background: var(--accent); color: #fff; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .match-list { display: grid; gap: 12px; }
+        .match-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; transition: all .2s; }
+        .match-card:hover { border-color: var(--accent); transform: translateX(4px); }
+        .match-rank { font-size: 1.4rem; font-weight: 800; color: var(--text-muted); width: 40px; text-align: center; }
+        .match-rank.top { color: var(--accent-light); }
+        .match-info h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+        .match-info .reasons { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+        .match-info .reason { padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; background: rgba(34,197,94,0.1); color: var(--green); }
+        .match-info .weakness { background: rgba(239,68,68,0.1); color: #f87171; }
+        .match-score-col { text-align: center; min-width: 80px; }
+        .match-score { font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+        .match-score.high { color: var(--green); }
+        .match-score.mid { color: var(--orange); }
+        .match-score.low { color: var(--text-muted); }
+        .match-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; }
+
+        .empty-msg { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 0.9rem; }
+        .empty-msg a { color: var(--accent-light); text-decoration: none; }
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 12px 20px; border-radius: 10px; font-size: 0.84rem; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+<script src="/static/nav.js" data-active="matching"></script>
+
+<div class="container">
+    <div class="header-row">
+        <h1>Smart Matching</h1>
+    </div>
+
+    <div class="selector">
+        <select id="company-select">
+            <option value="">Select a company profile...</option>
+        </select>
+        <button class="match-btn" id="match-btn" onclick="findMatches()" disabled>Find Matches</button>
+    </div>
+
+    <div id="no-profiles" class="empty-msg" style="display:none;">
+        <p>No company profiles found. <a href="/company-profile">Create one</a> to enable smart matching.</p>
+    </div>
+
+    <div id="results" style="display:none;margin-top:24px;">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('streamers',this)">Streamers</button>
+            <button class="tab" onclick="switchTab('investors',this)">Investors</button>
+            <button class="tab" onclick="switchTab('outlets',this)">Outlets</button>
+        </div>
+        <div id="panel-streamers" class="panel active"><div class="loading">Select a profile and click Find Matches</div></div>
+        <div id="panel-investors" class="panel"><div class="loading"></div></div>
+        <div id="panel-outlets" class="panel"><div class="loading"></div></div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let matchData = null;
+
+async function loadCompanies() {
+    try {
+        const r = await fetch('/api/companies');
+        const data = await r.json();
+        const sel = document.getElementById('company-select');
+        if (!data.length) { document.getElementById('no-profiles').style.display = 'block'; return; }
+        data.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; sel.appendChild(o); });
+        sel.onchange = () => { document.getElementById('match-btn').disabled = !sel.value; };
+    } catch(e) { console.error(e); }
+}
+
+async function findMatches() {
+    const cid = document.getElementById('company-select').value; if (!cid) return;
+    const btn = document.getElementById('match-btn'); btn.disabled = true; btn.textContent = 'Matching...';
+    document.getElementById('results').style.display = 'block';
+    ['streamers','investors','outlets'].forEach(t => {
+        document.getElementById('panel-'+t).innerHTML = '<div class="loading">Finding matches...</div>';
+    });
+    try {
+        const r = await fetch(`/api/matching/${cid}/all`);
+        matchData = await r.json();
+        renderPanel('streamers', matchData.streamers || []);
+        renderPanel('investors', matchData.investors || []);
+        renderPanel('outlets', matchData.outlets || []);
+    } catch(e) { toast('Matching failed: ' + e.message); }
+    finally { btn.disabled = false; btn.textContent = 'Find Matches'; }
+}
+
+function renderPanel(type, matches) {
+    const panel = document.getElementById('panel-' + type);
+    if (!matches.length) { panel.innerHTML = '<div class="empty-msg">No matches found for this profile.</div>'; return; }
+    panel.innerHTML = '<div class="match-list">' + matches.map((m, i) => {
+        const scoreCls = m.match_score >= 70 ? 'high' : m.match_score >= 40 ? 'mid' : 'low';
+        const rankCls = i < 3 ? ' top' : '';
+        return `<div class="match-card">
+            <div class="match-rank${rankCls}">${i+1}</div>
+            <div class="match-info">
+                <h3>${esc(m.target_name)}</h3>
+                <div class="reasons">
+                    ${(m.match_reasons||[]).map(r => `<span class="reason">${esc(r)}</span>`).join('')}
+                    ${(m.weak_points||[]).map(w => `<span class="reason weakness">${esc(w)}</span>`).join('')}
+                </div>
+            </div>
+            <div class="match-score-col">
+                <div class="match-score ${scoreCls}">${m.match_score.toFixed(0)}</div>
+                <div class="match-label">match</div>
+            </div>
+        </div>`;
+    }).join('') + '</div>';
+}
+
+function switchTab(tab, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+}
+
+function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+
+loadCompanies();
+</script>
+</body>
+</html>

@@ -49,6 +49,12 @@ class GamingOutlet(Base):
     # Flexible config per outlet
     scraper_config = Column(JSON, nullable=True, default=dict)
 
+    # CRM
+    relationship_stage = Column(String(30), nullable=True, default="new")
+    last_contacted_at = Column(DateTime, nullable=True)
+    last_responded_at = Column(DateTime, nullable=True)
+    total_outreach_count = Column(Integer, default=0)
+
     # Outreach profile (JSON string compiled from structured fields)
     outreach_profile = Column(Text, nullable=True)
 

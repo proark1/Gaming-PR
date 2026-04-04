@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Profile — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .container { max-width: 900px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+        .add-btn { background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; box-shadow: 0 4px 16px rgba(124,92,255,0.3); }
+        .add-btn:hover { transform: translateY(-1px); }
+        .profile-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
+        .profile-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; cursor: pointer; transition: all .2s; }
+        .profile-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,92,255,0.15); }
+        .profile-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+        .profile-card .desc { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+        .tag { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; background: rgba(124,92,255,0.12); color: var(--accent-light); }
+        .tag.green { background: rgba(34,197,94,0.12); color: var(--green); }
+        .tag.cyan { background: rgba(6,182,212,0.12); color: var(--cyan); }
+        .meta-row { display: flex; gap: 16px; font-size: 0.78rem; color: var(--text-muted); }
+        .empty-state { text-align: center; padding: 80px 20px; }
+        .empty-state h3 { font-size: 1.1rem; margin-bottom: 8px; }
+        .empty-state p { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 24px; }
+
+        .form-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
+        .form-overlay.active { display: flex; }
+        .form-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 700px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        .form-modal h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; }
+        .form-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .section-label { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 10px; border-top: 1px solid var(--border); padding-top: 16px; }
+        .section-label:first-of-type { margin-top: 0; border-top: none; padding-top: 0; }
+        .submit-btn { width: 100%; padding: 11px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; font-family: inherit; margin-top: 8px; transition: all .2s; }
+        .submit-btn:hover { transform: translateY(-1px); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .form-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .form-error.visible { display: block; }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 12px 20px; border-radius: 10px; font-size: 0.84rem; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .del-btn { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 8px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .del-btn:hover { background: rgba(239,68,68,0.2); }
+    </style>
+</head>
+<body>
+<script src="/static/nav.js" data-active="company-profile"></script>
+
+<div class="container">
+    <div class="header-row">
+        <h1>Company / Game Profiles</h1>
+        <button class="add-btn" onclick="openForm()">+ New Profile</button>
+    </div>
+
+    <div id="profiles-list" class="profile-cards"></div>
+    <div id="empty-state" class="empty-state" style="display:none;">
+        <h3>No profiles yet</h3>
+        <p>Create a company or game profile to enable smart matching with streamers, outlets, and investors.</p>
+        <button class="add-btn" onclick="openForm()">+ Create Your First Profile</button>
+    </div>
+</div>
+
+<div id="form-overlay" class="form-overlay">
+    <div class="form-modal">
+        <button class="close-btn" onclick="closeForm()">&times;</button>
+        <h2 id="form-title">New Company Profile</h2>
+        <div id="form-error" class="form-error"></div>
+        <form id="profile-form" onsubmit="saveProfile(event)">
+            <input type="hidden" id="f-id">
+            <div class="section-label">Basic Info</div>
+            <div class="form-group"><label>Name *</label><input id="f-name" required></div>
+            <div class="form-group"><label>Description</label><textarea id="f-desc" rows="3"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label>Website</label><input id="f-website" type="url"></div>
+                <div class="form-group"><label>Logo URL</label><input id="f-logo" type="url"></div>
+            </div>
+
+            <div class="section-label">Game Details</div>
+            <div class="form-row">
+                <div class="form-group"><label>Genres (comma-separated)</label><input id="f-genre" placeholder="fps, rpg, moba"></div>
+                <div class="form-group"><label>Platforms (comma-separated)</label><input id="f-platforms" placeholder="pc, ps5, xbox, mobile"></div>
+            </div>
+            <div class="form-row-3">
+                <div class="form-group"><label>Release Stage</label>
+                    <select id="f-release"><option value="">Select...</option><option>concept</option><option>prototype</option><option>alpha</option><option>beta</option><option>early_access</option><option>launched</option></select>
+                </div>
+                <div class="form-group"><label>Revenue Model</label>
+                    <select id="f-revenue"><option value="">Select...</option><option>f2p</option><option>premium</option><option>subscription</option><option>hybrid</option></select>
+                </div>
+                <div class="form-group"><label>Team Size</label><input id="f-team" type="number" min="1"></div>
+            </div>
+            <div class="form-group"><label>Target Audience (comma-separated)</label><input id="f-audience" placeholder="casual, competitive, streaming_friendly"></div>
+
+            <div class="section-label">Business & Funding</div>
+            <div class="form-row-3">
+                <div class="form-group"><label>Funding Stage</label>
+                    <select id="f-funding"><option value="">Select...</option><option>bootstrapped</option><option>pre_seed</option><option>seed</option><option>series_a</option><option>series_b</option><option>growth</option></select>
+                </div>
+                <div class="form-group"><label>Funding Target ($K)</label><input id="f-fundtarget" type="number" min="0"></div>
+                <div class="form-group"><label>Marketing Budget ($K)</label><input id="f-mktbudget" type="number" min="0"></div>
+            </div>
+
+            <div class="section-label">Matching Preferences</div>
+            <div class="form-row">
+                <div class="form-group"><label>Preferred Streamer Tiers</label><input id="f-tiers" placeholder="gold, platinum, diamond"></div>
+                <div class="form-group"><label>Preferred Regions</label><input id="f-regions" placeholder="NA, EU, APAC"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Preferred Platforms</label><input id="f-prefplat" placeholder="twitch, youtube, kick"></div>
+                <div class="form-group"><label>Preferred Investor Types</label><input id="f-invtypes" placeholder="vc, angel, corporate"></div>
+            </div>
+
+            <div class="section-label">Assets</div>
+            <div class="form-row-3">
+                <div class="form-group"><label>Trailer URL</label><input id="f-trailer" type="url"></div>
+                <div class="form-group"><label>Pitch Deck URL</label><input id="f-pitch" type="url"></div>
+                <div class="form-group"><label>Media Kit URL</label><input id="f-media" type="url"></div>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:16px;">
+                <button type="submit" class="submit-btn" id="save-btn" style="flex:1;">Save Profile</button>
+                <button type="button" class="del-btn" id="delete-btn" style="display:none;" onclick="deleteProfile()">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API = '/api/companies';
+let profiles = [];
+let editId = null;
+
+async function loadProfiles() {
+    try {
+        const r = await fetch(API); profiles = await r.json();
+        render();
+    } catch(e) { console.error(e); }
+}
+
+function render() {
+    const list = document.getElementById('profiles-list');
+    const empty = document.getElementById('empty-state');
+    if (!profiles.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    list.innerHTML = profiles.map(p => `
+        <div class="profile-card" onclick="openEdit(${p.id})">
+            <h3>${esc(p.name)}</h3>
+            <div class="desc">${esc(p.description || 'No description')}</div>
+            <div class="tag-row">
+                ${(p.genre||[]).map(g => `<span class="tag">${esc(g)}</span>`).join('')}
+                ${p.release_stage ? `<span class="tag green">${esc(p.release_stage)}</span>` : ''}
+                ${p.funding_stage ? `<span class="tag cyan">${esc(p.funding_stage)}</span>` : ''}
+            </div>
+            <div class="meta-row">
+                ${p.team_size ? `<span>Team: ${p.team_size}</span>` : ''}
+                ${(p.platforms||[]).length ? `<span>${(p.platforms||[]).join(', ')}</span>` : ''}
+                ${p.revenue_model ? `<span>${p.revenue_model}</span>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function csvToArr(v) { return v ? v.split(',').map(s=>s.trim()).filter(Boolean) : []; }
+function arrToCsv(a) { return (a||[]).join(', '); }
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function openForm() {
+    editId = null;
+    document.getElementById('form-title').textContent = 'New Company Profile';
+    document.getElementById('profile-form').reset();
+    document.getElementById('f-id').value = '';
+    document.getElementById('delete-btn').style.display = 'none';
+    document.getElementById('form-error').className = 'form-error';
+    document.getElementById('form-overlay').classList.add('active');
+}
+
+function openEdit(id) {
+    const p = profiles.find(x => x.id === id); if (!p) return;
+    editId = id;
+    document.getElementById('form-title').textContent = 'Edit Profile';
+    document.getElementById('f-id').value = id;
+    document.getElementById('f-name').value = p.name || '';
+    document.getElementById('f-desc').value = p.description || '';
+    document.getElementById('f-website').value = p.website || '';
+    document.getElementById('f-logo').value = p.logo_url || '';
+    document.getElementById('f-genre').value = arrToCsv(p.genre);
+    document.getElementById('f-platforms').value = arrToCsv(p.platforms);
+    document.getElementById('f-release').value = p.release_stage || '';
+    document.getElementById('f-revenue').value = p.revenue_model || '';
+    document.getElementById('f-team').value = p.team_size || '';
+    document.getElementById('f-audience').value = arrToCsv(p.target_audience);
+    document.getElementById('f-funding').value = p.funding_stage || '';
+    document.getElementById('f-fundtarget').value = p.funding_target_k || '';
+    document.getElementById('f-mktbudget').value = p.marketing_budget_k || '';
+    document.getElementById('f-tiers').value = arrToCsv(p.preferred_streamer_tiers);
+    document.getElementById('f-regions').value = arrToCsv(p.preferred_regions);
+    document.getElementById('f-prefplat').value = arrToCsv(p.preferred_platforms);
+    document.getElementById('f-invtypes').value = arrToCsv(p.preferred_investor_types);
+    document.getElementById('f-trailer').value = p.trailer_url || '';
+    document.getElementById('f-pitch').value = p.pitch_deck_url || '';
+    document.getElementById('f-media').value = p.media_kit_url || '';
+    document.getElementById('delete-btn').style.display = 'block';
+    document.getElementById('form-error').className = 'form-error';
+    document.getElementById('form-overlay').classList.add('active');
+}
+
+function closeForm() { document.getElementById('form-overlay').classList.remove('active'); }
+
+async function saveProfile(e) {
+    e.preventDefault();
+    const btn = document.getElementById('save-btn'); btn.disabled = true;
+    const body = {
+        name: document.getElementById('f-name').value,
+        description: document.getElementById('f-desc').value || null,
+        website: document.getElementById('f-website').value || null,
+        logo_url: document.getElementById('f-logo').value || null,
+        genre: csvToArr(document.getElementById('f-genre').value),
+        platforms: csvToArr(document.getElementById('f-platforms').value),
+        release_stage: document.getElementById('f-release').value || null,
+        revenue_model: document.getElementById('f-revenue').value || null,
+        team_size: parseInt(document.getElementById('f-team').value) || null,
+        target_audience: csvToArr(document.getElementById('f-audience').value),
+        funding_stage: document.getElementById('f-funding').value || null,
+        funding_target_k: parseInt(document.getElementById('f-fundtarget').value) || null,
+        marketing_budget_k: parseInt(document.getElementById('f-mktbudget').value) || null,
+        preferred_streamer_tiers: csvToArr(document.getElementById('f-tiers').value),
+        preferred_regions: csvToArr(document.getElementById('f-regions').value),
+        preferred_platforms: csvToArr(document.getElementById('f-prefplat').value),
+        preferred_investor_types: csvToArr(document.getElementById('f-invtypes').value),
+        trailer_url: document.getElementById('f-trailer').value || null,
+        pitch_deck_url: document.getElementById('f-pitch').value || null,
+        media_kit_url: document.getElementById('f-media').value || null,
+    };
+    try {
+        const url = editId ? `${API}/${editId}` : API;
+        const method = editId ? 'PUT' : 'POST';
+        const r = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        if (!r.ok) { const d = await r.json(); throw new Error(d.detail || 'Save failed'); }
+        closeForm(); toast(editId ? 'Profile updated' : 'Profile created');
+        loadProfiles();
+    } catch(e) {
+        const err = document.getElementById('form-error');
+        err.textContent = e.message; err.className = 'form-error visible';
+    } finally { btn.disabled = false; }
+}
+
+async function deleteProfile() {
+    if (!editId || !confirm('Delete this profile?')) return;
+    try {
+        await fetch(`${API}/${editId}`, { method: 'DELETE' });
+        closeForm(); toast('Profile deleted'); loadProfiles();
+    } catch(e) { alert(e.message); }
+}
+
+function toast(msg) {
+    const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+loadProfiles();
+</script>
+</body>
+</html>

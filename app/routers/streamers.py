@@ -93,6 +93,87 @@ def streamer_stats(db: Session = Depends(get_db)):
     }
 
 
+@router.get("/leaderboard")
+def leaderboard(
+    tier: Optional[str] = Query(None, description="Filter by tier: bronze,silver,gold,platinum,diamond"),
+    platform: Optional[str] = Query(None),
+    limit: int = Query(50, le=200),
+    db: Session = Depends(get_db),
+):
+    """Top streamers ranked by influence score with tier badges and CPM estimates."""
+    q = db.query(Streamer).filter(Streamer.is_active.is_(True))
+    if tier:
+        q = q.filter(Streamer.influence_tier == tier.lower())
+    if platform:
+        q = q.filter(Streamer.primary_platform == platform.lower())
+    streamers = (
+        q.order_by(Streamer.influence_score.desc().nullslast())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": s.id, "name": s.name, "primary_platform": s.primary_platform,
+            "total_followers": s.total_followers, "influence_score": s.influence_score,
+            "influence_tier": s.influence_tier, "engagement_rate": s.engagement_rate,
+            "estimated_cpm_usd": s.estimated_cpm_usd,
+            "sponsorship_rate_usd": s.sponsorship_rate_usd,
+            "platform_count": s.platform_count,
+            "profile_image_url": s.profile_image_url,
+        }
+        for s in streamers
+    ]
+
+
+@router.get("/compare")
+def compare_streamers(
+    ids: str = Query(..., description="Comma-separated streamer IDs (2-5)"),
+    db: Session = Depends(get_db),
+):
+    """Compare 2-5 streamers side by side on all metrics."""
+    id_list = [int(i.strip()) for i in ids.split(",") if i.strip().isdigit()][:5]
+    if len(id_list) < 2:
+        raise HTTPException(status_code=400, detail="Provide at least 2 streamer IDs")
+    streamers = db.query(Streamer).filter(Streamer.id.in_(id_list)).all()
+    return [
+        {
+            "id": s.id, "name": s.name, "primary_platform": s.primary_platform,
+            "total_followers": s.total_followers,
+            "twitch_followers": s.twitch_followers, "youtube_subscribers": s.youtube_subscribers,
+            "twitch_avg_viewers": s.twitch_avg_viewers,
+            "influence_score": s.influence_score, "influence_tier": s.influence_tier,
+            "engagement_rate": s.engagement_rate,
+            "estimated_cpm_usd": s.estimated_cpm_usd,
+            "sponsorship_rate_usd": s.sponsorship_rate_usd,
+            "platform_count": s.platform_count,
+            "game_focus": s.game_focus, "content_types": s.content_types,
+            "language": s.language, "country": s.country,
+            "contact_email": s.contact_email,
+            "relationship_stage": s.relationship_stage,
+        }
+        for s in streamers
+    ]
+
+
+@router.get("/{streamer_id}/history")
+def streamer_history(
+    streamer_id: int,
+    days: int = Query(30, ge=7, le=365),
+    db: Session = Depends(get_db),
+):
+    """Get follower/score history over time for growth analysis."""
+    from app.services.scoring_service import get_growth_trend
+    return get_growth_trend(db, streamer_id, days)
+
+
+@router.post("/score-all")
+def score_all(db: Session = Depends(get_db)):
+    """Recompute influence scores for all active streamers (admin)."""
+    from app.services.scoring_service import score_all_streamers
+    count = score_all_streamers(db)
+    return {"scored": count}
+
+
 @router.get("/{streamer_id}", response_model=StreamerResponse)
 def get_streamer(streamer_id: int, db: Session = Depends(get_db)):
     streamer = db.query(Streamer).filter(Streamer.id == streamer_id).first()
