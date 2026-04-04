@@ -555,6 +555,548 @@ def refresh_x_profile(db: Session, streamer: Streamer) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# Kick helpers
+# ---------------------------------------------------------------------------
+
+_KICK_FOLLOWERS_RE = re.compile(r'"followers_count"\s*:\s*(\d+)')
+_KICK_VIEWERS_RE = re.compile(r'"viewer_count"\s*:\s*(\d+)')
+_KICK_VERIFIED_RE = re.compile(r'"is_verified"\s*:\s*(true|false)', re.I)
+_KICK_BIO_RE = re.compile(r'"bio"\s*:\s*"([^"]*)"')
+_KICK_AVATAR_RE = re.compile(r'"profile_pic"\s*:\s*"(https?://[^"]+)"')
+_KICK_SLUG_RE = re.compile(r'"slug"\s*:\s*"([^"]+)"')
+
+
+def _kick_channel_data(username: str) -> Optional[dict]:
+    """Fetch Kick channel data via their public API."""
+    try:
+        resp = _http.get(
+            f"https://kick.com/api/v2/channels/{username}",
+            timeout=15,
+        )
+        if resp.status_code == 404:
+            return None
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as exc:
+        logger.warning("Kick channel fetch failed for %s: %s", username, exc)
+        return None
+
+
+def _kick_category_streams(category_slug: str, limit: int = 30) -> list[dict]:
+    """Fetch live streams for a Kick category/subcategory."""
+    streams: list[dict] = []
+    try:
+        resp = _http.get(
+            f"https://kick.com/api/v1/subcategories/{category_slug}/livestreams",
+            params={"limit": min(limit, 50), "sort": "viewers"},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if isinstance(data, dict):
+            streams = data.get("data", data.get("livestreams", []))
+        elif isinstance(data, list):
+            streams = data
+    except Exception as exc:
+        logger.warning("Kick category fetch failed for %s: %s", category_slug, exc)
+    return streams[:limit]
+
+
+def discover_from_kick(
+    db: Session,
+    category: str = "gaming",
+    limit: int = 30,
+) -> dict:
+    """
+    Discover live Kick streamers by category and upsert them.
+    No API key required — uses Kick's public API.
+    """
+    streams = _kick_category_streams(category, limit)
+    if not streams:
+        return {"added": 0, "updated": 0, "category": category, "streams_found": 0}
+
+    added = 0
+    updated = 0
+    now = datetime.now(timezone.utc)
+
+    for stream in streams:
+        channel = stream.get("channel", stream)
+        username = channel.get("slug") or channel.get("username", "")
+        if not username:
+            continue
+        username = username.lower()
+
+        followers = channel.get("followers_count") or channel.get("followersCount", 0)
+        viewers = stream.get("viewer_count") or stream.get("viewers", 0)
+        verified = channel.get("is_verified", False)
+        bio = channel.get("bio") or channel.get("user", {}).get("bio", "")
+        avatar = channel.get("profile_pic") or channel.get("user", {}).get("profile_pic", "")
+        display_name = channel.get("user", {}).get("username", username)
+
+        existing = db.query(Streamer).filter(Streamer.kick_username == username).first()
+        if existing:
+            existing.kick_followers = followers or existing.kick_followers
+            existing.kick_avg_viewers = viewers or existing.kick_avg_viewers
+            existing.kick_is_verified = verified
+            existing.kick_description = bio[:500] if bio else existing.kick_description
+            existing.kick_profile_image_url = avatar or existing.kick_profile_image_url
+            _recompute_total_followers(existing)
+            existing.last_stats_updated_at = now
+            updated += 1
+        else:
+            streamer = Streamer(
+                name=display_name or username,
+                primary_platform="kick",
+                kick_username=username,
+                kick_url=f"https://kick.com/{username}",
+                kick_followers=followers,
+                kick_avg_viewers=viewers,
+                kick_is_verified=verified,
+                kick_description=bio[:500] if bio else None,
+                kick_profile_image_url=avatar or None,
+                profile_image_url=avatar or None,
+                content_types=["live_streaming"],
+                last_stats_updated_at=now,
+            )
+            _recompute_total_followers(streamer)
+            db.add(streamer)
+            added += 1
+
+    db.commit()
+    return {"added": added, "updated": updated, "category": category, "streams_found": len(streams)}
+
+
+def refresh_kick_profile(db: Session, streamer: Streamer) -> list[str]:
+    """Refresh Kick stats for a streamer."""
+    if not streamer.kick_username:
+        return []
+    data = _kick_channel_data(streamer.kick_username)
+    if not data:
+        return []
+
+    updated: list[str] = []
+    followers = data.get("followers_count")
+    if followers is not None:
+        streamer.kick_followers = followers
+        updated.append("kick_followers")
+    verified = data.get("is_verified")
+    if verified is not None:
+        streamer.kick_is_verified = verified
+        updated.append("kick_is_verified")
+    bio = data.get("bio")
+    if bio:
+        streamer.kick_description = bio[:500]
+        updated.append("kick_description")
+    avatar = data.get("profile_pic")
+    if avatar:
+        streamer.kick_profile_image_url = avatar
+        updated.append("kick_profile_image_url")
+
+    if updated:
+        _recompute_total_followers(streamer)
+        streamer.last_stats_updated_at = datetime.now(timezone.utc)
+        db.commit()
+    return updated
+
+
+# ---------------------------------------------------------------------------
+# Rumble helpers
+# ---------------------------------------------------------------------------
+
+_RUMBLE_FOLLOWERS_RE = re.compile(r'(\d[\d,]*)\s*(?:followers|Followers)', re.I)
+_RUMBLE_CHANNEL_RE = re.compile(r'href="/c/([^"]+)"')
+
+
+def _rumble_search_channels(query: str, limit: int = 20) -> list[dict]:
+    """Search Rumble for channels matching a query."""
+    channels: list[dict] = []
+    try:
+        resp = _http.get(
+            "https://rumble.com/search/channel",
+            params={"q": query},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        html = resp.text
+
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, "html.parser")
+
+        for item in soup.select(".channel-item, .search-result, [class*='channel']"):
+            link = item.find("a", href=True)
+            if not link:
+                continue
+            href = link.get("href", "")
+            if "/c/" not in href and "/user/" not in href:
+                continue
+
+            name = link.get_text(strip=True) or ""
+            channel_id = href.split("/c/")[-1].split("/")[0] if "/c/" in href else href.split("/user/")[-1].split("/")[0]
+            if not channel_id or not name:
+                continue
+
+            # Try to find follower count nearby
+            followers = None
+            text = item.get_text()
+            m = _RUMBLE_FOLLOWERS_RE.search(text)
+            if m:
+                followers = int(m.group(1).replace(",", ""))
+
+            # Try to find avatar
+            img = item.find("img", src=True)
+            avatar = img.get("src", "") if img else ""
+
+            channels.append({
+                "channel_id": channel_id,
+                "name": name[:200],
+                "url": f"https://rumble.com/c/{channel_id}",
+                "followers": followers,
+                "avatar": avatar if avatar.startswith("http") else None,
+            })
+
+            if len(channels) >= limit:
+                break
+
+    except Exception as exc:
+        logger.warning("Rumble search failed for '%s': %s", query, exc)
+
+    return channels
+
+
+def _rumble_channel_page(channel_id: str) -> Optional[dict]:
+    """Scrape a Rumble channel page for metadata."""
+    try:
+        resp = _http.get(f"https://rumble.com/c/{channel_id}", timeout=15)
+        resp.raise_for_status()
+        html = resp.text
+
+        name = channel_id
+        followers = None
+        description = None
+        avatar = None
+
+        # Extract from page
+        m = _RUMBLE_FOLLOWERS_RE.search(html)
+        if m:
+            followers = int(m.group(1).replace(",", ""))
+
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html, "html.parser")
+
+        title_el = soup.find("h1") or soup.find("title")
+        if title_el:
+            name = title_el.get_text(strip=True).replace(" - Rumble", "").strip()
+
+        desc_el = soup.find("meta", attrs={"name": "description"})
+        if desc_el:
+            description = desc_el.get("content", "")[:500]
+
+        img_el = soup.select_one(".channel-header img, .channel-avatar img, img[class*='avatar']")
+        if img_el and img_el.get("src", "").startswith("http"):
+            avatar = img_el["src"]
+
+        return {
+            "channel_id": channel_id,
+            "name": name,
+            "url": f"https://rumble.com/c/{channel_id}",
+            "followers": followers,
+            "description": description,
+            "avatar": avatar,
+        }
+    except Exception as exc:
+        logger.warning("Rumble channel page fetch failed for %s: %s", channel_id, exc)
+        return None
+
+
+def discover_from_rumble(
+    db: Session,
+    query: str,
+    limit: int = 20,
+) -> dict:
+    """
+    Discover Rumble channels by search query and upsert them.
+    No API key required — scrapes public search results.
+    """
+    channels = _rumble_search_channels(query, limit)
+    if not channels:
+        return {"added": 0, "updated": 0, "query": query, "channels_found": 0}
+
+    added = 0
+    updated = 0
+    now = datetime.now(timezone.utc)
+
+    for ch in channels:
+        cid = ch["channel_id"]
+        existing = db.query(Streamer).filter(Streamer.rumble_channel_id == cid).first()
+        if existing:
+            if ch.get("followers") is not None:
+                existing.rumble_followers = ch["followers"]
+            if ch.get("avatar"):
+                existing.rumble_profile_image_url = ch["avatar"]
+            _recompute_total_followers(existing)
+            existing.last_stats_updated_at = now
+            updated += 1
+        else:
+            streamer = Streamer(
+                name=ch["name"],
+                primary_platform="rumble",
+                rumble_channel_id=cid,
+                rumble_url=ch["url"],
+                rumble_followers=ch.get("followers"),
+                rumble_profile_image_url=ch.get("avatar"),
+                profile_image_url=ch.get("avatar"),
+                content_types=["live_streaming"],
+                last_stats_updated_at=now,
+            )
+            _recompute_total_followers(streamer)
+            db.add(streamer)
+            added += 1
+
+    db.commit()
+    return {"added": added, "updated": updated, "query": query, "channels_found": len(channels)}
+
+
+def refresh_rumble_profile(db: Session, streamer: Streamer) -> list[str]:
+    """Refresh Rumble stats for a streamer."""
+    if not streamer.rumble_channel_id:
+        return []
+    data = _rumble_channel_page(streamer.rumble_channel_id)
+    if not data:
+        return []
+
+    updated: list[str] = []
+    if data.get("followers") is not None:
+        streamer.rumble_followers = data["followers"]
+        updated.append("rumble_followers")
+    if data.get("description"):
+        streamer.rumble_description = data["description"]
+        updated.append("rumble_description")
+    if data.get("avatar"):
+        streamer.rumble_profile_image_url = data["avatar"]
+        updated.append("rumble_profile_image_url")
+
+    if updated:
+        _recompute_total_followers(streamer)
+        streamer.last_stats_updated_at = datetime.now(timezone.utc)
+        db.commit()
+    return updated
+
+
+# ---------------------------------------------------------------------------
+# TikTok helpers
+# ---------------------------------------------------------------------------
+
+_TT_FOLLOWERS_RE = re.compile(r'"followerCount"\s*:\s*(\d+)')
+_TT_HEART_RE = re.compile(r'"heartCount"\s*:\s*(\d+)')
+_TT_DESC_RE = re.compile(r'"signature"\s*:\s*"([^"]*)"')
+_TT_AVATAR_RE = re.compile(r'"avatarLarger"\s*:\s*"(https?://[^"]+)"')
+_TT_NICKNAME_RE = re.compile(r'"nickName"\s*:\s*"([^"]*)"')
+
+
+def discover_tiktok_user(db: Session, username: str) -> dict:
+    """
+    Fetch a TikTok user profile and upsert the streamer.
+    No API key required — scrapes public profile page.
+    """
+    username = username.lstrip("@").lower()
+    try:
+        resp = _http.get(f"https://www.tiktok.com/@{username}", timeout=15)
+        resp.raise_for_status()
+        html = resp.text
+    except Exception as exc:
+        logger.warning("TikTok profile fetch failed for @%s: %s", username, exc)
+        return {"error": f"Could not fetch TikTok profile for @{username}: {exc}"}
+
+    followers = None
+    m = _TT_FOLLOWERS_RE.search(html)
+    if m:
+        followers = int(m.group(1))
+
+    nickname = username
+    m = _TT_NICKNAME_RE.search(html)
+    if m:
+        nickname = m.group(1) or username
+
+    description = None
+    m = _TT_DESC_RE.search(html)
+    if m:
+        description = m.group(1).replace("\\n", "\n").strip()[:500] or None
+
+    avatar = None
+    m = _TT_AVATAR_RE.search(html)
+    if m:
+        avatar = m.group(1).replace("\\u002F", "/")
+
+    now = datetime.now(timezone.utc)
+    existing = db.query(Streamer).filter(Streamer.tiktok_username == username).first()
+
+    if existing:
+        if followers is not None:
+            existing.tiktok_followers = followers
+        existing.tiktok_url = f"https://www.tiktok.com/@{username}"
+        if not existing.profile_image_url and avatar:
+            existing.profile_image_url = avatar
+        _recompute_total_followers(existing)
+        existing.last_stats_updated_at = now
+        db.commit()
+        return {"action": "updated", "streamer_id": existing.id, "username": username}
+    else:
+        streamer = Streamer(
+            name=nickname,
+            primary_platform="tiktok",
+            tiktok_username=username,
+            tiktok_url=f"https://www.tiktok.com/@{username}",
+            tiktok_followers=followers,
+            profile_image_url=avatar,
+            content_types=["shorts", "live_streaming"],
+            last_stats_updated_at=now,
+        )
+        _recompute_total_followers(streamer)
+        db.add(streamer)
+        db.commit()
+        db.refresh(streamer)
+        return {"action": "created", "streamer_id": streamer.id, "username": username}
+
+
+def refresh_tiktok_profile(db: Session, streamer: Streamer) -> list[str]:
+    """Refresh TikTok stats for a streamer."""
+    if not streamer.tiktok_username:
+        return []
+    try:
+        resp = _http.get(f"https://www.tiktok.com/@{streamer.tiktok_username}", timeout=15)
+        resp.raise_for_status()
+        html = resp.text
+    except Exception as exc:
+        logger.warning("TikTok refresh failed for @%s: %s", streamer.tiktok_username, exc)
+        return []
+
+    updated: list[str] = []
+    m = _TT_FOLLOWERS_RE.search(html)
+    if m:
+        streamer.tiktok_followers = int(m.group(1))
+        updated.append("tiktok_followers")
+
+    if updated:
+        _recompute_total_followers(streamer)
+        streamer.last_stats_updated_at = datetime.now(timezone.utc)
+        db.commit()
+    return updated
+
+
+# ---------------------------------------------------------------------------
+# YouTube category discovery
+# ---------------------------------------------------------------------------
+
+
+def discover_youtube_by_category(
+    db: Session,
+    category: str,
+    limit_per_game: int = 10,
+) -> dict:
+    """
+    Discover YouTube channels across all games in a category.
+    Reuses STREAMER_CATEGORIES and discover_youtube_by_search().
+    """
+    category_lower = category.lower()
+    games = STREAMER_CATEGORIES.get(category_lower)
+    if not games:
+        return {"error": f"Unknown category '{category}'. Available: {', '.join(sorted(STREAMER_CATEGORIES))}"}
+
+    results = []
+    total_added = 0
+    total_updated = 0
+
+    for game_name in games:
+        result = discover_youtube_by_search(db, query=game_name, max_results=limit_per_game)
+        results.append({
+            "game": game_name,
+            "added": result.get("added", 0),
+            "updated": result.get("updated", 0),
+            "channels_found": result.get("channels_found", 0),
+        })
+        total_added += result.get("added", 0)
+        total_updated += result.get("updated", 0)
+
+    return {
+        "category": category,
+        "games_searched": len(games),
+        "total_added": total_added,
+        "total_updated": total_updated,
+        "per_game": results,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Unified cross-platform discovery
+# ---------------------------------------------------------------------------
+
+
+def discover_all(
+    db: Session,
+    query: str,
+    limit_per_platform: int = 20,
+    min_viewers: int = 50,
+) -> dict:
+    """
+    Discover streamers across ALL supported platforms with a single query.
+    Runs Twitch, YouTube, Kick, and Rumble discovery in sequence.
+    Returns per-platform results.
+    """
+    import os
+    results: dict = {"query": query, "platforms": {}}
+    total_added = 0
+    total_updated = 0
+
+    # Twitch (if credentials available)
+    client_id = os.getenv("TWITCH_CLIENT_ID", "")
+    client_secret = os.getenv("TWITCH_CLIENT_SECRET", "")
+    if client_id and client_secret:
+        try:
+            twitch = discover_from_twitch(
+                db, game_name=query, limit=limit_per_platform,
+                min_viewers=min_viewers, client_id=client_id, client_secret=client_secret,
+            )
+            results["platforms"]["twitch"] = twitch
+            total_added += twitch.get("added", 0)
+            total_updated += twitch.get("updated", 0)
+        except Exception as exc:
+            results["platforms"]["twitch"] = {"error": str(exc)}
+    else:
+        results["platforms"]["twitch"] = {"skipped": "TWITCH_CLIENT_ID/SECRET not configured"}
+
+    # YouTube (keyless)
+    try:
+        yt = discover_youtube_by_search(db, query=query, max_results=limit_per_platform)
+        results["platforms"]["youtube"] = yt
+        total_added += yt.get("added", 0)
+        total_updated += yt.get("updated", 0)
+    except Exception as exc:
+        results["platforms"]["youtube"] = {"error": str(exc)}
+
+    # Kick (keyless)
+    try:
+        kick = discover_from_kick(db, category=query, limit=limit_per_platform)
+        results["platforms"]["kick"] = kick
+        total_added += kick.get("added", 0)
+        total_updated += kick.get("updated", 0)
+    except Exception as exc:
+        results["platforms"]["kick"] = {"error": str(exc)}
+
+    # Rumble (keyless)
+    try:
+        rumble = discover_from_rumble(db, query=query, limit=limit_per_platform)
+        results["platforms"]["rumble"] = rumble
+        total_added += rumble.get("added", 0)
+        total_updated += rumble.get("updated", 0)
+    except Exception as exc:
+        results["platforms"]["rumble"] = {"error": str(exc)}
+
+    results["total_added"] = total_added
+    results["total_updated"] = total_updated
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Refresh all platforms for a single streamer
 # ---------------------------------------------------------------------------
 
@@ -627,6 +1169,30 @@ def refresh_streamer(
     x_fields = refresh_x_profile(db, streamer)
     updated += x_fields
 
+    # Kick
+    if streamer.kick_username:
+        try:
+            kick_fields = refresh_kick_profile(db, streamer)
+            updated += kick_fields
+        except Exception as exc:
+            logger.warning("Kick refresh failed for %s: %s", streamer.kick_username, exc)
+
+    # Rumble
+    if streamer.rumble_channel_id:
+        try:
+            rumble_fields = refresh_rumble_profile(db, streamer)
+            updated += rumble_fields
+        except Exception as exc:
+            logger.warning("Rumble refresh failed for %s: %s", streamer.rumble_channel_id, exc)
+
+    # TikTok
+    if streamer.tiktok_username:
+        try:
+            tiktok_fields = refresh_tiktok_profile(db, streamer)
+            updated += tiktok_fields
+        except Exception as exc:
+            logger.warning("TikTok refresh failed for %s: %s", streamer.tiktok_username, exc)
+
     if updated:
         _recompute_total_followers(streamer)
         streamer.last_stats_updated_at = datetime.now(timezone.utc)
@@ -648,6 +1214,8 @@ def _recompute_total_followers(streamer: Streamer) -> None:
         streamer.x_followers,
         streamer.instagram_followers,
         streamer.tiktok_followers,
+        streamer.kick_followers,
+        streamer.rumble_followers,
     ]:
         if val:
             total += val

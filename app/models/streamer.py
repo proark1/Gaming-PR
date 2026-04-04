@@ -6,7 +6,7 @@ from app.database import Base
 
 
 class Streamer(Base):
-    """Gaming content creator — tracked across Twitch, YouTube, and X."""
+    """Gaming content creator — tracked across Twitch, YouTube, X, Kick, and Rumble."""
     __tablename__ = "streamers"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -14,7 +14,7 @@ class Streamer(Base):
     # Identity
     name = Column(String(500), nullable=False, index=True)   # Display / real name
     primary_platform = Column(String(20), nullable=False, default="twitch", index=True)
-    # Platforms: twitch, youtube, x
+    # Platforms: twitch, youtube, x, kick, rumble
 
     # Twitch
     twitch_username = Column(String(200), nullable=True, unique=True)
@@ -57,6 +57,22 @@ class Streamer(Base):
     tiktok_username = Column(String(200), nullable=True)
     tiktok_url = Column(String(2048), nullable=True)
     tiktok_followers = Column(Integer, nullable=True)
+
+    # Kick
+    kick_username = Column(String(200), nullable=True, unique=True)
+    kick_url = Column(String(2048), nullable=True)
+    kick_followers = Column(Integer, nullable=True)
+    kick_avg_viewers = Column(Integer, nullable=True)
+    kick_is_verified = Column(Boolean, nullable=True)
+    kick_description = Column(Text, nullable=True)
+    kick_profile_image_url = Column(String(2048), nullable=True)
+
+    # Rumble
+    rumble_channel_id = Column(String(200), nullable=True, unique=True)
+    rumble_url = Column(String(2048), nullable=True)
+    rumble_followers = Column(Integer, nullable=True)
+    rumble_description = Column(Text, nullable=True)
+    rumble_profile_image_url = Column(String(2048), nullable=True)
 
     # Content profile
     game_focus = Column(JSON, nullable=True, default=list)

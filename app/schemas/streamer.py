@@ -45,6 +45,20 @@ class StreamerBase(BaseModel):
     tiktok_username: Optional[str] = None
     tiktok_url: Optional[str] = None
     tiktok_followers: Optional[int] = None
+    # Kick
+    kick_username: Optional[str] = None
+    kick_url: Optional[str] = None
+    kick_followers: Optional[int] = None
+    kick_avg_viewers: Optional[int] = None
+    kick_is_verified: Optional[bool] = None
+    kick_description: Optional[str] = None
+    kick_profile_image_url: Optional[str] = None
+    # Rumble
+    rumble_channel_id: Optional[str] = None
+    rumble_url: Optional[str] = None
+    rumble_followers: Optional[int] = None
+    rumble_description: Optional[str] = None
+    rumble_profile_image_url: Optional[str] = None
     # Content profile
     game_focus: Optional[list[str]] = None
     content_types: Optional[list[str]] = None
@@ -109,6 +123,18 @@ class StreamerUpdate(BaseModel):
     tiktok_username: Optional[str] = None
     tiktok_url: Optional[str] = None
     tiktok_followers: Optional[int] = None
+    kick_username: Optional[str] = None
+    kick_url: Optional[str] = None
+    kick_followers: Optional[int] = None
+    kick_avg_viewers: Optional[int] = None
+    kick_is_verified: Optional[bool] = None
+    kick_description: Optional[str] = None
+    kick_profile_image_url: Optional[str] = None
+    rumble_channel_id: Optional[str] = None
+    rumble_url: Optional[str] = None
+    rumble_followers: Optional[int] = None
+    rumble_description: Optional[str] = None
+    rumble_profile_image_url: Optional[str] = None
     game_focus: Optional[list[str]] = None
     content_types: Optional[list[str]] = None
     language: Optional[str] = None
@@ -157,6 +183,26 @@ class StreamerDiscoverCategoryRequest(BaseModel):
 class StreamerDiscoverYouTubeSearchRequest(BaseModel):
     query: str
     max_results: int = 20
+
+
+class StreamerDiscoverKickRequest(BaseModel):
+    category: str = "gaming"
+    limit: int = 30
+
+
+class StreamerDiscoverRumbleRequest(BaseModel):
+    query: str
+    limit: int = 20
+
+
+class StreamerDiscoverTikTokRequest(BaseModel):
+    username: str
+
+
+class StreamerDiscoverAllRequest(BaseModel):
+    query: str
+    limit_per_platform: int = 20
+    min_viewers: int = 50
 
 
 class StreamerRefreshResponse(BaseModel):

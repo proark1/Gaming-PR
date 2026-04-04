@@ -15,6 +15,10 @@ from app.schemas.streamer import (
     StreamerDiscoverYouTubeRequest,
     StreamerDiscoverCategoryRequest,
     StreamerDiscoverYouTubeSearchRequest,
+    StreamerDiscoverKickRequest,
+    StreamerDiscoverRumbleRequest,
+    StreamerDiscoverTikTokRequest,
+    StreamerDiscoverAllRequest,
     StreamerRefreshResponse,
 )
 
@@ -248,6 +252,136 @@ def discover_youtube(
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
     return result
+
+
+@router.post("/discover/kick")
+def discover_kick(
+    payload: StreamerDiscoverKickRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Discover live Kick streamers by category slug.
+
+    Popular slugs: gaming, fortnite, valorant, call-of-duty, league-of-legends.
+    No API key required.
+    """
+    from app.services.streamer_discovery import discover_from_kick
+    result = discover_from_kick(db, category=payload.category, limit=payload.limit)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.post("/discover/rumble")
+def discover_rumble(
+    payload: StreamerDiscoverRumbleRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Discover Rumble channels by search query.
+
+    Searches Rumble for channels matching the query and upserts them.
+    No API key required.
+    """
+    from app.services.streamer_discovery import discover_from_rumble
+    result = discover_from_rumble(db, query=payload.query, limit=payload.limit)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.post("/discover/tiktok")
+def discover_tiktok(
+    payload: StreamerDiscoverTikTokRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Discover a TikTok user by username and upsert their profile.
+
+    No API key required.
+    """
+    from app.services.streamer_discovery import discover_tiktok_user
+    result = discover_tiktok_user(db, username=payload.username)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.post("/discover/youtube/category")
+def discover_youtube_category(
+    payload: StreamerDiscoverCategoryRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Discover YouTube gaming channels by category.
+
+    Uses the same categories as Twitch category discovery. No API key required.
+    """
+    from app.services.streamer_discovery import discover_youtube_by_category
+    result = discover_youtube_by_category(
+        db, category=payload.category, limit_per_game=payload.limit_per_game,
+    )
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.post("/discover/all")
+def discover_all_platforms(
+    payload: StreamerDiscoverAllRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Discover streamers across all supported platforms with a single call.
+
+    Searches Twitch (if credentials set), YouTube, Kick, and Rumble
+    for the given query. Returns combined results per platform.
+    """
+    from app.services.streamer_discovery import discover_all
+    result = discover_all(
+        db,
+        query=payload.query,
+        limit_per_platform=payload.limit_per_platform,
+        min_viewers=payload.min_viewers,
+    )
+    return result
+
+
+@router.get("/discover/platforms")
+def list_discovery_platforms():
+    """List all supported discovery platforms and their capabilities."""
+    import os
+    twitch_available = bool(os.getenv("TWITCH_CLIENT_ID") and os.getenv("TWITCH_CLIENT_SECRET"))
+    return {
+        "platforms": {
+            "twitch": {
+                "available": twitch_available,
+                "requires_credentials": True,
+                "discovery_modes": ["by_game", "by_category"],
+                "note": "Set TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET env vars" if not twitch_available else "Ready",
+            },
+            "youtube": {
+                "available": True,
+                "requires_credentials": False,
+                "discovery_modes": ["by_search", "by_channel_id", "by_category"],
+            },
+            "kick": {
+                "available": True,
+                "requires_credentials": False,
+                "discovery_modes": ["by_category"],
+            },
+            "rumble": {
+                "available": True,
+                "requires_credentials": False,
+                "discovery_modes": ["by_search"],
+            },
+            "tiktok": {
+                "available": True,
+                "requires_credentials": False,
+                "discovery_modes": ["by_username"],
+            },
+        }
+    }
 
 
 @router.post("/{streamer_id}/refresh", response_model=StreamerRefreshResponse)
