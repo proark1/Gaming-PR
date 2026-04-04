@@ -79,6 +79,11 @@ class Settings(BaseSettings):
     EMAIL_SERVICE_URL: str = "http://localhost:3000"
     EMAIL_SERVICE_API_KEY: str = ""
 
+    # Campaign automation
+    CAMPAIGN_SEND_INTERVAL_SECONDS: int = 60
+    CAMPAIGN_FOLLOW_UP_CHECK_MINUTES: int = 30
+    CAMPAIGN_EVENT_SYNC_MINUTES: int = 10
+
     model_config = {"env_file": ".env"}
 
 

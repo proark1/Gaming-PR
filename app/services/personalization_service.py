@@ -43,8 +43,16 @@ def _build_prompt(
     contact_name: str,
     contact_type: str,
     contact_profile: str,
+    is_follow_up: bool = False,
 ) -> str:
     focus_field = FOCUS_FIELD_LABELS.get(contact_type, "specific interests")
+    follow_up_note = ""
+    if is_follow_up:
+        follow_up_note = (
+            "\n\nIMPORTANT: This is a follow-up message. The contact did not respond to the "
+            "initial outreach. Write a brief, polite follow-up that references the original "
+            "pitch without repeating it verbatim. Keep it shorter than the original."
+        )
     return f"""You are helping a game developer write personalized outreach to a {contact_type}.
 
 Base message (in {source_language}):
@@ -55,7 +63,7 @@ Contact: {contact_name}
 Profile: {contact_profile}
 
 Rewrite the message personalized for {contact_name}. Reference their specific {focus_field}.
-Keep the core pitch. Stay in {source_language}. Be concise.
+Keep the core pitch. Stay in {source_language}. Be concise.{follow_up_note}
 
 Respond ONLY in this exact format (no extra text):
 TITLE: <personalized title>
@@ -69,6 +77,7 @@ def personalize_with_claude(
     contact_name: str,
     contact_type: str,
     contact_profile: str,
+    is_follow_up: bool = False,
 ) -> tuple[str, str]:
     """Call Claude API to adapt base message for a specific contact.
     Returns (personalized_title, personalized_body) in source_language."""
@@ -77,7 +86,8 @@ def personalize_with_claude(
 
         client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
         prompt = _build_prompt(
-            base_title, base_body, source_language, contact_name, contact_type, contact_profile
+            base_title, base_body, source_language, contact_name, contact_type, contact_profile,
+            is_follow_up=is_follow_up,
         )
 
         response = client.messages.create(
@@ -115,7 +125,8 @@ def personalize_with_claude(
 
 
 def personalize_and_translate(
-    db: Session, personalization: MessagePersonalization, message: Message
+    db: Session, personalization: MessagePersonalization, message: Message,
+    is_follow_up: bool = False,
 ) -> None:
     """Run full pipeline: Claude personalization → Google Translate → save."""
     try:
@@ -126,6 +137,7 @@ def personalize_and_translate(
             contact_name=personalization.target_name,
             contact_type=personalization.target_type,
             contact_profile=_get_contact_profile(db, personalization),
+            is_follow_up=is_follow_up,
         )
 
         # Translate to contact's language if different from source

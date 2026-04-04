@@ -23,6 +23,7 @@ from app.routers.email import router as email_router
 from app.routers.auth import router as auth_router
 from app.routers.investors import router as investors_router
 from app.routers.streamers import router as streamers_router
+from app.routers.campaigns import router as campaigns_router
 from app.seed.outlets import seed_outlets
 from app.seed.investors import seed_investors
 from app.seed.streamers import seed_streamers
@@ -190,13 +191,42 @@ async def lifespan(app: FastAPI):
             replace_existing=True,
         )
 
+    # Campaign automation jobs
+    from app.services.campaign_service import (
+        campaign_send_processor_job,
+        campaign_follow_up_processor_job,
+        campaign_event_sync_job,
+    )
+    scheduler.add_job(
+        campaign_send_processor_job,
+        "interval",
+        seconds=settings.CAMPAIGN_SEND_INTERVAL_SECONDS,
+        id="campaign_send_processor",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        campaign_follow_up_processor_job,
+        "interval",
+        minutes=settings.CAMPAIGN_FOLLOW_UP_CHECK_MINUTES,
+        id="campaign_follow_up_processor",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        campaign_event_sync_job,
+        "interval",
+        minutes=settings.CAMPAIGN_EVENT_SYNC_MINUTES,
+        id="campaign_event_sync",
+        replace_existing=True,
+    )
+
     scheduler.start()
     from app import scheduler_ref
     scheduler_ref.scheduler = scheduler
     logger.info(
         f"Scheduler started. Scraping every {settings.SCRAPE_INTERVAL_MINUTES} minutes. "
         f"Adaptive scheduling: {'ON' if settings.ENABLE_ADAPTIVE_SCHEDULING else 'OFF'}. "
-        f"Retry queue: {'ON' if settings.ENABLE_RETRY_QUEUE else 'OFF'}."
+        f"Retry queue: {'ON' if settings.ENABLE_RETRY_QUEUE else 'OFF'}. "
+        f"Campaign send processor: every {settings.CAMPAIGN_SEND_INTERVAL_SECONDS}s."
     )
 
     yield
@@ -268,6 +298,7 @@ app.include_router(auth_router)
 app.include_router(investors_router)
 app.include_router(streamers_router)
 app.include_router(messages.router)
+app.include_router(campaigns_router)
 
 # Serve shared static assets (nav.js, etc.)
 _static_dir = Path(__file__).parent / "app" / "static"
@@ -357,6 +388,11 @@ def individual_messages_page():
 @app.get("/translations", response_class=HTMLResponse)
 def translations_page():
     return _serve_page("translations.html")
+
+
+@app.get("/campaigns", response_class=HTMLResponse)
+def campaigns_page():
+    return _serve_page("campaigns.html")
 
 
 @app.get("/profile", response_class=HTMLResponse)
