@@ -8,359 +8,452 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        /* Page-specific styles (shared styles loaded by nav.js) */
         .container { max-width: 1300px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+        .add-btn { background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-size: 0.88rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; box-shadow: 0 4px 16px rgba(124,92,255,0.3); }
+        .add-btn:hover { transform: translateY(-1px); }
+        .act-btn { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; font-size: 0.76rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .act-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .act-btn.danger:hover { border-color: var(--red); color: var(--red); }
+        .act-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
         .tabs { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 4px; width: fit-content; }
         .tab { padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; background: transparent; border: none; color: var(--text-muted); font-family: inherit; transition: all .2s; }
         .tab:hover { color: var(--text-secondary); }
         .tab.active { background: var(--accent); color: #fff; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .card { margin-bottom: 20px; }
+        .stat-value.accent { color: var(--accent-light); }
         .stat-value.green { color: var(--green); }
         .stat-value.cyan { color: var(--cyan); }
         .stat-value.red { color: var(--red); }
         .stat-value.orange { color: var(--orange); }
-        .stat-value.accent { color: var(--accent-light); }
-        .card { margin-bottom: 20px; }
-        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-        .act-btn { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; }
-        .act-btn:hover { border-color: var(--accent); color: var(--text-primary); }
-        .act-btn.danger:hover { border-color: var(--red); color: var(--red); }
-        .act-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .add-btn { background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none; padding: 8px 18px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; box-shadow: 0 4px 16px rgba(124,92,255,0.3); }
-        .add-btn:hover { transform: translateY(-1px); }
         .form-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
         .form-overlay.active { display: flex; }
         .form-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 600px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         .form-modal h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; }
         .form-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
-        .fg { margin-bottom: 14px; }
-        .fg label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
-        .fg input, .fg select, .fg textarea { width: 100%; padding: 9px 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 0.85rem; box-sizing: border-box; }
-        .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--accent); outline: none; }
-        .fg textarea { min-height: 80px; resize: vertical; }
-        .fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .fg-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
         .submit-btn { width: 100%; padding: 11px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; font-family: inherit; margin-top: 8px; transition: all .2s; }
         .submit-btn:hover { transform: translateY(-1px); }
         .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; }
-        .badge.draft { background: rgba(148,163,184,0.15); color: #94a3b8; }
-        .badge.personalizing, .badge.paused { background: rgba(251,146,60,0.15); color: #fb923c; }
-        .badge.scheduled { background: rgba(34,211,238,0.15); color: #22d3ee; }
-        .badge.sending { background: rgba(124,92,255,0.15); color: var(--accent-light); }
-        .badge.completed { background: rgba(52,211,153,0.15); color: #34d399; }
-        .badge.failed, .badge.bounced { background: rgba(239,68,68,0.15); color: #ef4444; }
-        .badge.sent, .badge.delivered { background: rgba(34,211,238,0.15); color: #22d3ee; }
-        .badge.opened, .badge.clicked { background: rgba(52,211,153,0.15); color: #34d399; }
-        .badge.skipped { background: rgba(148,163,184,0.1); color: #64748b; }
-        .badge.personalized { background: rgba(124,92,255,0.1); color: var(--accent-light); }
-        .detail-back { cursor: pointer; color: var(--accent-light); font-size: 0.85rem; margin-bottom: 16px; display: inline-block; }
-        .detail-back:hover { text-decoration: underline; }
-        .rate-card { text-align: center; }
-        .rate-value { font-size: 1.8rem; font-weight: 800; }
-        .chk-row { display: flex; gap: 16px; align-items: center; }
-        .chk-row label { font-size: 0.82rem; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
+        .form-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .form-error.visible { display: block; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .chk-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+        .chk-row label { display: flex; align-items: center; gap: 6px; font-size: 0.84rem; color: var(--text-secondary); cursor: pointer; }
+        #detail-view { display: none; }
+        .back-link { color: var(--accent-light); cursor: pointer; font-size: 0.85rem; font-weight: 500; margin-bottom: 16px; display: inline-block; }
+        .back-link:hover { text-decoration: underline; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 0.84rem; margin-bottom: 16px; }
+        .info-grid dt { color: var(--text-muted); font-size: 0.78rem; }
+        .info-grid dd { color: var(--text-primary); margin: 0 0 8px; }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 12px 20px; border-radius: 10px; font-size: 0.84rem; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .dnc-input-row { display: flex; gap: 8px; margin-bottom: 16px; }
+        .dnc-input-row input { flex: 1; background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.84rem; }
+        .dnc-input-row input:focus { outline: none; border-color: var(--accent); }
     </style>
 </head>
 <body>
-<div class="container" id="app">
-    <div class="page-header">
-        <h1 id="pageTitle">Campaigns</h1>
-        <p class="page-subtitle" id="pageSubtitle">Automated PR outreach to streamers, outlets, and investors</p>
-    </div>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="campaigns"></script>
 
-    <div class="tabs">
-        <button class="tab active" onclick="showTab('campaigns')">Campaigns</button>
-        <button class="tab" onclick="showTab('dnc')">Do Not Contact</button>
-    </div>
-
-    <!-- CAMPAIGN LIST -->
-    <div id="campaignList">
-        <div class="stats-grid" id="topStats"></div>
-        <div class="btn-row">
-            <button class="add-btn" onclick="openCreate()">+ New Campaign</button>
-        </div>
-        <div class="card"><div class="table-wrapper"><table class="data-table"><thead>
-            <tr><th>Name</th><th>Status</th><th>Targets</th><th>Sent</th><th>Opened</th><th>Clicked</th><th>Created</th><th>Actions</th></tr>
-        </thead><tbody id="campBody"></tbody></table></div></div>
-    </div>
-
-    <!-- CAMPAIGN DETAIL -->
-    <div id="campaignDetail" style="display:none">
-        <span class="detail-back" onclick="showList()">&larr; Back to campaigns</span>
-        <div id="detailHeader"></div>
-        <div class="stats-grid" id="detailStats"></div>
-        <div class="btn-row" id="detailActions"></div>
-        <div class="card"><div class="table-wrapper"><table class="data-table"><thead>
-            <tr><th>Name</th><th>Type</th><th>Email</th><th>Status</th><th>Sent</th><th>Opened</th></tr>
-        </thead><tbody id="outreachBody"></tbody></table></div></div>
-    </div>
-
-    <!-- DNC -->
-    <div id="dncSection" style="display:none">
-        <div class="btn-row">
-            <button class="add-btn" onclick="openDNC()">+ Add to DNC</button>
-        </div>
-        <div class="card"><div class="table-wrapper"><table class="data-table"><thead>
-            <tr><th>Email</th><th>Reason</th><th>Source</th><th>Date</th><th>Actions</th></tr>
-        </thead><tbody id="dncBody"></tbody></table></div></div>
-    </div>
-</div>
-
-<!-- CREATE/EDIT MODAL -->
-<div class="form-overlay" id="createModal">
-    <div class="form-modal">
-        <button class="close-btn" onclick="closeModals()">&times;</button>
-        <h2 id="modalTitle">New Campaign</h2>
-        <form id="campForm" onsubmit="return saveCampaign(event)">
-            <input type="hidden" id="editId">
-            <div class="fg"><label>Campaign Name *</label><input id="fName" required></div>
-            <div class="fg"><label>Description</label><textarea id="fDesc"></textarea></div>
-            <div class="fg-row">
-                <div class="fg"><label>Message ID *</label><input type="number" id="fMsgId" required></div>
-                <div class="fg"><label>Domain ID *</label><input type="number" id="fDomainId" required></div>
+    <div class="container">
+        <!-- LIST VIEW -->
+        <div id="list-view">
+            <div class="header-row">
+                <div><h1>Campaigns</h1><div class="subtitle">Create and manage outreach campaigns</div></div>
+                <button class="add-btn" onclick="openForm()">+ New Campaign</button>
             </div>
-            <div class="fg-row3">
-                <div class="fg"><label>From Email *</label><input id="fFrom" required></div>
-                <div class="fg"><label>From Name</label><input id="fFromName"></div>
-                <div class="fg"><label>Reply-To</label><input id="fReplyTo"></div>
+            <div class="stat-grid" id="list-stats"></div>
+            <div class="tabs">
+                <button class="tab active" data-tab="campaigns" onclick="switchTab('campaigns')">Campaigns</button>
+                <button class="tab" data-tab="dnc" onclick="switchTab('dnc')">Do Not Contact</button>
             </div>
-            <div class="fg"><label>Target Types</label>
-                <div class="chk-row">
-                    <label><input type="checkbox" id="tStreamer" checked> Streamers</label>
-                    <label><input type="checkbox" id="tOutlet" checked> Outlets</label>
-                    <label><input type="checkbox" id="tVC"> VCs</label>
+            <div class="panel active" id="panel-campaigns">
+                <div class="card"><div id="campaigns-table"><div class="loading"><div class="spinner"></div> Loading...</div></div></div>
+            </div>
+            <div class="panel" id="panel-dnc">
+                <div class="card">
+                    <div class="card-header"><span>Do Not Contact List</span></div>
+                    <div class="dnc-input-row">
+                        <input type="email" id="dnc-email" placeholder="email@example.com">
+                        <input type="text" id="dnc-reason" placeholder="Reason (optional)">
+                        <button class="add-btn" onclick="addDnc()">Add</button>
+                    </div>
+                    <div id="dnc-table"></div>
                 </div>
             </div>
-            <div class="fg-row">
-                <div class="fg"><label>Min Followers</label><input type="number" id="fMinF"></div>
-                <div class="fg"><label>Max Followers</label><input type="number" id="fMaxF"></div>
+        </div>
+
+        <!-- DETAIL VIEW -->
+        <div id="detail-view">
+            <span class="back-link" onclick="showList()">&larr; Back to Campaigns</span>
+            <div class="header-row">
+                <div><h1 id="detail-name"></h1><div class="subtitle" id="detail-desc"></div></div>
+                <div class="btn-row" id="detail-actions"></div>
             </div>
-            <div class="fg-row">
-                <div class="fg"><label>Languages (comma-sep)</label><input id="fLangs" placeholder="en,es,ja"></div>
-                <div class="fg"><label>Platforms (comma-sep)</label><input id="fPlats" placeholder="twitch,youtube"></div>
+            <div class="card"><div class="info-grid" id="detail-info"></div></div>
+            <div class="stat-grid" id="detail-stats"></div>
+            <div class="card">
+                <div class="card-header"><span>Outreach Records</span><button class="act-btn" onclick="syncEvents()">Sync Events</button></div>
+                <div id="outreach-table"><div class="loading"><div class="spinner"></div> Loading...</div></div>
             </div>
-            <div class="fg-row3">
-                <div class="fg"><label>Batch Size</label><input type="number" id="fBatch" value="20"></div>
-                <div class="fg"><label>Batch Delay (s)</label><input type="number" id="fDelay" value="300"></div>
-                <div class="fg"><label>Max Follow-ups</label><input type="number" id="fMaxFU" value="1"></div>
-            </div>
-            <div class="fg"><label><input type="checkbox" id="fFUEnabled"> Enable follow-up (after 3 days of no open)</label></div>
-            <button type="submit" class="submit-btn">Create Campaign</button>
-        </form>
+        </div>
     </div>
-</div>
 
-<!-- DNC MODAL -->
-<div class="form-overlay" id="dncModal">
-    <div class="form-modal" style="max-width:400px">
-        <button class="close-btn" onclick="closeModals()">&times;</button>
-        <h2>Add to Do Not Contact</h2>
-        <form onsubmit="return addDNC(event)">
-            <div class="fg"><label>Email *</label><input id="dncEmail" required></div>
-            <div class="fg"><label>Reason</label><select id="dncReason"><option>manual</option><option>bounced</option><option>unsubscribed</option></select></div>
-            <button type="submit" class="submit-btn">Add</button>
-        </form>
+    <!-- Campaign Form Modal -->
+    <div class="form-overlay" id="campaign-overlay">
+        <div class="form-modal">
+            <button class="close-btn" onclick="closeForm()">&times;</button>
+            <h2 id="form-title">New Campaign</h2>
+            <div class="form-error" id="form-error"></div>
+            <form id="campaign-form" onsubmit="saveCampaign(event)">
+                <div class="fg" style="margin-bottom:12px"><label>Name</label><input id="f-name" required></div>
+                <div class="fg" style="margin-bottom:12px"><label>Description</label><textarea id="f-desc" rows="2"></textarea></div>
+                <div class="form-row" style="margin-bottom:12px">
+                    <div class="fg"><label>Message ID</label><input id="f-message-id" placeholder="UUID"></div>
+                    <div class="fg"><label>Domain ID</label><input id="f-domain-id" placeholder="UUID"></div>
+                </div>
+                <div class="form-row-3" style="margin-bottom:12px">
+                    <div class="fg"><label>From Email</label><input id="f-from-email" type="email"></div>
+                    <div class="fg"><label>From Name</label><input id="f-from-name"></div>
+                    <div class="fg"><label>Reply To</label><input id="f-reply-to" type="email"></div>
+                </div>
+                <div class="fg" style="margin-bottom:12px">
+                    <label>Target Types</label>
+                    <div class="chk-row">
+                        <label><input type="checkbox" id="f-tt-streamer" value="streamer"> Streamer</label>
+                        <label><input type="checkbox" id="f-tt-outlet" value="outlet"> Outlet</label>
+                        <label><input type="checkbox" id="f-tt-vc" value="vc"> VC</label>
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:12px">
+                    <div class="fg"><label>Min Followers</label><input id="f-min-fol" type="number" min="0"></div>
+                    <div class="fg"><label>Max Followers</label><input id="f-max-fol" type="number" min="0"></div>
+                </div>
+                <div class="form-row" style="margin-bottom:12px">
+                    <div class="fg"><label>Languages (comma-sep)</label><input id="f-langs" placeholder="en,es"></div>
+                    <div class="fg"><label>Platforms (comma-sep)</label><input id="f-platforms" placeholder="twitch,youtube"></div>
+                </div>
+                <div class="form-row" style="margin-bottom:12px">
+                    <div class="fg"><label>Batch Size</label><input id="f-batch-size" type="number" min="1" value="50"></div>
+                    <div class="fg"><label>Batch Delay (seconds)</label><input id="f-batch-delay" type="number" min="0" value="60"></div>
+                </div>
+                <div class="fg" style="margin-bottom:12px">
+                    <label><input type="checkbox" id="f-followup"> Enable Follow-ups</label>
+                </div>
+                <div class="form-row" style="margin-bottom:12px" id="followup-fields" hidden>
+                    <div class="fg"><label>Follow-up Delay (days)</label><input id="f-fu-delay" type="number" min="1" value="3"></div>
+                    <div class="fg"><label>Max Follow-ups</label><input id="f-fu-max" type="number" min="1" value="2"></div>
+                </div>
+                <input type="hidden" id="f-id">
+                <button type="submit" class="submit-btn" id="form-submit">Create Campaign</button>
+            </form>
+        </div>
     </div>
-</div>
 
-<script src="/static/nav.js"></script>
-<script>
-const token = localStorage.getItem('token');
-const authH = token ? {'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json'} : {'Content-Type': 'application/json'};
-let currentId = null;
+    <div class="toast" id="toast"></div>
 
-function showTab(t) {
-    document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', i === (t==='campaigns'?0:1)));
-    document.getElementById('campaignList').style.display = t==='campaigns'?'':'none';
-    document.getElementById('campaignDetail').style.display = 'none';
-    document.getElementById('dncSection').style.display = t==='dnc'?'':'none';
-    if(t==='campaigns') loadCampaigns();
-    if(t==='dnc') loadDNC();
-}
+    <script>
+    const API = '/api/campaigns';
+    const token = () => localStorage.getItem('token');
+    const authH = () => ({ 'Content-Type': 'application/json', ...(token() ? { Authorization: `Bearer ${token()}` } : {}) });
+    let currentId = null;
 
-function showList() {
-    document.getElementById('campaignList').style.display = '';
-    document.getElementById('campaignDetail').style.display = 'none';
+    let _tt;
+    function showToast(msg, isError = false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.borderColor = isError ? 'var(--red)' : 'var(--border)';
+        t.classList.add('show');
+        clearTimeout(_tt);
+        _tt = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function switchTab(name) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+        document.getElementById('panel-campaigns').classList.toggle('active', name === 'campaigns');
+        document.getElementById('panel-dnc').classList.toggle('active', name === 'dnc');
+        if (name === 'dnc') loadDnc();
+    }
+
+    const STATUS_COLORS = { draft: '', personalizing: 'orange', scheduled: 'cyan', sending: 'accent', paused: 'orange', completed: 'green', failed: 'red' };
+    function statusBadge(s) {
+        const c = STATUS_COLORS[s] || '';
+        return '<span class="badge' + (c ? ' badge-' + c : '') + '">' + (s || '-') + '</span>';
+    }
+    function fmtDate(d) { return d ? new Date(d).toLocaleDateString() : '-'; }
+    function splitCsv(v) { return v ? v.split(',').map(s => s.trim()).filter(Boolean) : []; }
+
+    document.getElementById('f-followup').addEventListener('change', function(e) {
+        document.getElementById('followup-fields').hidden = !e.target.checked;
+    });
+
+    // --- LIST ---
+    async function loadCampaigns() {
+        try {
+            var res = await fetch(API + '/', { headers: authH() });
+            var data = await res.json();
+            var list = Array.isArray(data) ? data : (data.campaigns || data.items || []);
+            renderListStats(list);
+            if (!list.length) { document.getElementById('campaigns-table').innerHTML = '<p style="color:var(--text-muted);padding:20px">No campaigns yet.</p>'; return; }
+            var html = '<table><thead><tr><th>Name</th><th>Status</th><th>Targets</th><th>Sent</th><th>Opened</th><th>Clicked</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+            list.forEach(function(c) {
+                var tgt = (c.target_types || []).join(', ') || '-';
+                html += '<tr>'
+                    + '<td><a href="#" onclick="showDetail(\'' + c.id + '\');return false" style="color:var(--accent-light);text-decoration:none;font-weight:600">' + (c.name || 'Untitled') + '</a></td>'
+                    + '<td>' + statusBadge(c.status || 'draft') + '</td>'
+                    + '<td>' + tgt + '</td>'
+                    + '<td>' + (c.sent_count || 0) + '</td>'
+                    + '<td>' + (c.opened_count || 0) + '</td>'
+                    + '<td>' + (c.clicked_count || 0) + '</td>'
+                    + '<td>' + fmtDate(c.created_at) + '</td>'
+                    + '<td class="btn-row">'
+                    + '<button class="act-btn" onclick="showDetail(\'' + c.id + '\')">View</button>'
+                    + (c.status === 'draft' ? '<button class="act-btn" onclick="launchCampaign(\'' + c.id + '\')">Launch</button>' : '')
+                    + (c.status === 'sending' ? '<button class="act-btn" onclick="pauseCampaign(\'' + c.id + '\')">Pause</button>' : '')
+                    + '<button class="act-btn danger" onclick="deleteCampaign(\'' + c.id + '\')">Delete</button>'
+                    + '</td></tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('campaigns-table').innerHTML = html;
+        } catch (e) { showToast('Failed to load campaigns: ' + e.message, true); }
+    }
+
+    function renderListStats(list) {
+        var total = list.length;
+        var active = list.filter(function(c) { return ['sending','scheduled','personalizing'].indexOf(c.status) >= 0; }).length;
+        var sent = list.reduce(function(s, c) { return s + (c.sent_count || 0); }, 0);
+        var opened = list.reduce(function(s, c) { return s + (c.opened_count || 0); }, 0);
+        var items = [['Total', total, 'accent'], ['Active', active, 'cyan'], ['Sent', sent, 'green'], ['Opened', opened, 'orange']];
+        document.getElementById('list-stats').innerHTML = items.map(function(x) {
+            return '<div class="stat-card"><div class="stat-label">' + x[0] + '</div><div class="stat-value ' + x[2] + '">' + x[1] + '</div></div>';
+        }).join('');
+    }
+
+    // --- FORM ---
+    function openForm(campaign) {
+        var f = function(id) { return document.getElementById(id); };
+        f('form-title').textContent = campaign ? 'Edit Campaign' : 'New Campaign';
+        f('form-submit').textContent = campaign ? 'Update Campaign' : 'Create Campaign';
+        f('form-error').classList.remove('visible');
+        f('f-id').value = (campaign && campaign.id) || '';
+        f('f-name').value = (campaign && campaign.name) || '';
+        f('f-desc').value = (campaign && campaign.description) || '';
+        f('f-message-id').value = (campaign && campaign.message_id) || '';
+        f('f-domain-id').value = (campaign && campaign.domain_id) || '';
+        f('f-from-email').value = (campaign && campaign.from_email) || '';
+        f('f-from-name').value = (campaign && campaign.from_name) || '';
+        f('f-reply-to').value = (campaign && campaign.reply_to) || '';
+        var tt = (campaign && campaign.target_types) || [];
+        ['streamer','outlet','vc'].forEach(function(t) { f('f-tt-' + t).checked = tt.indexOf(t) >= 0; });
+        var tf = (campaign && campaign.target_filters) || {};
+        f('f-min-fol').value = tf.min_followers != null ? tf.min_followers : '';
+        f('f-max-fol').value = tf.max_followers != null ? tf.max_followers : '';
+        f('f-langs').value = (tf.languages || []).join(', ');
+        f('f-platforms').value = (tf.platforms || []).join(', ');
+        f('f-batch-size').value = (campaign && campaign.batch_size) || 50;
+        f('f-batch-delay').value = (campaign && campaign.batch_delay_seconds != null) ? campaign.batch_delay_seconds : 60;
+        f('f-followup').checked = (campaign && campaign.follow_up_enabled) || false;
+        f('followup-fields').hidden = !f('f-followup').checked;
+        f('f-fu-delay').value = (campaign && campaign.follow_up_delay_days) || 3;
+        f('f-fu-max').value = (campaign && campaign.max_follow_ups) || 2;
+        f('campaign-overlay').classList.add('active');
+    }
+    function closeForm() { document.getElementById('campaign-overlay').classList.remove('active'); }
+
+    async function saveCampaign(e) {
+        e.preventDefault();
+        var f = function(id) { return document.getElementById(id).value; };
+        var id = f('f-id');
+        var target_types = ['streamer','outlet','vc'].filter(function(t) { return document.getElementById('f-tt-' + t).checked; });
+        var body = {
+            name: f('f-name'), description: f('f-desc') || null,
+            message_id: f('f-message-id') || null, domain_id: f('f-domain-id') || null,
+            from_email: f('f-from-email') || null, from_name: f('f-from-name') || null, reply_to: f('f-reply-to') || null,
+            target_types: target_types,
+            target_filters: {
+                min_followers: f('f-min-fol') ? Number(f('f-min-fol')) : null,
+                max_followers: f('f-max-fol') ? Number(f('f-max-fol')) : null,
+                languages: splitCsv(f('f-langs')),
+                platforms: splitCsv(f('f-platforms'))
+            },
+            batch_size: Number(f('f-batch-size')) || 50,
+            batch_delay_seconds: Number(f('f-batch-delay')) || 60,
+            follow_up_enabled: document.getElementById('f-followup').checked,
+            follow_up_delay_days: Number(f('f-fu-delay')) || 3,
+            max_follow_ups: Number(f('f-fu-max')) || 2
+        };
+        var btn = document.getElementById('form-submit');
+        btn.disabled = true;
+        try {
+            var res = await fetch(id ? (API + '/' + id) : API + '/', {
+                method: id ? 'PUT' : 'POST', headers: authH(), body: JSON.stringify(body)
+            });
+            var data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Failed');
+            showToast(id ? 'Campaign updated' : 'Campaign created');
+            closeForm(); loadCampaigns();
+            if (currentId) loadDetail(currentId);
+        } catch (err) {
+            var el = document.getElementById('form-error');
+            el.textContent = err.message; el.classList.add('visible');
+        } finally { btn.disabled = false; }
+    }
+
+    // --- ACTIONS ---
+    async function apiAction(url, method) {
+        method = method || 'POST';
+        try {
+            var res = await fetch(url, { method: method, headers: authH() });
+            var data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Failed');
+            return data;
+        } catch (e) { showToast(e.message, true); return null; }
+    }
+
+    async function launchCampaign(id) { if (await apiAction(API + '/' + id + '/launch')) { showToast('Campaign launched'); loadCampaigns(); if (currentId === id) loadDetail(id); } }
+    async function pauseCampaign(id) { if (await apiAction(API + '/' + id + '/pause')) { showToast('Campaign paused'); loadCampaigns(); if (currentId === id) loadDetail(id); } }
+    async function resumeCampaign(id) { if (await apiAction(API + '/' + id + '/resume')) { showToast('Campaign resumed'); loadCampaigns(); if (currentId === id) loadDetail(id); } }
+    async function deleteCampaign(id) {
+        if (!confirm('Delete this campaign?')) return;
+        if (await apiAction(API + '/' + id, 'DELETE')) { showToast('Campaign deleted'); if (currentId === id) showList(); loadCampaigns(); }
+    }
+    async function previewCampaign(id) {
+        var data = await apiAction(API + '/' + id + '/preview');
+        if (data) showToast('Preview: ' + (data.total_targets || data.count || JSON.stringify(data).substring(0, 80)) + ' targets');
+    }
+    async function syncEvents() {
+        if (await apiAction(API + '/' + currentId + '/sync-events')) { showToast('Events synced'); loadDetail(currentId); }
+    }
+
+    // --- DETAIL VIEW ---
+    function showList() {
+        currentId = null;
+        document.getElementById('list-view').style.display = '';
+        document.getElementById('detail-view').style.display = 'none';
+    }
+
+    async function showDetail(id) {
+        currentId = id;
+        document.getElementById('list-view').style.display = 'none';
+        document.getElementById('detail-view').style.display = '';
+        await loadDetail(id);
+    }
+
+    var _editCampaign = null;
+    async function loadDetail(id) {
+        try {
+            var results = await Promise.all([
+                fetch(API + '/' + id, { headers: authH() }),
+                fetch(API + '/' + id + '/stats', { headers: authH() }),
+                fetch(API + '/' + id + '/outreach', { headers: authH() })
+            ]);
+            var campaign = await results[0].json();
+            var stats = results[1].ok ? await results[1].json() : {};
+            var outreach = results[2].ok ? await results[2].json() : [];
+            var oList = Array.isArray(outreach) ? outreach : (outreach.records || outreach.items || []);
+            _editCampaign = campaign;
+
+            document.getElementById('detail-name').textContent = campaign.name || 'Untitled';
+            document.getElementById('detail-desc').textContent = campaign.description || '';
+
+            document.getElementById('detail-info').innerHTML =
+                '<div><dt>Status</dt><dd>' + statusBadge(campaign.status || 'draft') + '</dd></div>' +
+                '<div><dt>Target Types</dt><dd>' + ((campaign.target_types || []).join(', ') || '-') + '</dd></div>' +
+                '<div><dt>Batch Size</dt><dd>' + (campaign.batch_size || '-') + '</dd></div>' +
+                '<div><dt>Created</dt><dd>' + fmtDate(campaign.created_at) + '</dd></div>' +
+                '<div><dt>From</dt><dd>' + (campaign.from_email || '-') + '</dd></div>' +
+                '<div><dt>Follow-ups</dt><dd>' + (campaign.follow_up_enabled ? 'Yes (' + campaign.max_follow_ups + 'x, ' + campaign.follow_up_delay_days + 'd delay)' : 'No') + '</dd></div>';
+
+            var s = campaign.status || 'draft';
+            var btns = '<button class="act-btn" onclick="previewCampaign(\'' + id + '\')">Preview</button>'
+                + '<button class="act-btn" onclick="openForm(_editCampaign)">Edit</button>';
+            if (s === 'draft') btns += '<button class="add-btn" onclick="launchCampaign(\'' + id + '\')">Launch</button>';
+            if (s === 'sending') btns += '<button class="act-btn" onclick="pauseCampaign(\'' + id + '\')">Pause</button>';
+            if (s === 'paused') btns += '<button class="add-btn" onclick="resumeCampaign(\'' + id + '\')">Resume</button>';
+            document.getElementById('detail-actions').innerHTML = btns;
+
+            var sent = stats.sent || 0, delivered = stats.delivered || 0, opened = stats.opened || 0;
+            var clicked = stats.clicked || 0, replied = stats.replied || 0, bounced = stats.bounced || 0;
+            var total = sent || 1;
+            var pct = function(n) { return Math.round(n / total * 100); };
+            var statItems = [
+                ['Sent', sent, 'accent'], ['Delivered', delivered, 'cyan'],
+                ['Opened', opened + ' (' + pct(opened) + '%)', 'green'],
+                ['Clicked', clicked + ' (' + pct(clicked) + '%)', 'cyan'],
+                ['Replied', replied, 'green'],
+                ['Bounced', bounced + ' (' + pct(bounced) + '%)', 'red']
+            ];
+            document.getElementById('detail-stats').innerHTML = statItems.map(function(x) {
+                return '<div class="stat-card"><div class="stat-label">' + x[0] + '</div><div class="stat-value ' + x[2] + '">' + x[1] + '</div></div>';
+            }).join('');
+
+            if (!oList.length) {
+                document.getElementById('outreach-table').innerHTML = '<p style="color:var(--text-muted);padding:12px">No outreach records yet.</p>';
+                return;
+            }
+            var html = '<table><thead><tr><th>Name</th><th>Type</th><th>Email</th><th>Status</th><th>Sent At</th><th>Opened At</th></tr></thead><tbody>';
+            oList.forEach(function(r) {
+                html += '<tr>'
+                    + '<td>' + (r.name || r.contact_name || '-') + '</td>'
+                    + '<td>' + (r.type || r.target_type || '-') + '</td>'
+                    + '<td style="font-family:\'JetBrains Mono\',monospace;font-size:0.78rem">' + (r.email || '-') + '</td>'
+                    + '<td>' + statusBadge(r.status || '-') + '</td>'
+                    + '<td>' + fmtDate(r.sent_at) + '</td>'
+                    + '<td>' + fmtDate(r.opened_at) + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('outreach-table').innerHTML = html;
+        } catch (e) { showToast('Failed to load details: ' + e.message, true); }
+    }
+
+    // --- DNC ---
+    async function loadDnc() {
+        try {
+            var res = await fetch(API + '/dnc/list', { headers: authH() });
+            var data = await res.json();
+            var list = Array.isArray(data) ? data : (data.entries || data.items || []);
+            if (!list.length) { document.getElementById('dnc-table').innerHTML = '<p style="color:var(--text-muted)">No DNC entries.</p>'; return; }
+            var html = '<table><thead><tr><th>Email</th><th>Reason</th><th>Added</th><th></th></tr></thead><tbody>';
+            list.forEach(function(e) {
+                html += '<tr>'
+                    + '<td style="font-family:\'JetBrains Mono\',monospace;font-size:0.78rem">' + e.email + '</td>'
+                    + '<td>' + (e.reason || '-') + '</td>'
+                    + '<td>' + fmtDate(e.created_at) + '</td>'
+                    + '<td><button class="act-btn danger" onclick="removeDnc(\'' + e.id + '\')">Remove</button></td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('dnc-table').innerHTML = html;
+        } catch (e) { showToast('Failed to load DNC: ' + e.message, true); }
+    }
+
+    async function addDnc() {
+        var email = document.getElementById('dnc-email').value.trim();
+        if (!email) return;
+        var reason = document.getElementById('dnc-reason').value.trim();
+        try {
+            var res = await fetch(API + '/dnc', { method: 'POST', headers: authH(), body: JSON.stringify({ email: email, reason: reason || null }) });
+            if (!res.ok) { var d = await res.json(); throw new Error(d.detail || 'Failed'); }
+            showToast('Added to DNC');
+            document.getElementById('dnc-email').value = '';
+            document.getElementById('dnc-reason').value = '';
+            loadDnc();
+        } catch (e) { showToast(e.message, true); }
+    }
+
+    async function removeDnc(id) {
+        if (await apiAction(API + '/dnc/' + id, 'DELETE')) { showToast('Removed from DNC'); loadDnc(); }
+    }
+
+    // Boot
     loadCampaigns();
-}
-
-async function loadCampaigns() {
-    const r = await fetch('/api/campaigns/');
-    const data = await r.json();
-    const total = data.length;
-    const active = data.filter(c => ['sending','scheduled','personalizing'].includes(c.status)).length;
-    const sent = data.reduce((s,c) => s + (c.sent_count||0), 0);
-    const opened = data.reduce((s,c) => s + (c.opened_count||0), 0);
-    document.getElementById('topStats').innerHTML = `
-        <div class="stat-card"><div class="stat-value accent">${total}</div><div class="stat-label">Total Campaigns</div></div>
-        <div class="stat-card"><div class="stat-value cyan">${active}</div><div class="stat-label">Active</div></div>
-        <div class="stat-card"><div class="stat-value green">${sent}</div><div class="stat-label">Total Sent</div></div>
-        <div class="stat-card"><div class="stat-value orange">${opened}</div><div class="stat-label">Total Opened</div></div>`;
-    document.getElementById('campBody').innerHTML = data.map(c => `<tr>
-        <td><a href="#" onclick="viewCampaign(${c.id});return false" style="color:var(--accent-light)">${esc(c.name)}</a></td>
-        <td><span class="badge ${c.status}">${c.status}</span></td>
-        <td>${c.total_targets}</td><td>${c.sent_count}</td><td>${c.opened_count}</td><td>${c.clicked_count}</td>
-        <td>${new Date(c.created_at).toLocaleDateString()}</td>
-        <td class="btn-row">
-            ${c.status==='draft'?`<button class="act-btn" onclick="launchCamp(${c.id})">Launch</button><button class="act-btn danger" onclick="deleteCamp(${c.id})">Delete</button>`:''}
-            ${['sending','scheduled'].includes(c.status)?`<button class="act-btn" onclick="pauseCamp(${c.id})">Pause</button>`:''}
-            ${c.status==='paused'?`<button class="act-btn" onclick="resumeCamp(${c.id})">Resume</button>`:''}
-        </td></tr>`).join('');
-}
-
-async function viewCampaign(id) {
-    currentId = id;
-    document.getElementById('campaignList').style.display = 'none';
-    document.getElementById('campaignDetail').style.display = '';
-    const [cr, sr, or] = await Promise.all([
-        fetch(`/api/campaigns/${id}`).then(r=>r.json()),
-        fetch(`/api/campaigns/${id}/stats`).then(r=>r.json()),
-        fetch(`/api/campaigns/${id}/outreach`).then(r=>r.json()),
-    ]);
-    document.getElementById('detailHeader').innerHTML = `<div class="card" style="padding:20px">
-        <h2 style="margin:0 0 8px">${esc(cr.name)} <span class="badge ${cr.status}">${cr.status}</span></h2>
-        <p style="color:var(--text-muted);margin:0;font-size:0.85rem">${esc(cr.description||'')} &mdash; Message #${cr.message_id||'?'}, Domain #${cr.domain_id||'?'}, From: ${esc(cr.from_email||'')}</p>
-    </div>`;
-    const d = delivered = Math.max(sr.delivered||1,1);
-    document.getElementById('detailStats').innerHTML = `
-        <div class="stat-card rate-card"><div class="rate-value accent">${sr.sent}</div><div class="stat-label">Sent</div></div>
-        <div class="stat-card rate-card"><div class="rate-value cyan">${sr.delivered}</div><div class="stat-label">Delivered</div></div>
-        <div class="stat-card rate-card"><div class="rate-value green">${sr.opened}</div><div class="stat-label">Opened (${(sr.open_rate*100).toFixed(1)}%)</div></div>
-        <div class="stat-card rate-card"><div class="rate-value green">${sr.clicked}</div><div class="stat-label">Clicked (${(sr.click_rate*100).toFixed(1)}%)</div></div>
-        <div class="stat-card rate-card"><div class="rate-value orange">${sr.replied}</div><div class="stat-label">Replied (${(sr.reply_rate*100).toFixed(1)}%)</div></div>
-        <div class="stat-card rate-card"><div class="rate-value red">${sr.bounced}</div><div class="stat-label">Bounced (${(sr.bounce_rate*100).toFixed(1)}%)</div></div>`;
-    let btns = `<button class="act-btn" onclick="previewTargets(${id})">Preview Targets</button>
-        <button class="act-btn" onclick="syncEvents(${id})">Sync Events</button>`;
-    if(cr.status==='draft') btns += `<button class="add-btn" onclick="launchCamp(${id})">Launch Campaign</button>`;
-    if(['sending','scheduled'].includes(cr.status)) btns += `<button class="act-btn" onclick="pauseCamp(${id})">Pause</button>`;
-    if(cr.status==='paused') btns += `<button class="act-btn" onclick="resumeCamp(${id})">Resume</button>`;
-    document.getElementById('detailActions').innerHTML = btns;
-    document.getElementById('outreachBody').innerHTML = or.map(o => `<tr>
-        <td>${esc(o.target_name)}</td><td>${o.target_type}</td><td style="font-size:0.8rem">${esc(o.target_email||'-')}</td>
-        <td><span class="badge ${o.status}">${o.status}</span>${o.skip_reason?` <small>(${o.skip_reason})</small>`:''}</td>
-        <td>${o.sent_at?new Date(o.sent_at).toLocaleString():'-'}</td>
-        <td>${o.opened_at?new Date(o.opened_at).toLocaleString():'-'}</td>
-    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">No outreach records yet</td></tr>';
-}
-
-async function previewTargets(id) {
-    const r = await fetch(`/api/campaigns/${id}/preview`, {method:'POST', headers:authH});
-    const d = await r.json();
-    window.showToast?.(`Preview: ${d.total} targets (${d.with_email} with email, ${d.on_dnc_list} on DNC)`, 'success') || alert(`${d.total} targets, ${d.with_email} with email, ${d.on_dnc_list} on DNC`);
-}
-
-async function launchCamp(id) {
-    if(!confirm('Launch this campaign? This will begin personalization and sending.')) return;
-    const r = await fetch(`/api/campaigns/${id}/launch`, {method:'POST', headers:authH});
-    if(r.ok) { window.showToast?.('Campaign launched!', 'success'); viewCampaign(id); }
-    else { const e = await r.json(); window.showToast?.(e.detail||'Launch failed', 'error') || alert(e.detail); }
-}
-
-async function pauseCamp(id) {
-    await fetch(`/api/campaigns/${id}/pause`, {method:'POST', headers:authH});
-    window.showToast?.('Campaign paused', 'success');
-    currentId ? viewCampaign(id) : loadCampaigns();
-}
-
-async function resumeCamp(id) {
-    await fetch(`/api/campaigns/${id}/resume`, {method:'POST', headers:authH});
-    window.showToast?.('Campaign resumed', 'success');
-    currentId ? viewCampaign(id) : loadCampaigns();
-}
-
-async function deleteCamp(id) {
-    if(!confirm('Delete this campaign?')) return;
-    await fetch(`/api/campaigns/${id}`, {method:'DELETE', headers:authH});
-    window.showToast?.('Campaign deleted', 'success');
-    loadCampaigns();
-}
-
-async function syncEvents(id) {
-    await fetch(`/api/campaigns/${id}/sync-events`, {method:'POST', headers:authH});
-    window.showToast?.('Events synced', 'success');
-    viewCampaign(id);
-}
-
-function openCreate() {
-    document.getElementById('editId').value = '';
-    document.getElementById('modalTitle').textContent = 'New Campaign';
-    document.getElementById('campForm').reset();
-    document.getElementById('fBatch').value = 20;
-    document.getElementById('fDelay').value = 300;
-    document.getElementById('fMaxFU').value = 1;
-    document.getElementById('tStreamer').checked = true;
-    document.getElementById('tOutlet').checked = true;
-    document.getElementById('createModal').classList.add('active');
-}
-function closeModals() { document.querySelectorAll('.form-overlay').forEach(m => m.classList.remove('active')); }
-
-async function saveCampaign(e) {
-    e.preventDefault();
-    const types = [];
-    if(document.getElementById('tStreamer').checked) types.push('streamer');
-    if(document.getElementById('tOutlet').checked) types.push('outlet');
-    if(document.getElementById('tVC').checked) types.push('vc');
-    const filters = {};
-    const minF = document.getElementById('fMinF').value; if(minF) filters.min_followers = +minF;
-    const maxF = document.getElementById('fMaxF').value; if(maxF) filters.max_followers = +maxF;
-    const langs = document.getElementById('fLangs').value.trim(); if(langs) filters.languages = langs.split(',').map(s=>s.trim());
-    const plats = document.getElementById('fPlats').value.trim(); if(plats) filters.platforms = plats.split(',').map(s=>s.trim());
-    const body = {
-        name: document.getElementById('fName').value,
-        description: document.getElementById('fDesc').value || null,
-        message_id: +document.getElementById('fMsgId').value,
-        domain_id: +document.getElementById('fDomainId').value,
-        from_email: document.getElementById('fFrom').value,
-        from_name: document.getElementById('fFromName').value || null,
-        reply_to: document.getElementById('fReplyTo').value || null,
-        target_types: types,
-        target_filters: Object.keys(filters).length ? filters : null,
-        batch_size: +document.getElementById('fBatch').value || 20,
-        batch_delay_seconds: +document.getElementById('fDelay').value || 300,
-        follow_up_enabled: document.getElementById('fFUEnabled').checked,
-        max_follow_ups: +document.getElementById('fMaxFU').value || 1,
-    };
-    const editId = document.getElementById('editId').value;
-    const url = editId ? `/api/campaigns/${editId}` : '/api/campaigns/';
-    const method = editId ? 'PUT' : 'POST';
-    const r = await fetch(url, {method, headers:authH, body:JSON.stringify(body)});
-    if(r.ok) { closeModals(); window.showToast?.('Campaign saved', 'success'); loadCampaigns(); }
-    else { const e = await r.json(); window.showToast?.(e.detail||'Error', 'error'); }
-    return false;
-}
-
-// DNC
-async function loadDNC() {
-    const r = await fetch('/api/campaigns/dnc/list');
-    const data = await r.json();
-    document.getElementById('dncBody').innerHTML = data.map(d => `<tr>
-        <td>${esc(d.email)}</td><td>${d.reason}</td><td>${esc(d.source||'-')}</td>
-        <td>${new Date(d.created_at).toLocaleDateString()}</td>
-        <td><button class="act-btn danger" onclick="removeDNC(${d.id})">Remove</button></td>
-    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">No entries</td></tr>';
-}
-
-function openDNC() { document.getElementById('dncModal').classList.add('active'); }
-
-async function addDNC(e) {
-    e.preventDefault();
-    const r = await fetch('/api/campaigns/dnc', {method:'POST', headers:authH, body:JSON.stringify({
-        email: document.getElementById('dncEmail').value,
-        reason: document.getElementById('dncReason').value,
-    })});
-    if(r.ok) { closeModals(); window.showToast?.('Added to DNC', 'success'); loadDNC(); }
-    return false;
-}
-
-async function removeDNC(id) {
-    if(!confirm('Remove from Do Not Contact list?')) return;
-    await fetch(`/api/campaigns/dnc/${id}`, {method:'DELETE', headers:authH});
-    window.showToast?.('Removed', 'success');
-    loadDNC();
-}
-
-function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
-
-loadCampaigns();
-</script>
+    </script>
 </body>
 </html>
