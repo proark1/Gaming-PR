@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Press Coverage — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .container { max-width: 1300px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+        .stat-value { font-size: 2rem; }
+        .stat-value.accent { color: var(--accent-light); }
+        .stat-value.green { color: var(--green); }
+        .stat-value.cyan { color: var(--cyan); }
+        .stat-value.orange { color: var(--orange); }
+        .controls-row { display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+        .controls-row select { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); padding: 10px 14px; border-radius: 8px; font-family: inherit; font-size: 0.84rem; min-width: 200px; }
+        .controls-row select:focus { outline: none; border-color: var(--accent); }
+        .detect-btn { background: linear-gradient(135deg, var(--cyan), #0891b2); color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .detect-btn:hover { transform: translateY(-1px); }
+        .detect-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .add-btn { background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none; padding: 10px 22px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; box-shadow: 0 4px 16px rgba(124,92,255,0.3); }
+        .add-btn:hover { transform: translateY(-1px); }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 20px; overflow: hidden; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
+        /* Coverage list */
+        .cov-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
+        .cov-item:last-child { border-bottom: none; }
+        .cov-item:hover { background: var(--bg-card-hover); }
+        .cov-main { flex: 1; min-width: 0; }
+        .cov-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cov-outlet { font-size: 0.78rem; color: var(--text-muted); }
+        .cov-badges { display: flex; gap: 6px; flex-shrink: 0; }
+        .cov-emv { font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; font-weight: 600; color: var(--green); flex-shrink: 0; min-width: 80px; text-align: right; }
+        .badge { display: inline-block; font-size: 0.64rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .badge-green { background: var(--green-dim); color: var(--green); }
+        .badge-orange { background: var(--orange-dim); color: var(--orange); }
+        .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
+        .badge-accent { background: var(--accent-dim); color: var(--accent-light); }
+        .badge-red { background: var(--red-dim); color: var(--red); }
+        .badge-pink { background: var(--pink-dim); color: var(--pink); }
+        /* EMV breakdown */
+        .emv-row { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+        .emv-row:last-child { border-bottom: none; }
+        .emv-outlet { flex: 1; font-size: 0.84rem; }
+        .emv-bar-track { flex: 2; height: 22px; background: rgba(42,42,58,0.4); border-radius: 6px; overflow: hidden; }
+        .emv-bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--green), var(--cyan)); transition: width .6s ease; }
+        .emv-val { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: var(--green); min-width: 80px; text-align: right; }
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 600px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto; }
+        .modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .modal h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; }
+        .fg { margin-bottom: 14px; }
+        .fg label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }
+        .fg select, .fg input, .fg textarea { width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); padding: 10px 12px; border-radius: 8px; font-family: inherit; font-size: 0.84rem; transition: border-color .2s; }
+        .fg select:focus, .fg input:focus { outline: none; border-color: var(--accent); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .submit-btn { width: 100%; padding: 12px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; font-family: inherit; margin-top: 8px; transition: all .2s; }
+        .submit-btn:hover { transform: translateY(-1px); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .chk-label { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--text-secondary); cursor: pointer; margin-bottom: 12px; }
+        .act-btn { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .act-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 0.9rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 12px 20px; border-radius: 10px; font-size: 0.84rem; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="coverage"></script>
+
+    <div class="container">
+        <div class="header-row">
+            <div><h1>Press Coverage Monitor</h1><div class="subtitle">Track articles, reviews, and media mentions across outlets</div></div>
+            <button class="add-btn" onclick="openAddModal()">+ Add Coverage</button>
+        </div>
+
+        <div class="stat-grid" id="cov-stats">
+            <div class="stat-card"><div class="stat-label">Total Articles</div><div class="stat-value accent mono" id="s-articles">--</div></div>
+            <div class="stat-card"><div class="stat-label">Total Reach</div><div class="stat-value cyan mono" id="s-reach">--</div></div>
+            <div class="stat-card"><div class="stat-label">Total EMV</div><div class="stat-value green mono" id="s-emv">--</div></div>
+        </div>
+
+        <div class="controls-row">
+            <select id="company-select" onchange="onCompanyChange()">
+                <option value="">Select company...</option>
+            </select>
+            <button class="detect-btn" id="detect-btn" onclick="autoDetect()">Auto-Detect Coverage</button>
+        </div>
+
+        <div class="grid-2">
+            <!-- Coverage Timeline -->
+            <div>
+                <div class="card">
+                    <div class="card-header"><span>Coverage Timeline</span></div>
+                    <div id="coverage-list"><div class="loading">Select a company to view coverage</div></div>
+                </div>
+            </div>
+            <!-- EMV Breakdown -->
+            <div>
+                <div class="card">
+                    <div class="card-header"><span>EMV by Outlet</span></div>
+                    <div id="emv-breakdown"><div class="loading">Select a company</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Coverage Modal -->
+    <div class="modal-overlay" id="add-overlay" onclick="if(event.target===this)closeAddModal()">
+        <div class="modal">
+            <button class="close-btn" onclick="closeAddModal()">&times;</button>
+            <h2>Add Coverage</h2>
+            <form id="add-form" onsubmit="addCoverage(event)">
+                <div class="fg"><label>Article URL</label><input id="a-url" type="url" placeholder="https://..." required></div>
+                <div class="fg"><label>Article Title</label><input id="a-title" required placeholder="Article headline"></div>
+                <div class="fg"><label>Outlet Name</label><input id="a-outlet" required placeholder="e.g. IGN, Kotaku"></div>
+                <div class="form-row">
+                    <div class="fg">
+                        <label>Coverage Type</label>
+                        <select id="a-type">
+                            <option value="article">Article</option>
+                            <option value="review">Review</option>
+                            <option value="preview">Preview</option>
+                            <option value="interview">Interview</option>
+                            <option value="mention">Mention</option>
+                            <option value="feature">Feature</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label>Sentiment</label>
+                        <select id="a-sentiment">
+                            <option value="positive">Positive</option>
+                            <option value="neutral">Neutral</option>
+                            <option value="negative">Negative</option>
+                            <option value="mixed">Mixed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="fg">
+                    <label>Prominence</label>
+                    <select id="a-prominence">
+                        <option value="primary">Primary (main subject)</option>
+                        <option value="secondary">Secondary (significant mention)</option>
+                        <option value="passing">Passing mention</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn" id="add-btn">Add Coverage</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Coverage Modal -->
+    <div class="modal-overlay" id="edit-overlay" onclick="if(event.target===this)closeEditModal()">
+        <div class="modal">
+            <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            <h2 id="edit-title">Edit Coverage</h2>
+            <div id="edit-info" style="margin-bottom:16px"></div>
+            <div class="fg">
+                <label>Sentiment</label>
+                <select id="e-sentiment">
+                    <option value="positive">Positive</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="negative">Negative</option>
+                    <option value="mixed">Mixed</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>Link to Campaign (ID)</label>
+                <input id="e-campaign" placeholder="Campaign UUID (optional)">
+            </div>
+            <label class="chk-label"><input type="checkbox" id="e-verified"> Mark as verified</label>
+            <button class="submit-btn" onclick="updateCoverage()">Update Coverage</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    const authH = () => ({ 'Content-Type': 'application/json' });
+    let currentCoverageId = null;
+    let summaryData = null;
+
+    let _tt;
+    function showToast(msg, isError = false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.borderColor = isError ? 'var(--red)' : 'var(--green)';
+        t.classList.add('show');
+        clearTimeout(_tt);
+        _tt = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function fmtNum(n) { return n != null ? Number(n).toLocaleString() : '--'; }
+    function fmtMoney(v) { return v != null ? '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '--'; }
+
+    const SENTIMENT_BADGE = { positive: 'green', neutral: 'cyan', negative: 'red', mixed: 'orange' };
+    const TYPE_BADGE = { article: 'accent', review: 'cyan', preview: 'orange', interview: 'pink', mention: 'accent', feature: 'green' };
+    function sentimentBadge(s) { return `<span class="badge badge-${SENTIMENT_BADGE[s] || 'accent'}">${s || 'unknown'}</span>`; }
+    function typeBadge(t) { return `<span class="badge badge-${TYPE_BADGE[t] || 'accent'}">${t || 'article'}</span>`; }
+
+    async function loadCompanies() {
+        try {
+            const res = await fetch('/api/companies', { headers: authH() });
+            const data = await res.json();
+            const sel = document.getElementById('company-select');
+            (Array.isArray(data) ? data : data.companies || []).forEach(c => {
+                sel.innerHTML += `<option value="${c.id}">${c.company_name || c.name}</option>`;
+            });
+        } catch(e) { console.error('Failed to load companies', e); }
+    }
+
+    function getCompanyId() { return document.getElementById('company-select').value; }
+
+    function onCompanyChange() {
+        const id = getCompanyId();
+        if (id) { loadSummary(id); loadCoverage(id); }
+    }
+
+    async function loadSummary(companyId) {
+        try {
+            const res = await fetch(`/api/coverage/summary?company_id=${companyId}`, { headers: authH() });
+            summaryData = await res.json();
+            document.getElementById('s-articles').textContent = fmtNum(summaryData.total_articles);
+            document.getElementById('s-reach').textContent = fmtNum(summaryData.total_reach);
+            document.getElementById('s-emv').textContent = fmtMoney(summaryData.total_emv);
+            renderEMVBreakdown(summaryData.by_outlet || []);
+        } catch(e) { showToast('Failed to load summary', true); }
+    }
+
+    function renderEMVBreakdown(outlets) {
+        const el = document.getElementById('emv-breakdown');
+        if (!outlets || !outlets.length) { el.innerHTML = '<div class="loading">No outlet data</div>'; return; }
+        const maxEMV = Math.max(...outlets.map(o => o.emv || o.total_emv || 0), 1);
+        el.innerHTML = outlets.map(o => {
+            const emv = o.emv || o.total_emv || 0;
+            const w = Math.max((emv / maxEMV) * 100, 2);
+            return `<div class="emv-row">
+                <div class="emv-outlet">${o.outlet_name || o.name || 'Unknown'}</div>
+                <div class="emv-bar-track"><div class="emv-bar-fill" style="width:${w}%"></div></div>
+                <div class="emv-val">${fmtMoney(emv)}</div>
+            </div>`;
+        }).join('');
+    }
+
+    async function loadCoverage(companyId) {
+        const el = document.getElementById('coverage-list');
+        try {
+            const res = await fetch(`/api/coverage/?company_id=${companyId}`, { headers: authH() });
+            const data = await res.json();
+            const items = Array.isArray(data) ? data : data.items || data.coverage || [];
+            if (!items.length) { el.innerHTML = '<div class="empty-state">No coverage found for this company</div>'; return; }
+            el.innerHTML = items.map(c => `
+                <div class="cov-item" onclick="editCoverage('${c.id}')">
+                    <div class="cov-main">
+                        <div class="cov-title">${c.article_title || c.title || 'Untitled'}</div>
+                        <div class="cov-outlet">${c.outlet_name || ''} &middot; ${c.published_at ? new Date(c.published_at).toLocaleDateString() : (c.created_at ? new Date(c.created_at).toLocaleDateString() : '')}</div>
+                    </div>
+                    <div class="cov-badges">${typeBadge(c.coverage_type || c.type)} ${sentimentBadge(c.sentiment)}</div>
+                    <div class="cov-emv">${fmtMoney(c.emv)}</div>
+                </div>
+            `).join('');
+        } catch(e) { el.innerHTML = '<div class="loading">Failed to load coverage</div>'; }
+    }
+
+    async function autoDetect() {
+        const companyId = getCompanyId();
+        if (!companyId) { showToast('Please select a company first', true); return; }
+        const btn = document.getElementById('detect-btn');
+        btn.disabled = true; btn.textContent = 'Detecting...';
+        try {
+            const res = await fetch(`/api/coverage/auto-detect?company_id=${companyId}`, { method: 'POST', headers: authH() });
+            if (!res.ok) throw new Error((await res.json()).detail || 'Detection failed');
+            const d = await res.json();
+            showToast(`Found ${d.articles_found || d.count || 0} new articles`);
+            loadSummary(companyId);
+            loadCoverage(companyId);
+        } catch(e) { showToast(e.message, true); }
+        finally { btn.disabled = false; btn.textContent = 'Auto-Detect Coverage'; }
+    }
+
+    function openAddModal() { document.getElementById('add-overlay').classList.add('active'); }
+    function closeAddModal() { document.getElementById('add-overlay').classList.remove('active'); }
+
+    async function addCoverage(e) {
+        e.preventDefault();
+        const companyId = getCompanyId();
+        if (!companyId) { showToast('Please select a company first', true); return; }
+        const btn = document.getElementById('add-btn');
+        btn.disabled = true;
+        try {
+            const body = {
+                company_id: companyId,
+                article_url: document.getElementById('a-url').value,
+                article_title: document.getElementById('a-title').value,
+                outlet_name: document.getElementById('a-outlet').value,
+                coverage_type: document.getElementById('a-type').value,
+                sentiment: document.getElementById('a-sentiment').value,
+                prominence: document.getElementById('a-prominence').value
+            };
+            const res = await fetch('/api/coverage/', { method: 'POST', headers: authH(), body: JSON.stringify(body) });
+            if (!res.ok) throw new Error((await res.json()).detail || 'Failed to add');
+            showToast('Coverage added');
+            closeAddModal();
+            document.getElementById('add-form').reset();
+            loadSummary(companyId);
+            loadCoverage(companyId);
+        } catch(e) { showToast(e.message, true); }
+        finally { btn.disabled = false; }
+    }
+
+    async function editCoverage(id) {
+        currentCoverageId = id;
+        try {
+            const res = await fetch(`/api/coverage/${id}`, { headers: authH() });
+            const c = await res.json();
+            document.getElementById('edit-title').textContent = c.article_title || c.title || 'Edit Coverage';
+            document.getElementById('edit-info').innerHTML = `
+                <div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px">${c.outlet_name || ''} &middot; ${typeBadge(c.coverage_type || c.type)} ${sentimentBadge(c.sentiment)}</div>
+                ${c.article_url ? `<a href="${c.article_url}" target="_blank" style="color:var(--accent-light);font-size:0.82rem">View Article</a>` : ''}`;
+            document.getElementById('e-sentiment').value = c.sentiment || 'neutral';
+            document.getElementById('e-campaign').value = c.campaign_id || '';
+            document.getElementById('e-verified').checked = c.verified || false;
+            document.getElementById('edit-overlay').classList.add('active');
+        } catch(e) { showToast('Failed to load coverage', true); }
+    }
+
+    function closeEditModal() { document.getElementById('edit-overlay').classList.remove('active'); }
+
+    async function updateCoverage() {
+        if (!currentCoverageId) return;
+        try {
+            const body = {
+                sentiment: document.getElementById('e-sentiment').value,
+                campaign_id: document.getElementById('e-campaign').value || undefined,
+                verified: document.getElementById('e-verified').checked
+            };
+            const res = await fetch(`/api/coverage/${currentCoverageId}`, { method: 'PUT', headers: authH(), body: JSON.stringify(body) });
+            if (!res.ok) throw new Error('Update failed');
+            showToast('Coverage updated');
+            closeEditModal();
+            const companyId = getCompanyId();
+            if (companyId) { loadSummary(companyId); loadCoverage(companyId); }
+        } catch(e) { showToast(e.message, true); }
+    }
+
+    // Init
+    loadCompanies();
+    </script>
+</body>
+</html>

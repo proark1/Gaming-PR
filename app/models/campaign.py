@@ -50,6 +50,12 @@ class Campaign(Base):
     follow_up_message_id = Column(Integer, ForeignKey("messages.id"), nullable=True)
     max_follow_ups = Column(Integer, default=1)
 
+    # Smart follow-up config (behavior-based)
+    smart_follow_up_enabled = Column(Boolean, default=False)
+    follow_up_opened_no_reply_message_id = Column(Integer, ForeignKey("messages.id"), nullable=True)
+    follow_up_clicked_no_reply_message_id = Column(Integer, ForeignKey("messages.id"), nullable=True)
+    follow_up_never_opened_message_id = Column(Integer, ForeignKey("messages.id"), nullable=True)
+
     # Denormalized tracking counters
     total_targets = Column(Integer, default=0)
     personalized_count = Column(Integer, default=0)
@@ -111,6 +117,8 @@ class OutreachRecord(Base):
     # Follow-up tracking
     follow_up_number = Column(Integer, default=0)  # 0 = initial outreach
     parent_outreach_id = Column(Integer, ForeignKey("outreach_records.id"), nullable=True)
+    follow_up_trigger = Column(String(30), nullable=True)
+    # time_based | opened_no_reply | clicked_no_reply | never_opened
 
     # Timing
     scheduled_send_at = Column(DateTime, nullable=True)

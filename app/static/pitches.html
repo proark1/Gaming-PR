@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Pitch Generator — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .container { max-width: 1300px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+        .gen-grid { display: grid; grid-template-columns: 380px 1fr; gap: 24px; }
+        @media (max-width: 900px) { .gen-grid { grid-template-columns: 1fr; } }
+        .gen-form { position: sticky; top: 20px; }
+        .fg { margin-bottom: 14px; }
+        .fg label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }
+        .fg select, .fg input, .fg textarea { width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); padding: 10px 12px; border-radius: 8px; font-family: inherit; font-size: 0.84rem; transition: border-color .2s; }
+        .fg select:focus, .fg input:focus, .fg textarea:focus { outline: none; border-color: var(--accent); }
+        .fg textarea { resize: vertical; min-height: 60px; }
+        .generate-btn { width: 100%; padding: 12px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; font-family: inherit; transition: all .2s; box-shadow: 0 4px 16px rgba(124,92,255,0.3); }
+        .generate-btn:hover { transform: translateY(-1px); }
+        .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .pitch-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; transition: all .2s; }
+        .pitch-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+        .pitch-card .pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .pitch-card .pc-title { font-size: 0.9rem; font-weight: 600; }
+        .pitch-card .pc-meta { font-size: 0.74rem; color: var(--text-muted); margin-top: 6px; }
+        .pitch-card .pc-preview { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .badge { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .badge-green { background: var(--green-dim); color: var(--green); }
+        .badge-orange { background: var(--orange-dim); color: var(--orange); }
+        .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
+        .badge-accent { background: var(--accent-dim); color: var(--accent-light); }
+        .badge-red { background: var(--red-dim); color: var(--red); }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 700px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto; }
+        .modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .modal h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+        .modal-meta { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 16px; }
+        .modal-content { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 10px; padding: 20px; font-size: 0.88rem; line-height: 1.7; color: var(--text-secondary); white-space: pre-wrap; margin-bottom: 20px; max-height: 300px; overflow-y: auto; }
+        .modal-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .act-btn { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .act-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .act-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .act-btn.primary:hover { background: var(--accent-hover); }
+        .act-btn.danger { border-color: var(--red-dim); color: var(--text-secondary); }
+        .act-btn.danger:hover { border-color: var(--red); color: var(--red); }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 0.9rem; }
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 12px 20px; border-radius: 10px; font-size: 0.84rem; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .target-list { max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 4px; }
+        .target-item { padding: 8px 12px; font-size: 0.82rem; cursor: pointer; transition: background .15s; border-bottom: 1px solid var(--border); }
+        .target-item:last-child { border-bottom: none; }
+        .target-item:hover { background: var(--bg-card-hover); }
+        .target-item.selected { background: var(--accent-dim); color: var(--accent-light); }
+        .search-input { width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.82rem; margin-top: 4px; }
+        .search-input:focus { outline: none; border-color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="pitches"></script>
+
+    <div class="container">
+        <div class="header-row">
+            <div><h1>AI Pitch Generator</h1><div class="subtitle">Generate personalized pitches for streamers, VCs, and outlets</div></div>
+        </div>
+
+        <div class="gen-grid">
+            <!-- Left: Generation Form -->
+            <div class="gen-form">
+                <div class="card" style="padding: 24px;">
+                    <div class="fg">
+                        <label>Company Profile</label>
+                        <select id="company-select"><option value="">Select company...</option></select>
+                    </div>
+                    <div class="fg">
+                        <label>Target Type</label>
+                        <select id="target-type" onchange="loadTargets()">
+                            <option value="streamer">Streamer</option>
+                            <option value="vc">VC</option>
+                            <option value="outlet">Outlet</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label>Search Target</label>
+                        <input class="search-input" id="target-search" placeholder="Search by name..." oninput="filterTargets()">
+                        <div class="target-list" id="target-list"></div>
+                    </div>
+                    <div class="fg">
+                        <label>Pitch Type</label>
+                        <select id="pitch-type">
+                            <option value="investment">Investment</option>
+                            <option value="sponsorship">Sponsorship</option>
+                            <option value="press_coverage">Press Coverage</option>
+                            <option value="review_key">Review Key</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label>Tone</label>
+                        <select id="tone">
+                            <option value="professional">Professional</option>
+                            <option value="formal">Formal</option>
+                            <option value="casual">Casual</option>
+                            <option value="enthusiastic">Enthusiastic</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label>Custom Instructions (optional)</label>
+                        <textarea id="instructions" placeholder="Any specific points to emphasize..."></textarea>
+                    </div>
+                    <button class="generate-btn" id="gen-btn" onclick="generatePitch()">Generate Pitch</button>
+                </div>
+            </div>
+
+            <!-- Right: Pitch List -->
+            <div>
+                <div id="pitch-list">
+                    <div class="loading"><div class="spinner"></div> Loading pitches...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pitch Detail Modal -->
+    <div class="modal-overlay" id="pitch-overlay" onclick="if(event.target===this)closePitchModal()">
+        <div class="modal">
+            <button class="close-btn" onclick="closePitchModal()">&times;</button>
+            <h2 id="modal-title"></h2>
+            <div class="modal-meta" id="modal-meta"></div>
+            <div class="modal-content" id="modal-content"></div>
+            <div class="modal-actions" id="modal-actions"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    const authH = () => ({ 'Content-Type': 'application/json' });
+    let allTargets = [];
+    let selectedTargetId = null;
+    let currentPitchId = null;
+
+    let _tt;
+    function showToast(msg, isError = false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.borderColor = isError ? 'var(--red)' : 'var(--green)';
+        t.classList.add('show');
+        clearTimeout(_tt);
+        _tt = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    const STATUS_BADGE = { draft: 'accent', approved: 'green', sent: 'cyan', rejected: 'red', pending: 'orange' };
+    function statusBadge(s) { return `<span class="badge badge-${STATUS_BADGE[s] || 'accent'}">${s || 'draft'}</span>`; }
+
+    async function loadCompanies() {
+        try {
+            const res = await fetch('/api/companies', { headers: authH() });
+            const data = await res.json();
+            const sel = document.getElementById('company-select');
+            (Array.isArray(data) ? data : data.companies || []).forEach(c => {
+                sel.innerHTML += `<option value="${c.id}">${c.company_name || c.name}</option>`;
+            });
+        } catch(e) { console.error('Failed to load companies', e); }
+    }
+
+    async function loadTargets() {
+        const type = document.getElementById('target-type').value;
+        const endpoints = { streamer: '/api/streamers/', vc: '/api/vcs/', outlet: '/api/outlets/' };
+        selectedTargetId = null;
+        document.getElementById('target-search').value = '';
+        try {
+            const res = await fetch(endpoints[type], { headers: authH() });
+            const data = await res.json();
+            allTargets = Array.isArray(data) ? data : data.items || data.streamers || data.vcs || data.outlets || [];
+            renderTargets(allTargets);
+        } catch(e) {
+            document.getElementById('target-list').innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:0.82rem">Failed to load targets</div>';
+        }
+    }
+
+    function renderTargets(list) {
+        const el = document.getElementById('target-list');
+        if (!list.length) { el.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:0.82rem">No targets found</div>'; return; }
+        el.innerHTML = list.slice(0, 50).map(t => {
+            const name = t.name || t.channel_name || t.outlet_name || t.firm_name || 'Unknown';
+            const sel = t.id === selectedTargetId ? ' selected' : '';
+            return `<div class="target-item${sel}" onclick="selectTarget('${t.id}', this)">${name}</div>`;
+        }).join('');
+    }
+
+    function filterTargets() {
+        const q = document.getElementById('target-search').value.toLowerCase();
+        const filtered = allTargets.filter(t => {
+            const name = (t.name || t.channel_name || t.outlet_name || t.firm_name || '').toLowerCase();
+            return name.includes(q);
+        });
+        renderTargets(filtered);
+    }
+
+    function selectTarget(id, el) {
+        selectedTargetId = id;
+        document.querySelectorAll('.target-item').forEach(i => i.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+
+    async function generatePitch() {
+        const btn = document.getElementById('gen-btn');
+        const companyId = document.getElementById('company-select').value;
+        const targetType = document.getElementById('target-type').value;
+        if (!companyId) { showToast('Please select a company', true); return; }
+        if (!selectedTargetId) { showToast('Please select a target', true); return; }
+
+        btn.disabled = true; btn.textContent = 'Generating...';
+        try {
+            const body = {
+                company_id: companyId,
+                target_type: targetType,
+                target_id: selectedTargetId,
+                pitch_type: document.getElementById('pitch-type').value,
+                tone: document.getElementById('tone').value,
+                instructions: document.getElementById('instructions').value || undefined
+            };
+            const res = await fetch('/api/pitches/generate', { method: 'POST', headers: authH(), body: JSON.stringify(body) });
+            if (!res.ok) throw new Error((await res.json()).detail || 'Generation failed');
+            showToast('Pitch generated successfully');
+            loadPitches();
+        } catch(e) { showToast(e.message, true); }
+        finally { btn.disabled = false; btn.textContent = 'Generate Pitch'; }
+    }
+
+    async function loadPitches() {
+        try {
+            const res = await fetch('/api/pitches/', { headers: authH() });
+            const data = await res.json();
+            const pitches = Array.isArray(data) ? data : data.items || data.pitches || [];
+            const el = document.getElementById('pitch-list');
+            if (!pitches.length) { el.innerHTML = '<div class="empty-state">No pitches generated yet. Use the form to create your first pitch.</div>'; return; }
+            el.innerHTML = pitches.map(p => `
+                <div class="pitch-card" onclick="viewPitch('${p.id}')">
+                    <div class="pc-header">
+                        <span class="pc-title">${p.subject || p.title || 'Untitled Pitch'}</span>
+                        ${statusBadge(p.status)}
+                    </div>
+                    <div class="pc-preview">${(p.content || p.body || '').substring(0, 200)}...</div>
+                    <div class="pc-meta">${p.pitch_type || ''} &middot; ${p.tone || ''} &middot; ${p.created_at ? new Date(p.created_at).toLocaleDateString() : ''}</div>
+                </div>
+            `).join('');
+        } catch(e) {
+            document.getElementById('pitch-list').innerHTML = '<div class="empty-state">Failed to load pitches</div>';
+        }
+    }
+
+    async function viewPitch(id) {
+        currentPitchId = id;
+        try {
+            const res = await fetch(`/api/pitches/${id}`, { headers: authH() });
+            const p = await res.json();
+            document.getElementById('modal-title').textContent = p.subject || p.title || 'Pitch';
+            document.getElementById('modal-meta').innerHTML = `${statusBadge(p.status)} &nbsp; ${p.pitch_type || ''} &middot; ${p.tone || ''} &middot; ${p.target_type || ''} &middot; ${p.created_at ? new Date(p.created_at).toLocaleString() : ''}`;
+            document.getElementById('modal-content').textContent = p.content || p.body || '';
+            document.getElementById('modal-actions').innerHTML = `
+                <button class="act-btn primary" onclick="approvePitch('${id}')">Approve</button>
+                <button class="act-btn" onclick="closePitchModal();document.getElementById('instructions').value='Please revise: ';generatePitch()">Regenerate</button>
+                <button class="act-btn danger" onclick="deletePitch('${id}')">Delete</button>
+            `;
+            document.getElementById('pitch-overlay').classList.add('active');
+        } catch(e) { showToast('Failed to load pitch', true); }
+    }
+
+    function closePitchModal() { document.getElementById('pitch-overlay').classList.remove('active'); }
+
+    async function approvePitch(id) {
+        try {
+            const res = await fetch(`/api/pitches/${id}/approve`, { method: 'POST', headers: authH() });
+            if (!res.ok) throw new Error('Approve failed');
+            showToast('Pitch approved');
+            closePitchModal();
+            loadPitches();
+        } catch(e) { showToast(e.message, true); }
+    }
+
+    async function deletePitch(id) {
+        if (!confirm('Delete this pitch?')) return;
+        try {
+            const res = await fetch(`/api/pitches/${id}`, { method: 'DELETE', headers: authH() });
+            if (!res.ok) throw new Error('Delete failed');
+            showToast('Pitch deleted');
+            closePitchModal();
+            loadPitches();
+        } catch(e) { showToast(e.message, true); }
+    }
+
+    // Init
+    loadCompanies();
+    loadTargets();
+    loadPitches();
+    </script>
+</body>
+</html>

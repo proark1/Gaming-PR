@@ -138,7 +138,18 @@ def match_streamers(
         else:
             platform_score = 10.0
 
-        total = genre_score + region_score + tier_score + engagement_score + platform_score
+        # Historical engagement bonus (0-10)
+        try:
+            from app.services.engagement_scoring_service import get_engagement_score
+            hist_score = get_engagement_score(db, "streamer", s.id) / 100.0 * 10
+            if hist_score > 7:
+                reasons.append("historically_responsive")
+            elif hist_score < 3:
+                weak.append("low_historical_response")
+        except Exception:
+            hist_score = 5.0  # neutral
+
+        total = genre_score + region_score + tier_score + engagement_score + platform_score + hist_score
         results.append({
             "target_type": "streamer",
             "target_id": s.id,
@@ -232,7 +243,18 @@ def match_investors(
         if inv.is_gaming_focused:
             reasons.append("gaming_focused")
 
-        total = stage_score + focus_score + check_score + region_score + gaming_score
+        # Historical engagement bonus (0-10)
+        try:
+            from app.services.engagement_scoring_service import get_engagement_score
+            hist_score = get_engagement_score(db, "vc", inv.id) / 100.0 * 10
+            if hist_score > 7:
+                reasons.append("historically_responsive")
+            elif hist_score < 3:
+                weak.append("low_historical_response")
+        except Exception:
+            hist_score = 5.0
+
+        total = stage_score + focus_score + check_score + region_score + gaming_score + hist_score
         results.append({
             "target_type": "investor",
             "target_id": inv.id,
@@ -305,7 +327,18 @@ def match_outlets(
             priority_score += 5
         priority_score = min(priority_score, 20)
 
-        total = lang_score + region_score + cat_score + priority_score
+        # Historical engagement bonus (0-10)
+        try:
+            from app.services.engagement_scoring_service import get_engagement_score
+            hist_score = get_engagement_score(db, "outlet", o.id) / 100.0 * 10
+            if hist_score > 7:
+                reasons.append("historically_responsive")
+            elif hist_score < 3:
+                weak.append("low_historical_response")
+        except Exception:
+            hist_score = 5.0
+
+        total = lang_score + region_score + cat_score + priority_score + hist_score
         results.append({
             "target_type": "outlet",
             "target_id": o.id,

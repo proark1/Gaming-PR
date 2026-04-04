@@ -27,6 +27,10 @@ from app.routers.campaigns import router as campaigns_router
 from app.routers.companies import router as companies_router
 from app.routers.matching import router as matching_router
 from app.routers.crm import router as crm_router
+from app.routers.pitches import router as pitches_router
+from app.routers.analytics import router as analytics_router
+from app.routers.deals import router as deals_router
+from app.routers.coverage import router as coverage_router
 from app.seed.outlets import seed_outlets
 from app.seed.investors import seed_investors
 from app.seed.streamers import seed_streamers
@@ -240,6 +244,16 @@ async def lifespan(app: FastAPI):
         replace_existing=True,
     )
 
+    # Engagement scoring for matching engine
+    from app.services.engagement_scoring_service import compute_engagement_scores_job
+    scheduler.add_job(
+        compute_engagement_scores_job,
+        "interval",
+        hours=6,
+        id="engagement_scoring",
+        replace_existing=True,
+    )
+
     scheduler.start()
     from app import scheduler_ref
     scheduler_ref.scheduler = scheduler
@@ -323,6 +337,10 @@ app.include_router(campaigns_router)
 app.include_router(companies_router)
 app.include_router(matching_router)
 app.include_router(crm_router)
+app.include_router(pitches_router)
+app.include_router(analytics_router)
+app.include_router(deals_router)
+app.include_router(coverage_router)
 
 # Serve shared static assets (nav.js, etc.)
 _static_dir = Path(__file__).parent / "app" / "static"
@@ -437,6 +455,26 @@ def matching_page():
 @app.get("/crm", response_class=HTMLResponse)
 def crm_page():
     return _serve_page("crm.html")
+
+
+@app.get("/pitches", response_class=HTMLResponse)
+def pitches_page():
+    return _serve_page("pitches.html")
+
+
+@app.get("/analytics", response_class=HTMLResponse)
+def analytics_page():
+    return _serve_page("analytics.html")
+
+
+@app.get("/deals", response_class=HTMLResponse)
+def deals_page():
+    return _serve_page("deals.html")
+
+
+@app.get("/coverage", response_class=HTMLResponse)
+def coverage_page():
+    return _serve_page("coverage.html")
 
 
 @app.get("/profile", response_class=HTMLResponse)

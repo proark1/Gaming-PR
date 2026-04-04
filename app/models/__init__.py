@@ -13,6 +13,10 @@ from app.models.campaign import Campaign, OutreachRecord, DoNotContact
 from app.models.company import CompanyProfile
 from app.models.streamer_snapshot import StreamerSnapshot
 from app.models.activity import ContactActivity
+from app.models.pitch import GeneratedPitch
+from app.models.deal import Deal, DealStageHistory
+from app.models.coverage import PressCoverage
+from app.models.contact_engagement import ContactEngagementScore
 
 __all__ = [
     "GamingOutlet", "Article", "ArticleTranslation",
@@ -23,4 +27,6 @@ __all__ = [
     "MessagePersonalization",
     "Campaign", "OutreachRecord", "DoNotContact",
     "CompanyProfile", "StreamerSnapshot", "ContactActivity",
+    "GeneratedPitch", "Deal", "DealStageHistory",
+    "PressCoverage", "ContactEngagementScore",
 ]

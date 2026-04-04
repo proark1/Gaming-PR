@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deal Tracker — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .container { max-width: 1400px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+        .stat-value { font-size: 2rem; }
+        .stat-value.accent { color: var(--accent-light); }
+        .stat-value.green { color: var(--green); }
+        .stat-value.cyan { color: var(--cyan); }
+        .stat-value.orange { color: var(--orange); }
+        .tabs { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 4px; width: fit-content; }
+        .tab { padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; background: transparent; border: none; color: var(--text-muted); font-family: inherit; transition: all .2s; }
+        .tab:hover { color: var(--text-secondary); }
+        .tab.active { background: var(--accent); color: #fff; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        /* Pipeline Kanban */
+        .pipeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; min-height: 400px; overflow-x: auto; }
+        .pipe-col { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; min-height: 300px; min-width: 180px; }
+        .pipe-col-header { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .pipe-count { background: var(--bg-primary); padding: 2px 8px; border-radius: 10px; font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; }
+        .deal-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all .2s; }
+        .deal-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+        .deal-card .dc-title { font-size: 0.84rem; font-weight: 600; margin-bottom: 4px; }
+        .deal-card .dc-contact { font-size: 0.74rem; color: var(--text-muted); margin-bottom: 6px; }
+        .deal-card .dc-value { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: var(--green); font-weight: 600; }
+        .deal-card .dc-type { font-size: 0.64rem; font-weight: 600; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; display: inline-block; margin-bottom: 4px; }
+        .dt-investment { background: var(--green-dim); color: var(--green); }
+        .dt-sponsorship { background: var(--accent-dim); color: var(--accent-light); }
+        .dt-partnership { background: var(--cyan-dim); color: var(--cyan); }
+        /* Table */
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        td { padding: 10px 14px; font-size: 0.84rem; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+        tr:hover td { background: var(--bg-card-hover); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .badge { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; }
+        .badge-green { background: var(--green-dim); color: var(--green); }
+        .badge-orange { background: var(--orange-dim); color: var(--orange); }
+        .badge-cyan { background: var(--cyan-dim); color: var(--cyan); }
+        .badge-accent { background: var(--accent-dim); color: var(--accent-light); }
+        .badge-red { background: var(--red-dim); color: var(--red); }
+        /* Form */
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 20px; overflow: hidden; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.9rem; }
+        .form-body { padding: 24px; max-width: 700px; }
+        .fg { margin-bottom: 14px; }
+        .fg label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }
+        .fg select, .fg input, .fg textarea { width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); padding: 10px 12px; border-radius: 8px; font-family: inherit; font-size: 0.84rem; transition: border-color .2s; }
+        .fg select:focus, .fg input:focus, .fg textarea:focus { outline: none; border-color: var(--accent); }
+        .fg textarea { resize: vertical; min-height: 60px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .submit-btn { padding: 12px 32px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; font-family: inherit; transition: all .2s; box-shadow: 0 4px 16px rgba(124,92,255,0.3); }
+        .submit-btn:hover { transform: translateY(-1px); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .filter-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .filter-row select { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.82rem; }
+        .filter-row select:focus { outline: none; border-color: var(--accent); }
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 650px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto; }
+        .modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .modal h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-size: 0.84rem; margin-bottom: 16px; }
+        .info-grid dt { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; }
+        .info-grid dd { color: var(--text-primary); margin: 0 0 10px; }
+        .stage-row { display: flex; gap: 8px; align-items: center; margin: 16px 0; }
+        .stage-row select { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.82rem; flex: 1; }
+        .stage-row select:focus { outline: none; border-color: var(--accent); }
+        .note-row { display: flex; gap: 8px; margin: 12px 0; }
+        .note-row input { flex: 1; background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.84rem; }
+        .note-row input:focus { outline: none; border-color: var(--accent); }
+        .act-btn { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .act-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .act-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 12px 20px; border-radius: 10px; font-size: 0.84rem; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        @media (max-width: 1100px) { .pipeline { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 600px) { .pipeline { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="deals"></script>
+
+    <div class="container">
+        <div class="header-row">
+            <div><h1>Deal & Sponsorship Tracker</h1><div class="subtitle">Manage your investment, sponsorship, and partnership pipeline</div></div>
+        </div>
+
+        <div class="stat-grid" id="deal-stats">
+            <div class="stat-card"><div class="stat-label">Total Deals</div><div class="stat-value accent mono" id="s-total">--</div></div>
+            <div class="stat-card"><div class="stat-label">Total Value</div><div class="stat-value green mono" id="s-value">--</div></div>
+            <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value cyan mono" id="s-winrate">--</div></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="pipeline" onclick="switchTab('pipeline')">Pipeline</button>
+            <button class="tab" data-tab="list" onclick="switchTab('list')">List</button>
+            <button class="tab" data-tab="create" onclick="switchTab('create')">Create</button>
+        </div>
+
+        <!-- Pipeline Tab -->
+        <div class="panel active" id="panel-pipeline">
+            <div class="pipeline" id="kanban"><div class="loading">Loading pipeline...</div></div>
+        </div>
+
+        <!-- List Tab -->
+        <div class="panel" id="panel-list">
+            <div class="filter-row">
+                <select id="filter-stage" onchange="loadDealsList()">
+                    <option value="">All Stages</option>
+                    <option value="interested">Interested</option>
+                    <option value="due_diligence">Due Diligence</option>
+                    <option value="term_sheet">Term Sheet</option>
+                    <option value="closing">Closing</option>
+                    <option value="closed_won">Closed Won</option>
+                    <option value="closed_lost">Closed Lost</option>
+                </select>
+                <select id="filter-type" onchange="loadDealsList()">
+                    <option value="">All Types</option>
+                    <option value="investment">Investment</option>
+                    <option value="sponsorship">Sponsorship</option>
+                    <option value="partnership">Partnership</option>
+                </select>
+            </div>
+            <div class="card">
+                <div id="deals-table"><div class="loading">Loading...</div></div>
+            </div>
+        </div>
+
+        <!-- Create Tab -->
+        <div class="panel" id="panel-create">
+            <div class="card">
+                <div class="card-header"><span>New Deal</span></div>
+                <div class="form-body">
+                    <form id="deal-form" onsubmit="createDeal(event)">
+                        <div class="fg">
+                            <label>Company</label>
+                            <select id="f-company" required><option value="">Select company...</option></select>
+                        </div>
+                        <div class="form-row">
+                            <div class="fg">
+                                <label>Contact Type</label>
+                                <select id="f-contact-type">
+                                    <option value="streamer">Streamer</option>
+                                    <option value="vc">VC</option>
+                                    <option value="outlet">Outlet</option>
+                                </select>
+                            </div>
+                            <div class="fg">
+                                <label>Contact ID</label>
+                                <input id="f-contact-id" placeholder="UUID of contact">
+                            </div>
+                        </div>
+                        <div class="fg">
+                            <label>Deal Type</label>
+                            <select id="f-deal-type">
+                                <option value="investment">Investment</option>
+                                <option value="sponsorship">Sponsorship</option>
+                                <option value="partnership">Partnership</option>
+                            </select>
+                        </div>
+                        <div class="fg">
+                            <label>Title</label>
+                            <input id="f-title" required placeholder="Deal title">
+                        </div>
+                        <div class="form-row">
+                            <div class="fg">
+                                <label>Value ($)</label>
+                                <input id="f-value" type="number" min="0" step="0.01" placeholder="0.00">
+                            </div>
+                            <div class="fg">
+                                <label>Stage</label>
+                                <select id="f-stage">
+                                    <option value="interested">Interested</option>
+                                    <option value="due_diligence">Due Diligence</option>
+                                    <option value="term_sheet">Term Sheet</option>
+                                    <option value="closing">Closing</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="fg">
+                            <label>Notes</label>
+                            <textarea id="f-notes" placeholder="Initial notes..."></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn" id="create-btn">Create Deal</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deal Detail Modal -->
+    <div class="modal-overlay" id="deal-overlay" onclick="if(event.target===this)closeModal()">
+        <div class="modal">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <h2 id="modal-title"></h2>
+            <div id="modal-info" class="info-grid"></div>
+            <div class="stage-row">
+                <label style="font-size:0.78rem;color:var(--text-muted);white-space:nowrap">Change Stage:</label>
+                <select id="modal-stage">
+                    <option value="interested">Interested</option>
+                    <option value="due_diligence">Due Diligence</option>
+                    <option value="term_sheet">Term Sheet</option>
+                    <option value="closing">Closing</option>
+                    <option value="closed_won">Closed Won</option>
+                    <option value="closed_lost">Closed Lost</option>
+                </select>
+                <button class="act-btn primary" onclick="changeStage()">Update</button>
+            </div>
+            <div class="note-row">
+                <input id="modal-note" placeholder="Add a note...">
+                <button class="act-btn" onclick="changeStage()">Save with Note</button>
+            </div>
+            <div id="modal-notes-list" style="margin-top:12px"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    const authH = () => ({ 'Content-Type': 'application/json' });
+    const STAGES = ['interested','due_diligence','term_sheet','closing','closed_won','closed_lost'];
+    const STAGE_LABELS = { interested: 'Interested', due_diligence: 'Due Diligence', term_sheet: 'Term Sheet', closing: 'Closing', closed_won: 'Closed Won', closed_lost: 'Closed Lost' };
+    const STAGE_COLORS = { interested: 'var(--accent)', due_diligence: 'var(--cyan)', term_sheet: 'var(--orange)', closing: 'var(--accent-light)', closed_won: 'var(--green)', closed_lost: 'var(--red)' };
+    let currentDealId = null;
+
+    let _tt;
+    function showToast(msg, isError = false) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.borderColor = isError ? 'var(--red)' : 'var(--green)';
+        t.classList.add('show');
+        clearTimeout(_tt);
+        _tt = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function switchTab(name) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+        document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+        if (name === 'list') loadDealsList();
+        if (name === 'pipeline') loadPipeline();
+    }
+
+    function fmtMoney(v) { return v != null ? '$' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '--'; }
+    function stageBadge(s) {
+        const colors = { interested: 'accent', due_diligence: 'cyan', term_sheet: 'orange', closing: 'accent', closed_won: 'green', closed_lost: 'red' };
+        return `<span class="badge badge-${colors[s] || 'accent'}">${STAGE_LABELS[s] || s}</span>`;
+    }
+    function typeBadge(t) {
+        return `<span class="deal-card dc-type dt-${t || 'investment'}">${t || '--'}</span>`;
+    }
+
+    async function loadSummary() {
+        try {
+            const res = await fetch('/api/deals/summary', { headers: authH() });
+            const d = await res.json();
+            document.getElementById('s-total').textContent = d.total_deals != null ? d.total_deals.toLocaleString() : '--';
+            document.getElementById('s-value').textContent = fmtMoney(d.total_value);
+            document.getElementById('s-winrate').textContent = d.win_rate != null ? (d.win_rate * 100).toFixed(1) + '%' : '--';
+        } catch(e) { console.error('Failed to load summary', e); }
+    }
+
+    async function loadPipeline() {
+        try {
+            const res = await fetch('/api/deals/pipeline', { headers: authH() });
+            const d = await res.json();
+            const pipeline = d.stages || d.pipeline || d;
+            const el = document.getElementById('kanban');
+            el.innerHTML = STAGES.map(stage => {
+                const deals = (pipeline[stage] || []);
+                return `<div class="pipe-col">
+                    <div class="pipe-col-header">
+                        <span style="color:${STAGE_COLORS[stage]}">${STAGE_LABELS[stage]}</span>
+                        <span class="pipe-count">${deals.length}</span>
+                    </div>
+                    ${deals.map(deal => `
+                        <div class="deal-card" onclick="viewDeal('${deal.id}')">
+                            <div class="dc-type dt-${deal.deal_type || 'investment'}">${deal.deal_type || ''}</div>
+                            <div class="dc-title">${deal.title || 'Untitled'}</div>
+                            <div class="dc-contact">${deal.contact_name || ''}</div>
+                            <div class="dc-value">${fmtMoney(deal.value)}</div>
+                        </div>
+                    `).join('')}
+                </div>`;
+            }).join('');
+        } catch(e) { document.getElementById('kanban').innerHTML = '<div class="loading">Failed to load pipeline</div>'; }
+    }
+
+    async function loadDealsList() {
+        const stage = document.getElementById('filter-stage').value;
+        const type = document.getElementById('filter-type').value;
+        let url = '/api/deals/?';
+        if (stage) url += `stage=${stage}&`;
+        if (type) url += `deal_type=${type}&`;
+        try {
+            const res = await fetch(url, { headers: authH() });
+            const data = await res.json();
+            const deals = Array.isArray(data) ? data : data.items || data.deals || [];
+            if (!deals.length) { document.getElementById('deals-table').innerHTML = '<div class="loading">No deals found</div>'; return; }
+            document.getElementById('deals-table').innerHTML = `<table>
+                <thead><tr><th>Title</th><th>Type</th><th>Contact</th><th>Stage</th><th>Value</th><th>Created</th></tr></thead>
+                <tbody>${deals.map(d => `<tr style="cursor:pointer" onclick="viewDeal('${d.id}')">
+                    <td style="font-weight:600">${d.title || '--'}</td>
+                    <td>${typeBadge(d.deal_type)}</td>
+                    <td>${d.contact_name || '--'}</td>
+                    <td>${stageBadge(d.stage)}</td>
+                    <td class="mono" style="color:var(--green)">${fmtMoney(d.value)}</td>
+                    <td style="font-size:0.78rem;color:var(--text-muted)">${d.created_at ? new Date(d.created_at).toLocaleDateString() : '--'}</td>
+                </tr>`).join('')}</tbody></table>`;
+        } catch(e) { document.getElementById('deals-table').innerHTML = '<div class="loading">Failed to load</div>'; }
+    }
+
+    async function viewDeal(id) {
+        currentDealId = id;
+        try {
+            const res = await fetch(`/api/deals/${id}`, { headers: authH() });
+            const d = await res.json();
+            document.getElementById('modal-title').textContent = d.title || 'Deal';
+            document.getElementById('modal-stage').value = d.stage || 'interested';
+            document.getElementById('modal-info').innerHTML = `
+                <dl>
+                    <dt>Type</dt><dd>${d.deal_type || '--'}</dd>
+                    <dt>Contact</dt><dd>${d.contact_name || d.contact_id || '--'}</dd>
+                    <dt>Value</dt><dd style="color:var(--green);font-family:'JetBrains Mono',monospace">${fmtMoney(d.value)}</dd>
+                    <dt>Stage</dt><dd>${stageBadge(d.stage)}</dd>
+                    <dt>Created</dt><dd>${d.created_at ? new Date(d.created_at).toLocaleString() : '--'}</dd>
+                    <dt>Updated</dt><dd>${d.updated_at ? new Date(d.updated_at).toLocaleString() : '--'}</dd>
+                </dl>`;
+            const notes = d.notes || d.activity || [];
+            document.getElementById('modal-notes-list').innerHTML = Array.isArray(notes) ? notes.map(n => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;color:var(--text-secondary)">${typeof n === 'string' ? n : (n.text || n.note || JSON.stringify(n))}</div>`).join('') : (typeof notes === 'string' ? `<div style="font-size:0.82rem;color:var(--text-secondary)">${notes}</div>` : '');
+            document.getElementById('modal-note').value = '';
+            document.getElementById('deal-overlay').classList.add('active');
+        } catch(e) { showToast('Failed to load deal', true); }
+    }
+
+    function closeModal() { document.getElementById('deal-overlay').classList.remove('active'); }
+
+    async function changeStage() {
+        if (!currentDealId) return;
+        const newStage = document.getElementById('modal-stage').value;
+        const notes = document.getElementById('modal-note').value;
+        try {
+            const res = await fetch(`/api/deals/${currentDealId}/stage`, {
+                method: 'POST', headers: authH(),
+                body: JSON.stringify({ new_stage: newStage, notes: notes || undefined })
+            });
+            if (!res.ok) throw new Error('Stage change failed');
+            showToast('Deal updated');
+            closeModal();
+            loadPipeline();
+            loadSummary();
+        } catch(e) { showToast(e.message, true); }
+    }
+
+    async function loadCompanies() {
+        try {
+            const res = await fetch('/api/companies', { headers: authH() });
+            const data = await res.json();
+            const sel = document.getElementById('f-company');
+            (Array.isArray(data) ? data : data.companies || []).forEach(c => {
+                sel.innerHTML += `<option value="${c.id}">${c.company_name || c.name}</option>`;
+            });
+        } catch(e) { console.error('Failed to load companies', e); }
+    }
+
+    async function createDeal(e) {
+        e.preventDefault();
+        const btn = document.getElementById('create-btn');
+        btn.disabled = true; btn.textContent = 'Creating...';
+        try {
+            const body = {
+                company_id: document.getElementById('f-company').value,
+                contact_type: document.getElementById('f-contact-type').value,
+                contact_id: document.getElementById('f-contact-id').value || undefined,
+                deal_type: document.getElementById('f-deal-type').value,
+                title: document.getElementById('f-title').value,
+                value: parseFloat(document.getElementById('f-value').value) || 0,
+                stage: document.getElementById('f-stage').value,
+                notes: document.getElementById('f-notes').value || undefined
+            };
+            const res = await fetch('/api/deals/', { method: 'POST', headers: authH(), body: JSON.stringify(body) });
+            if (!res.ok) throw new Error((await res.json()).detail || 'Create failed');
+            showToast('Deal created');
+            document.getElementById('deal-form').reset();
+            switchTab('pipeline');
+            loadSummary();
+        } catch(e) { showToast(e.message, true); }
+        finally { btn.disabled = false; btn.textContent = 'Create Deal'; }
+    }
+
+    // Init
+    loadSummary();
+    loadPipeline();
+    loadCompanies();
+    </script>
+</body>
+</html>

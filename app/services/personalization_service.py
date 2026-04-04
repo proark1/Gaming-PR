@@ -44,15 +44,35 @@ def _build_prompt(
     contact_type: str,
     contact_profile: str,
     is_follow_up: bool = False,
+    follow_up_context: str = None,
 ) -> str:
     focus_field = FOCUS_FIELD_LABELS.get(contact_type, "specific interests")
     follow_up_note = ""
     if is_follow_up:
-        follow_up_note = (
-            "\n\nIMPORTANT: This is a follow-up message. The contact did not respond to the "
-            "initial outreach. Write a brief, polite follow-up that references the original "
-            "pitch without repeating it verbatim. Keep it shorter than the original."
-        )
+        if follow_up_context == "opened_no_reply":
+            follow_up_note = (
+                "\n\nIMPORTANT: This is a follow-up. They OPENED the previous email but didn't reply. "
+                "Write a shorter, more direct follow-up. They saw the pitch — ask if they have questions "
+                "or would like to discuss. Be concise and action-oriented."
+            )
+        elif follow_up_context == "clicked_no_reply":
+            follow_up_note = (
+                "\n\nIMPORTANT: This is a follow-up. They CLICKED a link in the previous email, showing "
+                "strong interest, but didn't reply. Reference what they likely saw (trailer, pitch deck, "
+                "media kit). Ask directly for next steps. Be brief and enthusiastic."
+            )
+        elif follow_up_context == "never_opened":
+            follow_up_note = (
+                "\n\nIMPORTANT: This is a follow-up. They NEVER OPENED the previous email. "
+                "Write a completely NEW, more compelling subject line. Keep the body very short "
+                "(2-3 sentences max). Try a different angle to grab their attention."
+            )
+        else:
+            follow_up_note = (
+                "\n\nIMPORTANT: This is a follow-up message. The contact did not respond to the "
+                "initial outreach. Write a brief, polite follow-up that references the original "
+                "pitch without repeating it verbatim. Keep it shorter than the original."
+            )
     return f"""You are helping a game developer write personalized outreach to a {contact_type}.
 
 Base message (in {source_language}):
@@ -78,6 +98,7 @@ def personalize_with_claude(
     contact_type: str,
     contact_profile: str,
     is_follow_up: bool = False,
+    follow_up_context: str = None,
 ) -> tuple[str, str]:
     """Call Claude API to adapt base message for a specific contact.
     Returns (personalized_title, personalized_body) in source_language."""
@@ -88,6 +109,7 @@ def personalize_with_claude(
         prompt = _build_prompt(
             base_title, base_body, source_language, contact_name, contact_type, contact_profile,
             is_follow_up=is_follow_up,
+            follow_up_context=follow_up_context,
         )
 
         response = client.messages.create(
@@ -127,6 +149,7 @@ def personalize_with_claude(
 def personalize_and_translate(
     db: Session, personalization: MessagePersonalization, message: Message,
     is_follow_up: bool = False,
+    follow_up_context: str = None,
 ) -> None:
     """Run full pipeline: Claude personalization → Google Translate → save."""
     try:
@@ -138,6 +161,7 @@ def personalize_and_translate(
             contact_type=personalization.target_type,
             contact_profile=_get_contact_profile(db, personalization),
             is_follow_up=is_follow_up,
+            follow_up_context=follow_up_context,
         )
 
         # Translate to contact's language if different from source
