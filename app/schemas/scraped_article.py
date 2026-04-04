@@ -32,6 +32,7 @@ class ScrapedArticleResponse(BaseModel):
     article_type: Optional[str] = None
     game_titles: Optional[list] = None
     platforms: Optional[list] = None
+    streamers_mentioned: Optional[list] = None
     meta_description: Optional[str] = None
     og_title: Optional[str] = None
     og_description: Optional[str] = None
@@ -59,6 +60,7 @@ class ScrapedArticleListResponse(BaseModel):
     article_type: Optional[str] = None
     tags: Optional[list] = None
     platforms: Optional[list] = None
+    streamers_mentioned: Optional[list] = None
     is_full_content: bool = False
     word_count: Optional[int] = None
     scraped_at: datetime

@@ -60,6 +60,7 @@ def export_json(
             "tags": a.tags,
             "categories": a.categories,
             "platforms": a.platforms,
+            "streamers_mentioned": a.streamers_mentioned,
             "game_titles": a.game_titles,
             "featured_image_url": a.featured_image_url,
             "outlet_id": a.outlet_id,
@@ -94,8 +95,8 @@ def export_csv(
     # Header
     writer.writerow([
         "id", "title", "url", "author", "published_at", "language",
-        "article_type", "word_count", "tags", "platforms", "game_titles",
-        "featured_image_url", "outlet_id", "scraped_at",
+        "article_type", "word_count", "tags", "platforms", "streamers_mentioned",
+        "game_titles", "featured_image_url", "outlet_id", "scraped_at",
     ])
 
     for a in articles:
@@ -104,6 +105,7 @@ def export_csv(
             a.published_at.isoformat() if a.published_at else "",
             a.language, a.article_type or "", a.word_count or "",
             "|".join(a.tags or []), "|".join(a.platforms or []),
+            "|".join(s["name"] for s in (a.streamers_mentioned or []) if isinstance(s, dict)),
             "|".join(a.game_titles or []),
             a.featured_image_url or "", a.outlet_id,
             a.scraped_at.isoformat() if a.scraped_at else "",

@@ -95,6 +95,158 @@ GAMING_PLATFORMS = [
     "Retro", "Emulator",
 ]
 
+GAMING_STREAMERS = {
+    # FPS / Shooter streamers
+    "fps": [
+        "Shroud", "s1mple", "TenZ", "Tarik", "iiTzTimmy",
+        "DrDisrespect", "Summit1g", "fl0m", "aceu", "ShivFPS",
+        "Beaulo", "Pengu", "MacieJay", "noted", "Sinatraa",
+        "ScreaM", "kennyS", "ZywOo", "NiKo", "device",
+        "Wardell", "nAts", "Aspas", "Demon1",
+        "Stewie2K", "autimatic", "EliGE", "NAF", "twistzz",
+        "cadiaN", "blameF", "broky", "ropz", "rain",
+    ],
+    # Battle Royale streamers
+    "battle_royale": [
+        "Ninja", "NICKMERCS", "Tfue", "SypherPK", "Clix",
+        "Bugha", "Mongraal", "MrSavage", "Benjyfishy", "Stable Ronaldo",
+        "ImperialHal", "Genburten", "Verhulst", "NiceWigg", "Rogue",
+        "HisWattson", "Nokokopuffs", "Daltoosh", "Dropped", "Resultuh",
+        "Albralelie", "Zach Mazer", "Scump", "Aydan", "UnknownxArmy",
+        "Chappie", "Faide", "iitztimmy", "Euriece", "Lethamyr",
+    ],
+    # MOBA streamers
+    "moba": [
+        "Faker", "Tyler1", "Caedrel", "Caps", "TheBausffs",
+        "Doublelift", "Sneaky", "IWillDominate", "Jankos", "Rekkles",
+        "Bjergsen", "Imaqtpie", "Yassuo", "TF Blade", "Baus",
+        "Dopa", "ShowMaker", "Chovy", "Canyon", "Gumayusi",
+        "Zeus", "Keria", "BeryL", "Ruler", "Viper",
+        "Topson", "N0tail", "Puppey", "Arteezy", "Miracle",
+        "SumaiL", "ana", "Ceb", "JerAx", "Yatoro",
+        "Ammar", "Collapse", "Miposhka", "MATUMBAMAN", "MinD_ContRoL",
+    ],
+    # Variety / Just Chatting streamers
+    "variety": [
+        "xQc", "Kai Cenat", "HasanAbi", "Pokimane", "Ludwig",
+        "Amouranth", "Sodapoppin", "Mizkif", "Emiru", "Valkyrae",
+        "Disguised Toast", "Sykkuno", "Myth", "Lirik", "CohhCarnage",
+        "Northernlion", "Jerma985", "Asmongold", "Moistcr1tikal", "penguinz0",
+        "Trainwreckstv", "Rubius", "AuronPlay", "ibai", "TheGrefg",
+        "Gaules", "Loud Coringa", "CaseOh", "IShowSpeed", "KaiCenat",
+        "AdinRoss", "Sketch", "Fanum", "Jynxzi", "Ironmouse",
+        "CDawgVA", "Gigguk", "Nyanners", "Veibae", "Shylily",
+    ],
+    # RPG / MMO streamers
+    "rpg_mmo": [
+        "Asmongold", "Bellular", "Preach", "Maximum",
+        "Quin69", "Zizaran", "Mathil", "Empyrian",
+        "Alkaizer", "Steelmage", "Darkee", "Jungroan",
+        "Rich Campbell", "Pyromancer", "Scottzone", "ZeplaHQ",
+        "Limit Maximum", "Scripe", "Gingi", "Naowh",
+        "Josh Strife Hayes", "TheLazyPeon", "KiraTV", "Force Gaming",
+        "Fextralife", "LobosJr", "DistortionDave", "HappyHob",
+        "Otzdarva", "TrueVanguard", "Datto", "Aztecross",
+    ],
+    # Strategy / Simulation streamers
+    "strategy_sim": [
+        "Harstem", "Serral", "Maru", "Reynor", "Clem",
+        "Viper", "TheViper", "Hera", "DauT", "TaToH",
+        "Spiffing Brit", "Many A True Nerd", "quill18", "Arumba",
+        "Florryworry", "Feedbackgaming", "AlexTheRambler", "Drew Durnil",
+        "ISP", "Bokoen1", "Rimmy", "ambiguousamphibian",
+        "RTGame", "CallMeKevin", "DangerouslyFunny", "GrayStillPlays",
+        "LetMeExplainStudios", "Wirtual", "FatDino", "T90Official",
+    ],
+    # Fighting game streamers (FGC)
+    "fgc": [
+        "Maximilian Dood", "SonicFox", "MKLeo", "Hungrybox",
+        "Mang0", "Leffen", "Sparg0", "Tweek", "Light",
+        "BrianF", "JWong", "LTG", "Sajam", "TastySteve",
+        "Jiyuna", "Punk", "iDom", "MenaRD", "Tokido",
+        "Daigo", "Knee", "Arslan Ash", "JDCR", "Anakin",
+        "Riddles", "Dabuz", "Marss", "Zain", "aMSa",
+    ],
+    # Speedrunning streamers
+    "speedrunning": [
+        "Distortion2", "mitchriz", "Cheese", "Simply",
+        "SmallAnt", "PointCrow", "IndieTimmie", "EazySpeezy",
+        "Summoning Salt", "Karl Jobst", "AverageTrey", "Linkus7",
+        "Zallard1", "Darbian", "Kosmic", "Niftski",
+        "Dream", "Couriway", "Feinberg", "k4yfour",
+    ],
+    # Minecraft / Sandbox streamers
+    "sandbox": [
+        "Dream", "GeorgeNotFound", "Sapnap", "TommyInnit", "Tubbo",
+        "Ranboo", "Ph1LzA", "Technoblade", "Quackity", "Karl Jacobs",
+        "BadBoyHalo", "Skeppy", "CaptainSparklez", "EthosLab", "Grian",
+        "MumboJumbo", "GoodTimesWithScar", "Bdubs", "Hermitcraft",
+        "Pixlriffs", "ibxtoycat", "Wattles", "Iskall85",
+        "Wilbur Soot", "Slimecicle", "Foolish Gamers", "ConnorEatsPants",
+        "Purpled", "Hannahxxrose", "Punz", "Antfrost",
+    ],
+    # Horror / Survival streamers
+    "horror_survival": [
+        "Markiplier", "jacksepticeye", "CoryxKenshin", "8-BitRyan",
+        "Berleezy", "John Wolfe", "ManlyBadassHero", "Daz Games",
+        "FusionZGamer", "IGP", "Insym", "Daskerzanmanz",
+        "Psycho", "OhmWrecker", "H2ODelirious", "VanosGaming",
+        "BigJigglyPanda", "Terroriser", "Cartoonz", "BasicallyIDoWrk",
+    ],
+    # Racing / Sports game streamers
+    "racing_sports": [
+        "Wirtual", "Super GT", "Jimmy Broadbent", "Jardier",
+        "Matt Malone", "DashLane", "Nerd Out", "TheEleventhDiplomat",
+        "Lando Norris", "Max Verstappen", "Charles Leclerc",
+        "Castro1021", "Nick28T", "Bateson87", "RunTheFUTMarket",
+        "NepentheZ", "AA9Skillz", "Finch", "RTFM",
+    ],
+    # Content creators / YouTube gaming
+    "youtube_gaming": [
+        "PewDiePie", "MrBeast Gaming", "Jacksepticeye", "Markiplier",
+        "SSundee", "LazarBeam", "Muselk", "Fresh",
+        "Loserfruit", "CouRage", "TimTheTatman", "DrLupo",
+        "Dude Perfect Gaming", "Jelly", "Kwebbelkop", "Slogo",
+        "DanTDM", "PopularMMOs", "PrestonPlayz", "UnspeakableGaming",
+        "Typical Gamer", "Ali-A", "Lachlan", "BCC Trolling",
+        "TheRadBrad", "MKIceAndFire", "GamerBraves", "AngryJoeShow",
+        "Skill Up", "ACG", "gameranx", "Fextralife",
+    ],
+    # Esports casters / analysts
+    "esports_talent": [
+        "Phreak", "CaptainFlowers", "Medic", "Quickshot", "Sjokz",
+        "Machine", "Stunna", "Plat Chat", "Sideshow", "Bren",
+        "DDK", "Sadokist", "HenryG", "Bardolph", "Moses",
+        "Pansy", "Frankie Ward", "Freya", "Dash", "Ovilee",
+        "Tasteless", "Artosis", "Day9", "Grubby", "ToD",
+        "PiG", "Rotti", "Maynarde", "ZombieGrub", "Feardragon",
+    ],
+    # Japanese / Asian streamers
+    "asian": [
+        "Kuzuha", "Kanae", "Shibuya HAL", "stylishnoob", "SHAKA",
+        "ボドカ", "釈迦", "加藤純一", "もこう", "布団ちゃん",
+        "Pekora", "Marine", "Subaru", "Miko", "Suisei",
+        "Gura", "Mumei", "Fauna", "Kronii", "Biboo",
+        "Vox Akuma", "Mysta Rias", "Shu Yamino", "Ike Eveland",
+        "T1", "Gen.G", "DRX", "Deft", "Bang",
+    ],
+    # Spanish / Latin American streamers
+    "latam_spanish": [
+        "ibai", "AuronPlay", "TheGrefg", "Rubius", "Vegetta777",
+        "Willyrex", "ElMariana", "JuanSGuarnizo", "Rivers_gg", "Spreen",
+        "Coscu", "Momo", "Lit Killah", "Luzu", "Fernanfloo",
+        "Windygirk", "JuegaGerman", "DED", "ElSpreen", "Roier",
+        "Quackity", "Carreraaa", "IlloJuan", "Reventxz", "Werlyb",
+    ],
+    # Portuguese / Brazilian streamers
+    "brazilian": [
+        "Gaules", "Loud Coringa", "Alanzoka", "Cellbit", "Felps",
+        "Bagi", "Liminha", "Forever", "Flakes Power", "YoDa",
+        "BrTT", "Baiano", "Rakin", "Casimito", "MortaL",
+        "Technosh", "Kami", "Gordox", "Robin", "Calango",
+    ],
+}
+
 ARTICLE_TYPES = {
     "review": ["review", "análisis", "test", "レビュー", "обзор", "critique", "reseña"],
     "preview": ["preview", "avance", "プレビュー", "превью", "aperçu"],
@@ -182,6 +334,7 @@ def extract_full_article(url: str, timeout: int = 20, language: str = "en",
         "article_type": None,
         "game_titles": [],
         "platforms": [],
+        "streamers_mentioned": [],
         "meta_title": None,
         "meta_description": None,
         "og_title": None,
@@ -253,6 +406,7 @@ def extract_full_article(url: str, timeout: int = 20, language: str = "en",
     _extract_tags_and_categories(soup, result)
     _detect_article_type(result)
     _detect_platforms(result)
+    _detect_streamers(result)
     _detect_game_titles(soup, result)
     _extract_engagement(soup, result)
 
@@ -700,6 +854,28 @@ def _detect_platforms(result: dict):
             platforms.add(platform)
 
     result["platforms"] = list(platforms)
+
+
+def _detect_streamers(result: dict):
+    """Detect gaming streamers/content creators mentioned in the article."""
+    searchable = " ".join([
+        result.get("title") or "",
+        result.get("full_body_text") or "",
+        " ".join(result.get("tags", [])),
+    ])
+
+    found = {}  # {name: category}
+    for category, names in GAMING_STREAMERS.items():
+        for name in names:
+            # Only match names with 3+ chars to avoid false positives on very short names
+            if len(name) < 3:
+                continue
+            if name.lower() in searchable.lower():
+                found[name] = category
+
+    result["streamers_mentioned"] = [
+        {"name": name, "category": cat} for name, cat in found.items()
+    ]
 
 
 def _detect_game_titles(soup: BeautifulSoup, result: dict):

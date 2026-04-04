@@ -48,6 +48,7 @@ class ScrapedArticle(Base):
     article_type = Column(String(100), nullable=True)  # news, review, preview, guide, opinion, interview
     game_titles = Column(JSON, nullable=True, default=list)  # games mentioned
     platforms = Column(JSON, nullable=True, default=list)  # ["PS5", "PC", "Xbox"]
+    streamers_mentioned = Column(JSON, nullable=True, default=list)  # [{name, category}]
 
     # SEO & social metadata
     meta_title = Column(String(1000), nullable=True)

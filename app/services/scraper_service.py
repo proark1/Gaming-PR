@@ -598,6 +598,7 @@ def _apply_full_content(article: ScrapedArticle, data: dict):
     article.article_type = data.get("article_type")
     article.game_titles = data.get("game_titles", [])
     article.platforms = data.get("platforms", [])
+    article.streamers_mentioned = data.get("streamers_mentioned", [])
     article.comment_count = data.get("comment_count")
     article.rating_score = data.get("rating_score")
     article.rating_max = data.get("rating_max")
