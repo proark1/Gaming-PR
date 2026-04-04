@@ -29,7 +29,15 @@ class GamingOutlet(Base):
     social_twitter = Column(String(500), nullable=True)
     social_facebook = Column(String(500), nullable=True)
     social_youtube = Column(String(500), nullable=True)
+    social_linkedin = Column(String(500), nullable=True)
+    social_instagram = Column(String(500), nullable=True)
+    social_tiktok = Column(String(500), nullable=True)
+    social_discord = Column(String(500), nullable=True)
+    social_twitch = Column(String(500), nullable=True)
     contact_email = Column(String(500), nullable=True)
+    contact_phone = Column(String(100), nullable=True)
+    contact_page_url = Column(String(2048), nullable=True)
+    contact_form_url = Column(String(2048), nullable=True)
 
     # Scraping state
     last_scraped_at = Column(DateTime, nullable=True)
@@ -40,6 +48,9 @@ class GamingOutlet(Base):
 
     # Flexible config per outlet
     scraper_config = Column(JSON, nullable=True, default=dict)
+
+    # Outreach profile (JSON string compiled from structured fields)
+    outreach_profile = Column(Text, nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

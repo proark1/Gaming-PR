@@ -15,6 +15,7 @@ from app.schemas.email import (
     EmailStatsResponse,
 )
 from app.services import email_service
+from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/email", tags=["Email"])
 
@@ -22,7 +23,7 @@ router = APIRouter(prefix="/api/email", tags=["Email"])
 # ── Domain Endpoints ──
 
 @router.post("/domains", response_model=DomainResponse, status_code=201)
-def add_domain(payload: DomainCreate, db: Session = Depends(get_db)):
+def add_domain(payload: DomainCreate, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     """Connect a domain for email sending. Returns DNS records to configure."""
     try:
         domain = email_service.add_domain(
@@ -52,7 +53,7 @@ def get_domain(domain_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/domains/{domain_id}/verify", response_model=DomainVerifyResponse)
-def verify_domain(domain_id: int, db: Session = Depends(get_db)):
+def verify_domain(domain_id: int, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     """Trigger DNS verification for a connected domain."""
     try:
         return email_service.verify_domain(db, domain_id)
@@ -63,7 +64,7 @@ def verify_domain(domain_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/domains/{domain_id}", status_code=204)
-def delete_domain(domain_id: int, db: Session = Depends(get_db)):
+def delete_domain(domain_id: int, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     """Remove a connected domain."""
     if not email_service.delete_domain(db, domain_id):
         raise HTTPException(status_code=404, detail="Domain not found")
@@ -72,7 +73,7 @@ def delete_domain(domain_id: int, db: Session = Depends(get_db)):
 # ── Email Endpoints ──
 
 @router.post("/send", response_model=EmailResponse, status_code=201)
-def send_email(payload: EmailSend, db: Session = Depends(get_db)):
+def send_email(payload: EmailSend, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     """Send an email through a verified domain."""
     try:
         return email_service.send_email(
@@ -96,7 +97,7 @@ def send_email(payload: EmailSend, db: Session = Depends(get_db)):
 
 
 @router.post("/send/batch", response_model=list[EmailResponse], status_code=201)
-def send_batch(payload: EmailBatchSend, db: Session = Depends(get_db)):
+def send_batch(payload: EmailBatchSend, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     """Send a batch of up to 100 emails."""
     try:
         email_dicts = [e.model_dump() for e in payload.emails]

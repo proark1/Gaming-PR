@@ -3,19 +3,30 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import FastAPI
+import os as _os
+
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import SUPPORTED_LANGUAGES, settings
 from app.database import Base, engine, SessionLocal
-from app.routers import articles, outlets, scraper, translations
+from app.routers import articles, outlets, scraper, translations, messages
+from app.models.personalization import MessagePersonalization  # ensures table is created
 from app.routers.monitoring import router as monitoring_router
 from app.routers.webhooks import router as webhooks_router
 from app.routers.export import router as export_router
 from app.routers.websocket import router as websocket_router
 from app.routers.email import router as email_router
+from app.routers.auth import router as auth_router
+from app.routers.investors import router as investors_router
+from app.routers.streamers import router as streamers_router
 from app.seed.outlets import seed_outlets
+from app.seed.investors import seed_investors
+from app.seed.streamers import seed_streamers
+from app.services.auth_service import seed_admin_user
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -60,22 +71,113 @@ def scheduled_retry_queue():
         db.close()
 
 
+def _auto_migrate_columns():
+    """Add missing columns to existing tables (safe for both SQLite and PostgreSQL)."""
+    from sqlalchemy import inspect, text
+    inspector = inspect(engine)
+    migrations = [
+        ("gaming_outlets", "contact_email", "VARCHAR(500)"),
+        ("gaming_outlets", "contact_phone", "VARCHAR(100)"),
+        ("gaming_outlets", "contact_page_url", "VARCHAR(2048)"),
+        ("gaming_outlets", "contact_form_url", "VARCHAR(2048)"),
+        ("gaming_outlets", "social_linkedin", "VARCHAR(500)"),
+        ("gaming_outlets", "social_instagram", "VARCHAR(500)"),
+        ("gaming_outlets", "social_tiktok", "VARCHAR(500)"),
+        ("gaming_outlets", "social_discord", "VARCHAR(500)"),
+        ("gaming_outlets", "social_twitch", "VARCHAR(500)"),
+        ("users", "is_admin", "BOOLEAN DEFAULT FALSE"),
+        ("gaming_outlets", "outreach_profile", "TEXT"),
+        ("streamers", "outreach_profile", "TEXT"),
+        ("gaming_investors", "outreach_profile", "TEXT"),
+    ]
+    with engine.connect() as conn:
+        # Set a short lock timeout only for this migration connection so ALTER TABLE
+        # doesn't hang indefinitely waiting for locks held by a concurrent process.
+        # Applies only to this connection — normal app connections are unaffected.
+        is_pg = not settings.DATABASE_URL.startswith("sqlite")
+        if is_pg:
+            try:
+                conn.execute(text("SET lock_timeout = '5000ms'"))
+            except Exception:
+                pass
+
+        for table, column, col_type in migrations:
+            if table not in inspector.get_table_names():
+                continue
+            existing = [c["name"] for c in inspector.get_columns(table)]
+            if column not in existing:
+                try:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+                    conn.commit()
+                    logger.info(f"Migrated: added {table}.{column}")
+                except Exception as e:
+                    logger.warning(f"Migration skip {table}.{column}: {e}")
+
+    # Widen INTEGER columns to BIGINT for fields that can exceed 2^31 (e.g. YouTube total views)
+    bigint_migrations = [
+        ("streamers", "youtube_total_views"),
+        ("streamers", "twitch_views_total"),
+        ("streamers", "total_followers"),
+        ("streamers", "estimated_monthly_reach"),
+    ]
+    with engine.connect() as conn:
+        for table, column in bigint_migrations:
+            if table not in inspector.get_table_names():
+                continue
+            cols = {c["name"]: c for c in inspector.get_columns(table)}
+            if column in cols and str(cols[column]["type"]) == "INTEGER":
+                try:
+                    conn.execute(text(f"ALTER TABLE {table} ALTER COLUMN {column} TYPE BIGINT"))
+                    conn.commit()
+                    logger.info(f"Migrated: changed {table}.{column} to BIGINT")
+                except Exception as e:
+                    logger.warning(f"Migration skip {table}.{column} type change: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    logger.info("Startup: creating tables...")
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Startup: tables ready.")
+    except Exception as e:
+        logger.error(f"Startup: create_all failed (will retry on next deploy): {e}")
+
+    logger.info("Startup: running column migrations...")
+    try:
+        _auto_migrate_columns()
+        logger.info("Startup: column migrations complete.")
+    except Exception as e:
+        logger.error(f"Startup: migrations failed (will retry on next deploy): {e}")
+
+    logger.info("Startup: seeding database...")
     db = SessionLocal()
     try:
-        added = seed_outlets(db)
-        logger.info(f"Database initialized. {added} new outlets seeded.")
+        outlets_added = seed_outlets(db)
+        investors_added = seed_investors(db)
+        streamers_added = seed_streamers(db)
+        logger.info(
+            f"Database initialized. "
+            f"{outlets_added} outlets, {investors_added} investors, "
+            f"{streamers_added} streamers seeded."
+        )
+        admin = seed_admin_user(db, email="assad.dar@gmail.com", username="assad_dar")
+        if admin:
+            logger.info(f"Admin user ready: {admin.email} (id={admin.id})")
+    except Exception as e:
+        logger.error(f"Startup: seeding failed: {e}")
     finally:
         db.close()
 
+    from datetime import datetime, timedelta, timezone as tz
+    first_scrape = datetime.now(tz.utc) + timedelta(minutes=settings.SCRAPE_INTERVAL_MINUTES)
     scheduler.add_job(
         scheduled_scrape,
         "interval",
         minutes=settings.SCRAPE_INTERVAL_MINUTES,
         id="auto_scrape",
         replace_existing=True,
+        next_run_time=first_scrape,
     )
 
     # Retry queue runs every 5 minutes
@@ -89,6 +191,8 @@ async def lifespan(app: FastAPI):
         )
 
     scheduler.start()
+    from app import scheduler_ref
+    scheduler_ref.scheduler = scheduler
     logger.info(
         f"Scheduler started. Scraping every {settings.SCRAPE_INTERVAL_MINUTES} minutes. "
         f"Adaptive scheduling: {'ON' if settings.ENABLE_ADAPTIVE_SCHEDULING else 'OFF'}. "
@@ -107,8 +211,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Gaming PR Platform",
     description=(
-        "The world's most advanced gaming news scraper. "
-        "Scrapes 80+ outlets across 10 languages with async concurrency, "
+        "The world's most advanced gaming industry scraper. "
+        "Scrapes 80+ news outlets, 25+ gaming VCs, and 30+ gaming streamers "
+        "across 10 languages with async concurrency, "
         "Playwright browser fallback, stealth headers, circuit breakers, "
         "adaptive scheduling, retry queues, content change tracking, "
         "WebSocket live feed, webhook notifications, and bulk export. "
@@ -118,13 +223,37 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_cors_origins = _os.environ.get("CORS_ORIGINS", "").split(",")
+_cors_origins = [o.strip() for o in _cors_origins if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_origins or ["*"],
+    allow_credentials=bool(_cors_origins),
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled error on {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
 
 app.include_router(articles.router)
 app.include_router(translations.router)
@@ -135,12 +264,104 @@ app.include_router(webhooks_router)
 app.include_router(export_router)
 app.include_router(websocket_router)
 app.include_router(email_router)
+app.include_router(auth_router)
+app.include_router(investors_router)
+app.include_router(streamers_router)
+app.include_router(messages.router)
+
+# Serve shared static assets (nav.js, etc.)
+_static_dir = Path(__file__).parent / "app" / "static"
+app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+
+
+def _serve_page(filename: str):
+    html_path = _static_dir / filename
+    return HTMLResponse(content=html_path.read_text(), status_code=200)
 
 
 @app.get("/", response_class=HTMLResponse)
 def landing_page():
-    html_path = Path(__file__).parent / "app" / "static" / "landing.html"
-    return HTMLResponse(content=html_path.read_text(), status_code=200)
+    return _serve_page("landing.html")
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard_page():
+    return _serve_page("dashboard.html")
+
+
+@app.get("/articles", response_class=HTMLResponse)
+def articles_page():
+    return _serve_page("articles.html")
+
+
+@app.get("/outlets", response_class=HTMLResponse)
+def outlets_page():
+    return _serve_page("outlets.html")
+
+
+@app.get("/streamers", response_class=HTMLResponse)
+def streamers_page():
+    return _serve_page("streamers.html")
+
+
+@app.get("/vcs", response_class=HTMLResponse)
+def vcs_page():
+    return _serve_page("vcs.html")
+
+
+@app.get("/webhooks", response_class=HTMLResponse)
+def webhooks_page():
+    return _serve_page("webhooks.html")
+
+
+@app.get("/export", response_class=HTMLResponse)
+def export_page():
+    return _serve_page("export.html")
+
+
+@app.get("/emails", response_class=HTMLResponse)
+def emails_page():
+    return _serve_page("emails.html")
+
+
+@app.get("/scraper", response_class=HTMLResponse)
+def scraper_page():
+    return _serve_page("scraper.html")
+
+
+@app.get("/feed", response_class=HTMLResponse)
+def feed_page():
+    return _serve_page("feed.html")
+
+
+@app.get("/manage/articles", response_class=HTMLResponse)
+def manage_articles_page():
+    return _serve_page("manage-articles.html")
+
+
+@app.get("/manage/messages", response_class=HTMLResponse)
+def manage_messages_page():
+    return _serve_page("manage-messages.html")
+
+
+@app.get("/message-translations", response_class=HTMLResponse)
+def message_translations_page():
+    return _serve_page("message-translations.html")
+
+
+@app.get("/individual-messages", response_class=HTMLResponse)
+def individual_messages_page():
+    return _serve_page("individual-messages.html")
+
+
+@app.get("/translations", response_class=HTMLResponse)
+def translations_page():
+    return _serve_page("translations.html")
+
+
+@app.get("/profile", response_class=HTMLResponse)
+def profile_page():
+    return _serve_page("profile.html")
 
 
 @app.get("/health")

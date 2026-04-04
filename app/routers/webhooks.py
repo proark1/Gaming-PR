@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.webhook import Webhook
+from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
 
@@ -39,8 +40,11 @@ class WebhookResponse(BaseModel):
 
 
 @router.post("/", response_model=WebhookResponse)
-def create_webhook(data: WebhookCreate, db: Session = Depends(get_db)):
+def create_webhook(data: WebhookCreate, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     """Register a new webhook."""
+    from app.utils.url_safety import is_safe_url
+    if not is_safe_url(data.url):
+        raise HTTPException(status_code=400, detail="Webhook URL is not allowed (targets internal or private network)")
     webhook = Webhook(
         name=data.name,
         url=data.url,
@@ -71,7 +75,7 @@ def get_webhook(webhook_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/{webhook_id}")
-def delete_webhook(webhook_id: int, db: Session = Depends(get_db)):
+def delete_webhook(webhook_id: int, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     webhook = db.query(Webhook).filter(Webhook.id == webhook_id).first()
     if not webhook:
         raise HTTPException(status_code=404, detail="Webhook not found")
@@ -81,7 +85,7 @@ def delete_webhook(webhook_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{webhook_id}/toggle")
-def toggle_webhook(webhook_id: int, db: Session = Depends(get_db)):
+def toggle_webhook(webhook_id: int, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     webhook = db.query(Webhook).filter(Webhook.id == webhook_id).first()
     if not webhook:
         raise HTTPException(status_code=404, detail="Webhook not found")
@@ -91,7 +95,7 @@ def toggle_webhook(webhook_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{webhook_id}/test")
-def test_webhook(webhook_id: int, db: Session = Depends(get_db)):
+def test_webhook(webhook_id: int, db: Session = Depends(get_db), _user=Depends(get_current_user)):
     """Send a test event to a webhook."""
     webhook = db.query(Webhook).filter(Webhook.id == webhook_id).first()
     if not webhook:

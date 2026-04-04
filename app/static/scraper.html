@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scraper Console — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Page-specific styles (shared styles loaded by nav.js) */
+
+        /* Top bar */
+        .top-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 24px; }
+        .run-btn { padding: 10px 24px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: inherit; border: none; transition: all .2s; color: #fff; }
+        .run-btn-all { background: linear-gradient(135deg, var(--green), #16a34a); box-shadow: 0 4px 16px rgba(34,197,94,0.3); }
+        .run-btn-all:hover { box-shadow: 0 6px 20px rgba(34,197,94,0.4); }
+        .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .outlet-picker { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+        .outlet-picker select { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 9px 12px; border-radius: 8px; font-size: 0.84rem; font-family: inherit; min-width: 240px; cursor: pointer; }
+        .outlet-picker select option { background: var(--bg-primary); }
+        .run-btn-single { background: var(--accent); box-shadow: 0 3px 12px rgba(124,92,255,0.2); }
+
+        /* Layout */
+        .main-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+        @media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } }
+
+        /* Card overrides */
+        .card { margin-bottom: 20px; }
+        .card-header .act-btn { font-size: 0.72rem; }
+
+        /* Console log */
+        .console {
+            background: #0c0c12; border: 1px solid var(--border); border-radius: var(--radius);
+            font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; line-height: 1.7;
+            max-height: 340px; overflow-y: auto; padding: 14px; margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+        .console::-webkit-scrollbar { width: 5px; }
+        .console::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 4px; }
+        .log-line { display: flex; gap: 8px; padding: 1px 0; }
+        .log-time { color: var(--text-muted); flex-shrink: 0; min-width: 70px; }
+        .log-ok { color: var(--green); }
+        .log-err { color: var(--red); }
+        .log-warn { color: var(--orange); }
+        .log-info { color: var(--cyan); }
+        .log-dim { color: var(--text-muted); }
+
+        /* Jobs table */
+        tr.expandable { cursor: pointer; }
+
+        /* Job detail expand */
+        .job-detail { display: none; }
+        .job-detail.open { display: table-row; }
+        .job-detail td { padding: 0; }
+        .job-expand { padding: 12px 16px; background: rgba(10,10,15,0.5); }
+        .outlet-result { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid rgba(42,42,58,0.2); font-size: 0.78rem; }
+        .outlet-result:last-child { border-bottom: none; }
+        .outlet-result .or-name { flex: 1; color: var(--text-primary); font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .outlet-result .or-stat { color: var(--text-muted); min-width: 60px; text-align: center; }
+        .outlet-result .or-stat strong { color: var(--text-primary); }
+        .outlet-result .or-stat.ok strong { color: var(--green); }
+        .outlet-result .or-stat.err strong { color: var(--red); }
+
+        /* Sidebar panels */
+        .sb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
+        .sb-header { padding: 10px 14px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 0.82rem; display: flex; align-items: center; justify-content: space-between; }
+        .sb-body { padding: 12px 14px; font-size: 0.8rem; }
+        .sb-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+        .sb-label { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; font-weight: 600; }
+        .sb-val { font-weight: 700; }
+        .sb-val.green { color: var(--green); }
+        .sb-val.red { color: var(--red); }
+        .sb-val.accent { color: var(--accent-light); }
+        .sb-divider { border-top: 1px solid var(--border); margin: 8px 0; }
+
+        .act-btn { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary); padding: 5px 12px; border-radius: 6px; font-size: 0.72rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .act-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .act-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Auto-refresh indicator */
+        .refresh-indicator { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted); }
+        .refresh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .login-notice { text-align: center; padding: 10px; background: var(--orange-dim); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; color: var(--orange); font-size: 0.82rem; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="scraper"></script>
+
+    <div class="container">
+        <h1 id="pageTitle">Scraper Console</h1>
+        <div class="subtitle" id="pageSubtitle">Admin console — run scrapes, monitor activity, inspect per-outlet results</div>
+        <div id="login-notice" class="login-notice" style="display:none">Log in to run scrapes and manage the scraper.</div>
+
+        <!-- Top actions -->
+        <div class="top-bar">
+            <button class="run-btn run-btn-all" id="runAllBtn" onclick="runAll()">Scrape All Sources</button>
+            <div class="outlet-picker">
+                <select id="category-select" onchange="filterOutletPicker()" style="min-width:140px">
+                    <option value="">All Types</option>
+                    <option value="gaming_news">News Outlets</option>
+                    <option value="gaming_vc">Gaming VCs</option>
+                    <option value="gaming_streamer">Streamers</option>
+                </select>
+                <select id="outlet-select"><option value="">— Pick source to scrape —</option></select>
+                <button class="run-btn run-btn-single" id="runOneBtn" onclick="runOne()" disabled>Scrape Selected</button>
+            </div>
+            <div class="refresh-indicator"><span class="refresh-dot"></span> Auto-refresh 10s</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stat-grid" id="stats"></div>
+
+        <!-- Console log -->
+        <div class="card">
+            <div class="card-header">
+                <span id="console-heading">Activity Log</span>
+                <div class="console-header-meta">
+                    <span class="console-line-count" id="console-line-count">0 lines</span>
+                    <button class="act-btn" onclick="clearLog()">Clear</button>
+                </div>
+            </div>
+        </div>
+        <div class="console" id="console"></div>
+
+        <!-- Main area: jobs + sidebar -->
+        <div class="main-grid">
+            <div>
+                <!-- Job history -->
+                <div class="card">
+                    <div class="card-header">
+                        <span>Scrape Job History</span>
+                        <button class="act-btn" onclick="loadJobs()">Refresh</button>
+                    </div>
+                    <div id="jobs-table"><div class="loading"><div class="spinner"></div> Loading...</div></div>
+                </div>
+            </div>
+
+            <div>
+                <!-- Circuit breakers -->
+                <div class="sb-card">
+                    <div class="sb-header"><span>Circuit Breakers</span></div>
+                    <div class="sb-body" id="circuit-breakers"><div class="loading"><div class="spinner"></div></div></div>
+                </div>
+
+                <!-- Retry queue -->
+                <div class="sb-card">
+                    <div class="sb-header"><span>Retry Queue</span><button class="act-btn" id="retryBtn" onclick="processRetries()">Process</button></div>
+                    <div class="sb-body" id="retry-queue"><div class="loading"><div class="spinner"></div></div></div>
+                </div>
+
+                <!-- Scraper Interval -->
+                <div class="sb-card">
+                    <div class="sb-header"><span>Scrape Interval</span></div>
+                    <div class="sb-body">
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <input type="number" id="intervalInput" min="1" max="1440"
+                                   style="width:70px;background:var(--bg-input,#1a1a2e);border:1px solid var(--border);border-radius:4px;padding:4px 8px;color:var(--text);font-size:0.85rem"
+                                   placeholder="30">
+                            <span style="color:var(--text-muted);font-size:0.8rem">min</span>
+                            <button class="act-btn" onclick="saveInterval()">Save</button>
+                        </div>
+                        <div id="intervalStatus" style="font-size:0.75rem;color:var(--text-muted);margin-top:6px"></div>
+                    </div>
+                </div>
+
+                <!-- Schedule -->
+                <div class="sb-card">
+                    <div class="sb-header"><span>Scrape Schedule</span></div>
+                    <div class="sb-body" id="schedule" style="max-height:300px;overflow-y:auto"><div class="loading"><div class="spinner"></div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allOutlets = [];
+        let expandedJobs = new Set();
+
+        function authHeaders() { const t = gprGetToken(); return t ? { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' } : null; }
+        function isLoggedIn() { return !!gprGetToken(); }
+        function esc(s) { return typeof gprEsc === 'function' ? gprEsc(s) : (s || ''); }
+        function timeAgo(d) { return typeof gprTimeAgo === 'function' ? gprTimeAgo(d) : (d || 'N/A'); }
+        function statusBadge(s) {
+            const m = { completed: 'green', success: 'green', running: 'cyan', failed: 'red', error: 'red', queued: 'orange', pending: 'accent', circuit_open: 'orange' };
+            return `<span class="badge badge-${m[s]||'accent'}">${s}</span>`;
+        }
+        function nowTime() { return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+
+        // ─── Console Log ───
+        function updateLineCount() {
+            const con = document.getElementById('console');
+            const cnt = document.getElementById('console-line-count');
+            if (cnt) cnt.textContent = con.children.length + ' lines';
+        }
+        function log(msg, cls = '') {
+            const con = document.getElementById('console');
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerHTML = `<span class="log-time">${nowTime()}</span><span class="${cls}">${msg}</span>`;
+            con.appendChild(line);
+            con.scrollTop = con.scrollHeight;
+            // Cap at 200 lines
+            while (con.children.length > 200) con.firstChild.remove();
+            updateLineCount();
+        }
+        function clearLog() {
+            document.getElementById('console').innerHTML = '';
+            updateLineCount();
+            log('Console cleared', 'log-dim');
+        }
+
+        // Update category badge in console heading
+        function updateConsoleHeading() {
+            const cat = document.getElementById('category-select').value;
+            const catBadges = {gaming_news:'<span class="badge badge-cyan">News</span>', gaming_vc:'<span class="badge badge-green">VC</span>', gaming_streamer:'<span class="badge badge-orange">Streamer</span>'};
+            const heading = document.getElementById('console-heading');
+            if (heading) heading.innerHTML = 'Activity Log ' + (catBadges[cat] || '');
+        }
+
+        // ─── Load Outlets for picker ───
+        const CATEGORY_LABELS = { gaming_news: 'News', gaming_vc: 'VC', gaming_streamer: 'Streamer' };
+        async function loadOutletPicker() {
+            try {
+                const res = await fetch('/api/outlets/');
+                allOutlets = await res.json();
+                filterOutletPicker();
+            } catch (e) {}
+        }
+        function filterOutletPicker() {
+            const cat = document.getElementById('category-select').value;
+            const filtered = cat ? allOutlets.filter(o => o.category === cat) : allOutlets;
+            updateConsoleHeading();
+            loadStats();
+            loadJobs();
+            const sel = document.getElementById('outlet-select');
+            sel.innerHTML = `<option value="">— Pick source (${filtered.length} of ${allOutlets.length}) —</option>`;
+            // Group by category
+            const groups = {};
+            filtered.sort((a, b) => a.name.localeCompare(b.name)).forEach(o => {
+                const g = CATEGORY_LABELS[o.category] || o.category || 'Other';
+                if (!groups[g]) groups[g] = [];
+                groups[g].push(o);
+            });
+            for (const [label, outlets] of Object.entries(groups)) {
+                sel.innerHTML += `<optgroup label="${label}">` +
+                    outlets.map(o => `<option value="${o.id}">${esc(o.name)} (${o.language})</option>`).join('') +
+                    '</optgroup>';
+            }
+            sel.onchange = () => { document.getElementById('runOneBtn').disabled = !sel.value; };
+        }
+
+        // ─── Stats ───
+        async function loadStats() {
+            try {
+                const cat = document.getElementById('category-select').value;
+                const url = '/api/scraper/stats' + (cat ? '?category=' + encodeURIComponent(cat) : '');
+                const res = await fetch(url);
+                const s = await res.json();
+                const lastJob = (s.recent_jobs || [])[0];
+                const catOutlets = cat ? allOutlets.filter(o => o.category === cat) : allOutlets;
+                const outletCount = catOutlets.length;
+                const catLabel = {gaming_news:'News Outlets', gaming_vc:'VC Sources', gaming_streamer:'Streamers'}[cat] || 'Total Sources';
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-card"><div class="stat-label">Total Scraped</div><div class="stat-value" style="color:var(--accent-light)">${(s.total_articles||0).toLocaleString()}</div></div>
+                    <div class="stat-card"><div class="stat-label">Full Content</div><div class="stat-value" style="color:var(--green)">${(s.full_content_articles||0).toLocaleString()}</div><div class="stat-sub">${s.total_articles ? Math.round(s.full_content_articles/s.total_articles*100) : 0}%</div></div>
+                    <div class="stat-card"><div class="stat-label">${catLabel}</div><div class="stat-value" style="color:var(--cyan)">${outletCount}</div></div>
+                    <div class="stat-card"><div class="stat-label">Last Job</div><div class="stat-value" style="font-size:0.9rem;color:var(--text-primary)">${lastJob ? timeAgo(lastJob.started_at) : 'Never'}</div><div class="stat-sub">${lastJob ? lastJob.status : '-'}</div></div>
+                `;
+            } catch (e) {}
+        }
+
+        // ─── Run All ───
+        async function runAll() {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const btn = document.getElementById('runAllBtn');
+            btn.disabled = true; btn.textContent = 'Starting...';
+            log('Starting full scrape of all active sources (news, VCs, streamers)...', 'log-info');
+            try {
+                const res = await fetch('/api/scraper/run?run_async=true', { method: 'POST', headers: h });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed');
+                log('Full scrape queued successfully', 'log-ok');
+                btn.textContent = 'Queued!';
+                setTimeout(() => { btn.disabled = false; btn.textContent = 'Scrape All Outlets'; refreshAll(); }, 3000);
+            } catch (e) {
+                log('Failed to start scrape: ' + e.message, 'log-err');
+                btn.textContent = 'Error';
+                setTimeout(() => { btn.disabled = false; btn.textContent = 'Scrape All Outlets'; }, 3000);
+            }
+        }
+
+        // ─── Run Single ───
+        async function runOne() {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const sel = document.getElementById('outlet-select');
+            const outletId = sel.value;
+            if (!outletId) return;
+            const outletName = sel.options[sel.selectedIndex].text;
+            const btn = document.getElementById('runOneBtn');
+            btn.disabled = true; btn.textContent = 'Scraping...';
+            log(`Starting scrape for ${outletName}...`, 'log-info');
+            try {
+                const res = await fetch(`/api/scraper/run/${outletId}?extract_content=true&run_async=false`, { method: 'POST', headers: h });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed');
+                log(`${outletName}: ${data.status}`, data.status === 'success' || data.status === 'completed' ? 'log-ok' : 'log-warn');
+                if (data.articles_found !== undefined) log(`  Found: ${data.articles_found} | New: ${data.new_articles || 0} | Full: ${data.full_content_extracted || 0}`, 'log-dim');
+                if ((data.errors || []).length > 0) data.errors.forEach(e => log('  Error: ' + e, 'log-err'));
+                btn.textContent = 'Done!';
+                setTimeout(() => { btn.disabled = false; btn.textContent = 'Scrape Selected'; refreshAll(); }, 2000);
+            } catch (e) {
+                log(`Failed: ${e.message}`, 'log-err');
+                btn.textContent = 'Error';
+                setTimeout(() => { btn.disabled = false; btn.textContent = 'Scrape Selected'; }, 2000);
+            }
+        }
+
+        // ─── Jobs ───
+        async function loadJobs() {
+            const el = document.getElementById('jobs-table');
+            try {
+                const cat = document.getElementById('category-select').value;
+                const catOutletIds = cat ? new Set(allOutlets.filter(o => o.category === cat).map(o => o.id)) : null;
+                const res = await fetch('/api/scraper/jobs?limit=50');
+                let jobs = await res.json();
+
+                // Filter jobs by category
+                if (catOutletIds) {
+                    jobs = jobs.filter(j => {
+                        // scrape_all jobs (no outlet_id): include if they have outlet_results for this category
+                        if (!j.outlet_id) {
+                            return !j.outlet_results || j.outlet_results.some(r => catOutletIds.has(r.outlet_id));
+                        }
+                        return catOutletIds.has(j.outlet_id);
+                    });
+                    // Filter outlet_results breakdown to matching category
+                    jobs.forEach(j => {
+                        if (j.outlet_results) {
+                            j.outlet_results = j.outlet_results.filter(r => !r.outlet_id || catOutletIds.has(r.outlet_id));
+                        }
+                    });
+                }
+
+                if (!jobs.length) { el.innerHTML = `<div class="empty">No scrape jobs yet${cat ? ' for this category' : ''}. Click "Scrape All Sources" to start.</div>`; return; }
+                el.innerHTML = `<table>
+                    <thead><tr><th>ID</th><th>Type</th><th>Status</th><th>When</th><th>Duration</th><th>Outlets</th><th>Found</th><th>New</th><th>Full</th><th>Errors</th></tr></thead>
+                    <tbody>${jobs.map(j => {
+                        const hasDetails = j.outlet_results && j.outlet_results.length > 0;
+                        return `<tr class="${hasDetails ? 'expandable' : ''} status-${j.status}" onclick="${hasDetails ? `toggleJob(${j.id})` : ''}">
+                            <td style="font-family:'JetBrains Mono',monospace;font-size:0.74rem">#${j.id}${hasDetails ? ' &#9660;' : ''}</td>
+                            <td>${esc(j.job_type)}</td>
+                            <td>${statusBadge(j.status)}</td>
+                            <td title="${j.started_at ? new Date(j.started_at).toLocaleString() : ''}">${timeAgo(j.started_at)}</td>
+                            <td>${j.duration_seconds != null ? j.duration_seconds.toFixed(1) + 's' : '-'}</td>
+                            <td>${j.total_outlets_scraped ?? '-'}</td>
+                            <td>${j.total_articles_found ?? '-'}</td>
+                            <td style="color:var(--green);font-weight:600">${j.total_new_articles ?? '-'}</td>
+                            <td>${j.total_full_content_extracted ?? '-'}</td>
+                            <td style="color:${(j.total_errors||0) > 0 ? 'var(--red)' : 'var(--text-muted)'}">${j.total_errors ?? 0}</td>
+                        </tr>
+                        ${hasDetails ? `<tr class="job-detail ${expandedJobs.has(j.id)?'open':''}" id="jd-${j.id}"><td colspan="10"><div class="job-expand">
+                            <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;font-weight:600;margin-bottom:8px">Per-Outlet Breakdown</div>
+                            ${j.outlet_results.map(or => `<div class="outlet-result">
+                                <span class="or-name">${esc(or.outlet_name || 'Outlet #' + (or.outlet_id || '?'))}</span>
+                                <span class="badge badge-accent">${or.language || '?'}</span>
+                                <span class="or-stat">Found: <strong>${or.articles_found ?? 0}</strong></span>
+                                <span class="or-stat ok">New: <strong>${or.new_articles ?? 0}</strong></span>
+                                <span class="or-stat">Full: <strong>${or.full_content_extracted ?? 0}</strong></span>
+                                <span class="or-stat ${(or.errors||[]).length > 0 ? 'err' : ''}">Err: <strong>${(or.errors||[]).length}</strong></span>
+                                ${statusBadge(or.status || 'done')}
+                            </div>`).join('')}
+                        </div></td></tr>` : ''}`;
+                    }).join('')}</tbody>
+                </table>`;
+            } catch (e) { el.innerHTML = `<div class="empty" style="color:var(--red)">Failed: ${e.message}</div>`; }
+        }
+
+        function toggleJob(id) {
+            if (expandedJobs.has(id)) expandedJobs.delete(id); else expandedJobs.add(id);
+            const el = document.getElementById('jd-' + id);
+            if (el) el.classList.toggle('open');
+        }
+
+        // ─── Circuit Breakers ───
+        async function loadCircuitBreakers() {
+            const el = document.getElementById('circuit-breakers');
+            try {
+                const res = await fetch('/api/scraper/circuit-breakers');
+                const data = await res.json();
+                const circuits = data.circuits || {};
+                const keys = Object.keys(circuits);
+                if (!keys.length) { el.innerHTML = '<div style="color:var(--green);font-size:0.82rem">All circuits clean</div>'; return; }
+                el.innerHTML = keys.map(k => {
+                    const c = circuits[k]; const state = c.state || 'closed';
+                    const cls = state === 'closed' ? 'green' : state === 'open' ? 'red' : 'orange';
+                    return `<div class="sb-row"><span>${esc(k)}</span><span class="sb-val ${cls}">${state}</span></div>`;
+                }).join('');
+            } catch (e) { el.innerHTML = '<div style="font-size:0.8rem;color:var(--text-muted)">Unavailable</div>'; }
+        }
+
+        // ─── Retry Queue ───
+        async function loadRetryQueue() {
+            const el = document.getElementById('retry-queue');
+            try {
+                const res = await fetch('/api/scraper/retry-queue');
+                const d = await res.json();
+                el.innerHTML = `
+                    <div class="sb-row"><span class="sb-label">Status</span>${d.enabled ? '<span class="badge badge-green">on</span>' : '<span class="badge badge-red">off</span>'}</div>
+                    <div class="sb-divider"></div>
+                    <div class="sb-row"><span class="sb-label">Queue</span><span class="sb-val accent">${d.queue_size ?? d.pending ?? 0}</span></div>
+                    <div class="sb-row"><span class="sb-label">Processed</span><span class="sb-val green">${d.total_processed ?? 0}</span></div>
+                    <div class="sb-row"><span class="sb-label">Failed</span><span class="sb-val red">${d.total_failed ?? 0}</span></div>
+                `;
+            } catch (e) { el.innerHTML = '<div style="font-size:0.8rem;color:var(--text-muted)">Unavailable</div>'; }
+        }
+
+        async function processRetries() {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const btn = document.getElementById('retryBtn');
+            btn.disabled = true; btn.textContent = '...';
+            log('Processing retry queue...', 'log-info');
+            try {
+                const res = await fetch('/api/scraper/retry-queue/process', { method: 'POST', headers: h });
+                if (!res.ok) throw new Error('Failed');
+                log('Retry queue processed', 'log-ok');
+                btn.textContent = 'Done';
+                setTimeout(() => { btn.disabled = false; btn.textContent = 'Process'; loadRetryQueue(); }, 2000);
+            } catch (e) {
+                log('Retry failed: ' + e.message, 'log-err');
+                btn.disabled = false; btn.textContent = 'Process';
+            }
+        }
+
+        // ─── Interval ───
+        async function loadInterval() {
+            try {
+                const res = await fetch('/api/scraper/interval');
+                const data = await res.json();
+                if (data.interval_minutes) {
+                    document.getElementById('intervalInput').value = data.interval_minutes;
+                    document.getElementById('intervalStatus').textContent = `Currently: every ${data.interval_minutes} min`;
+                }
+            } catch (e) {}
+        }
+
+        async function saveInterval() {
+            const minutes = parseInt(document.getElementById('intervalInput').value);
+            if (!minutes || minutes < 1) return;
+            const statusEl = document.getElementById('intervalStatus');
+            try {
+                const res = await gprFetch('/api/scraper/interval', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ minutes })
+                });
+                if (res && res.ok) {
+                    statusEl.textContent = `Saved — scraping every ${minutes} min`;
+                    statusEl.style.color = 'var(--success, #22c55e)';
+                } else {
+                    statusEl.textContent = 'Failed to save';
+                    statusEl.style.color = 'var(--error, #ef4444)';
+                }
+            } catch (e) {
+                statusEl.textContent = 'Error: ' + e.message;
+                statusEl.style.color = 'var(--error, #ef4444)';
+            }
+        }
+
+        // ─── Schedule ───
+        async function loadSchedule() {
+            const el = document.getElementById('schedule');
+            try {
+                const res = await fetch('/api/scraper/schedule');
+                const data = await res.json();
+                const outlets = data.outlets || [];
+                if (!outlets.length) { el.innerHTML = '<div style="font-size:0.8rem;color:var(--text-muted)">No schedule data</div>'; return; }
+                el.innerHTML = outlets.slice(0, 20).map(o => `<div class="sb-row">
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${esc(o.outlet_name || o.name || '')}">${esc(o.outlet_name || o.name || '#' + o.outlet_id)}</span>
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:0.74rem;color:var(--accent-light)">${o.interval_minutes ? o.interval_minutes + 'm' : '-'}</span>
+                </div>`).join('');
+            } catch (e) { el.innerHTML = '<div style="font-size:0.8rem;color:var(--text-muted)">Unavailable</div>'; }
+        }
+
+        // ─── Refresh all ───
+        function refreshAll() {
+            document.getElementById('login-notice').style.display = isLoggedIn() ? 'none' : 'block';
+            loadStats();
+            loadJobs();
+            loadCircuitBreakers();
+            loadRetryQueue();
+            loadSchedule();
+            loadInterval();
+        }
+
+        // ─── Init ───
+        log('Scraper console initialized', 'log-info');
+        log('Auto-refreshing every 10 seconds', 'log-dim');
+        // Sync with global category
+        function updateScraperHeading(cat) {
+            const labels = {gaming_news:'News Outlets',gaming_vc:'Gaming VCs',gaming_streamer:'Streamers'};
+            const suffix = labels[cat] ? ` — ${labels[cat]}` : '';
+            document.getElementById('pageTitle').textContent = 'Scraper Console' + suffix;
+        }
+        const _initCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+        if (_initCat) { document.getElementById('category-select').value = _initCat; updateScraperHeading(_initCat); }
+        window.addEventListener('gpr-category-change', e => {
+            const cat = e.detail.category || '';
+            document.getElementById('category-select').value = cat;
+            updateScraperHeading(cat);
+            filterOutletPicker(); loadStats();
+        });
+        loadOutletPicker();
+        refreshAll();
+        setInterval(refreshAll, 10000);
+    </script>
+</body>
+</html>

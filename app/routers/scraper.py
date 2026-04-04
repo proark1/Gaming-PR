@@ -1,8 +1,8 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
-from sqlalchemy import func
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Body, Depends, HTTPException, BackgroundTasks, Query
+from sqlalchemy import func, case
+from sqlalchemy.orm import Session, joinedload, contains_eager
 
 from app.config import settings
 from app.database import get_db
@@ -17,6 +17,7 @@ from app.schemas.scraped_article import (
     ScrapeJobDetailResponse,
 )
 from app.services.scraper_service import scrape_all, scrape_single_outlet
+from app.routers.auth import get_current_user
 
 router = APIRouter(prefix="/api/scraper", tags=["scraper"])
 
@@ -45,6 +46,7 @@ def run_all(
     extract_content: bool = True,
     run_async: bool = False,
     db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
 ):
     """Scrape all active outlets. Set run_async=true to run in background."""
     if run_async:
@@ -65,6 +67,7 @@ def run_one(
     extract_content: bool = True,
     run_async: bool = False,
     db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
 ):
     """Scrape a single outlet."""
     outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
@@ -111,13 +114,17 @@ def list_scraped(
     outlet_id: Optional[int] = None,
     article_type: Optional[str] = None,
     has_full_content: Optional[bool] = None,
+    outlet_category: Optional[str] = None,
     search: Optional[str] = None,
     skip: int = 0,
     limit: int = Query(default=50, le=200),
     db: Session = Depends(get_db),
 ):
     """List scraped articles with filtering."""
-    query = db.query(ScrapedArticle)
+    if outlet_category:
+        query = db.query(ScrapedArticle).join(GamingOutlet).options(contains_eager(ScrapedArticle.outlet)).filter(GamingOutlet.category == outlet_category)
+    else:
+        query = db.query(ScrapedArticle).options(joinedload(ScrapedArticle.outlet))
     if language:
         query = query.filter(ScrapedArticle.language == language)
     if outlet_id:
@@ -152,17 +159,24 @@ def get_article_history(article_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/stats")
-def scraper_stats(db: Session = Depends(get_db)):
-    """Get scraper statistics."""
-    total_articles = db.query(func.count(ScrapedArticle.id)).scalar()
-    full_content = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.is_full_content.is_(True)).scalar()
+def scraper_stats(category: Optional[str] = None, db: Session = Depends(get_db)):
+    """Get scraper statistics, optionally filtered by outlet category."""
+    base_q = db.query(ScrapedArticle)
+    if category:
+        base_q = base_q.join(GamingOutlet).filter(GamingOutlet.category == category)
+    counts = base_q.with_entities(
+        func.count(ScrapedArticle.id).label("total"),
+        func.sum(case((ScrapedArticle.is_full_content == True, 1), else_=0)).label("full_content"),
+    ).one()
+    total_articles = counts.total or 0
+    full_content = counts.full_content or 0
     by_language = dict(
-        db.query(ScrapedArticle.language, func.count(ScrapedArticle.id))
+        base_q.with_entities(ScrapedArticle.language, func.count(ScrapedArticle.id))
         .group_by(ScrapedArticle.language)
         .all()
     )
     by_type = dict(
-        db.query(ScrapedArticle.article_type, func.count(ScrapedArticle.id))
+        base_q.with_entities(ScrapedArticle.article_type, func.count(ScrapedArticle.id))
         .filter(ScrapedArticle.article_type.isnot(None))
         .group_by(ScrapedArticle.article_type)
         .all()
@@ -204,7 +218,7 @@ def circuit_breaker_status():
 
 
 @router.post("/circuit-breakers/{outlet_id}/reset")
-def reset_circuit_breaker(outlet_id: int):
+def reset_circuit_breaker(outlet_id: int, _user=Depends(get_current_user)):
     """Manually reset a circuit breaker for an outlet."""
     from app.scrapers.circuit_breaker import circuit_breaker
     circuit_breaker.reset(outlet_id)
@@ -222,7 +236,7 @@ def retry_queue_stats():
 
 
 @router.post("/retry-queue/process")
-def process_retries(db: Session = Depends(get_db)):
+def process_retries(db: Session = Depends(get_db), _user=Depends(get_current_user)):
     """Manually process the retry queue."""
     from app.services.scraper_service import process_retry_queue
     return process_retry_queue(db)
@@ -236,3 +250,31 @@ def scrape_schedule(db: Session = Depends(get_db)):
         "adaptive_scheduling_enabled": settings.ENABLE_ADAPTIVE_SCHEDULING,
         "outlets": get_schedule_info(db),
     }
+
+
+@router.get("/interval")
+def get_scrape_interval():
+    """Get the current auto-scrape interval in minutes."""
+    from app import scheduler_ref
+    sched = scheduler_ref.scheduler
+    if sched is None:
+        return {"interval_minutes": None}
+    job = sched.get_job("auto_scrape")
+    if job is None:
+        return {"interval_minutes": None}
+    interval = getattr(job.trigger, "interval", None)
+    minutes = int(interval.total_seconds() / 60) if interval else None
+    return {"interval_minutes": minutes}
+
+
+@router.patch("/interval")
+def set_scrape_interval(minutes: int = Body(..., embed=True), _user=Depends(get_current_user)):
+    """Change the auto-scrape interval at runtime (1–1440 minutes)."""
+    from app import scheduler_ref
+    if minutes < 1 or minutes > 1440:
+        raise HTTPException(status_code=400, detail="minutes must be between 1 and 1440")
+    sched = scheduler_ref.scheduler
+    if sched is None:
+        raise HTTPException(status_code=503, detail="Scheduler not running")
+    sched.reschedule_job("auto_scrape", trigger="interval", minutes=minutes)
+    return {"interval_minutes": minutes, "status": "updated"}

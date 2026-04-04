@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Dashboard-specific styles (shared styles loaded by nav.js via styles.css) */
+        .status-badge { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); font-weight: 500; padding: 6px 14px; border-radius: 20px; }
+        .status-healthy { background: var(--green-dim); color: var(--green); }
+        .status-degraded { background: var(--orange-dim); color: var(--orange); }
+        .status-unhealthy { background: var(--red-dim); color: var(--red); }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .stat-value { font-size: 2rem; }
+        .stat-value.accent { color: var(--accent-light); }
+        .stat-value.green { color: var(--green); }
+        .stat-value.cyan { color: var(--cyan); }
+        .stat-value.orange { color: var(--orange); }
+        .bar-chart { padding: var(--sp-4) var(--sp-5); }
+        .bar-row { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+        .bar-label { width: 80px; font-size: var(--text-sm); color: var(--text-secondary); text-align: right; flex-shrink: 0; }
+        .bar-track { flex: 1; height: 24px; background: rgba(42,42,58,0.4); border-radius: var(--radius-sm); overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: var(--radius-sm); transition: width .8s ease; display: flex; align-items: center; padding-left: 8px; font-size: var(--text-xs); font-weight: 600; color: rgba(255,255,255,0.9); min-width: fit-content; }
+        .bar-count { font-size: var(--text-sm); color: var(--text-muted); flex-shrink: 0; width: 50px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-3); padding: var(--sp-4) var(--sp-5); }
+        .config-item { display: flex; flex-direction: column; gap: var(--sp-1); }
+        .config-key { font-size: var(--text-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
+        .config-val { font-family: 'JetBrains Mono', monospace; font-size: var(--text-base); color: var(--text-primary); }
+        .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-7); }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="dashboard"></script>
+
+    <div class="container">
+        <div class="header-row">
+            <div>
+                <h1>Monitoring Dashboard</h1>
+                <div class="subtitle">Real-time platform health, scraping metrics, and language coverage</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px">
+                <div id="health-badge" class="status-badge status-healthy">
+                    <span class="status-dot"></span> <span id="health-text">Loading...</span>
+                </div>
+                <span id="last-updated" style="font-size:0.72rem;color:var(--text-muted)"></span>
+                <button class="refresh-btn" onclick="loadDashboard()">Refresh</button>
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="stat-grid" style="margin-bottom:20px"><div class="skeleton" style="height:88px"></div><div class="skeleton" style="height:88px"></div><div class="skeleton" style="height:88px"></div><div class="skeleton" style="height:88px"></div><div class="skeleton" style="height:88px"></div><div class="skeleton" style="height:88px"></div></div><div class="grid-2"><div class="skeleton" style="height:250px"></div><div class="skeleton" style="height:250px"></div></div>
+        </div>
+    </div>
+
+    <script>
+        const COLORS = ['#7c5cff','#ec4899','#06b6d4','#22c55e','#f59e0b','#ef4444','#8b5cf6','#14b8a6','#f97316','#6366f1'];
+
+        function fmt(n) { return gprFmt(n); }
+        function timeAgo(d) { return gprTimeAgo(d) || 'Never'; }
+
+        function statusBadge(status) {
+            const map = { completed: 'green', running: 'cyan', failed: 'red', queued: 'orange' };
+            return `<span class="badge badge-${map[status]||'accent'}">${status}</span>`;
+        }
+
+        async function loadDashboard() {
+            try {
+                const [dashRes, healthRes] = await Promise.all([
+                    fetch('/api/monitoring/dashboard'),
+                    fetch('/api/monitoring/health')
+                ]);
+                const dash = await dashRes.json();
+                const health = await healthRes.json();
+
+                // Health badge
+                const badge = document.getElementById('health-badge');
+                const text = document.getElementById('health-text');
+                badge.className = `status-badge status-${health.status}`;
+                text.textContent = health.status.charAt(0).toUpperCase() + health.status.slice(1);
+
+                document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+                const o = dash.overview;
+                const s = dash.system;
+                const langKeys = Object.keys(dash.language_coverage);
+                const maxLangArticles = Math.max(...langKeys.map(k => dash.language_coverage[k].total_articles), 1);
+
+                // Article type bars
+                const typeKeys = Object.keys(dash.article_types || {});
+                const maxTypeCount = Math.max(...typeKeys.map(k => dash.article_types[k]), 1);
+
+                document.getElementById('content').innerHTML = `
+                    <!-- Stat cards -->
+                    <div class="stat-grid">
+                        <div class="stat-card stat-card--hero">
+                            <div class="stat-label">Total Scraped</div>
+                            <div class="stat-value accent">${fmt(o.total_articles)}</div>
+                            <div class="stat-sub">${fmt(o.full_content_articles)} full content (${o.extraction_rate_pct}%)</div>
+                        </div>
+                        <div class="stat-card stat-card--hero">
+                            <div class="stat-label">Last 24 Hours</div>
+                            <div class="stat-value green">${fmt(o.articles_last_24h)}</div>
+                            <div class="stat-sub">${fmt(o.articles_last_7d)} in last 7 days</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">News Outlets</div>
+                            <div class="stat-value cyan">${o.news_outlets || 0}</div>
+                            <div class="stat-sub">active sources</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Gaming VCs</div>
+                            <div class="stat-value green">${o.vc_outlets || 0}</div>
+                            <div class="stat-sub">active firms</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Streamers</div>
+                            <div class="stat-value orange">${o.streamer_outlets || 0}</div>
+                            <div class="stat-sub">active channels</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Failing Sources</div>
+                            <div class="stat-value ${dash.failing_outlets.length > 5 ? 'orange' : 'green'}">${dash.failing_outlets.length}</div>
+                            <div class="stat-sub">${o.active_outlets} active of ${o.total_outlets} total</div>
+                        </div>
+                    </div>
+
+                    <!-- System config -->
+                    <div class="card" style="margin-bottom:32px">
+                        <div class="card-header">System Configuration</div>
+                        <div class="config-grid">
+                            <div class="config-item"><span class="config-key">Scrape Interval</span><span class="config-val">${s.scrape_interval_minutes} min</span></div>
+                            <div class="config-item"><span class="config-key">Concurrency</span><span class="config-val">${s.concurrency} threads</span></div>
+                            <div class="config-item"><span class="config-key">Full Extraction</span><span class="config-val">${s.full_content_extraction ? 'ON' : 'OFF'}</span></div>
+                            <div class="config-item"><span class="config-key">Robots.txt</span><span class="config-val">${s.robots_txt_compliance ? 'Enforced' : 'OFF'}</span></div>
+                            <div class="config-item"><span class="config-key">Sitemap Discovery</span><span class="config-val">${s.sitemap_discovery ? 'ON' : 'OFF'}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <!-- Language coverage -->
+                        <div class="card">
+                            <div class="card-header">Language Coverage</div>
+                            <div class="bar-chart">
+                                ${langKeys.map((k, i) => {
+                                    const lc = dash.language_coverage[k];
+                                    const pct = Math.max((lc.total_articles / maxLangArticles) * 100, 2);
+                                    return `<div class="bar-row">
+                                        <span class="bar-label">${lc.name}</span>
+                                        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}">${lc.active_outlets} outlets</div></div>
+                                        <span class="bar-count">${fmt(lc.total_articles)}</span>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Article types -->
+                        <div class="card">
+                            <div class="card-header">Article Types</div>
+                            <div class="bar-chart">
+                                ${typeKeys.length ? typeKeys.map((k, i) => {
+                                    const pct = Math.max((dash.article_types[k] / maxTypeCount) * 100, 2);
+                                    return `<div class="bar-row">
+                                        <span class="bar-label">${k}</span>
+                                        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${COLORS[(i+3)%COLORS.length]}">${fmt(dash.article_types[k])}</div></div>
+                                        <span class="bar-count">${fmt(dash.article_types[k])}</span>
+                                    </div>`;
+                                }).join('') : '<div style="padding:20px;color:var(--text-muted)">No article type data yet</div>'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <!-- Top outlets -->
+                        <div class="card">
+                            <div class="card-header">Top Sources by Articles</div>
+                            <table>
+                                <thead><tr><th>Source</th><th>Type</th><th>Lang</th><th>Total</th><th>Avg/Scrape</th><th>Last Scraped</th></tr></thead>
+                                <tbody>
+                                    ${dash.top_outlets.slice(0,10).map(o => {
+                                        const catLabel = {gaming_news:'News',gaming_vc:'VC',gaming_streamer:'Streamer'}[o.category]||o.category||'?';
+                                        const catColor = {gaming_news:'cyan',gaming_vc:'green',gaming_streamer:'orange'}[o.category]||'accent';
+                                        return `<tr>
+                                        <td style="color:var(--text-primary);font-weight:500">${o.name}</td>
+                                        <td><span class="badge badge-${catColor}">${catLabel}</span></td>
+                                        <td><span class="badge badge-accent">${o.language}</span></td>
+                                        <td>${fmt(o.total_scraped)}</td>
+                                        <td>${o.avg_per_scrape ? o.avg_per_scrape.toFixed(1) : '-'}</td>
+                                        <td>${timeAgo(o.last_scraped)}</td>
+                                    </tr>`}).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Failing outlets -->
+                        <div class="card">
+                            <div class="card-header">Failing Sources</div>
+                            ${dash.failing_outlets.length ? `<table>
+                                <thead><tr><th>Source</th><th>Type</th><th>Failures</th><th>Status</th><th>Last Scraped</th></tr></thead>
+                                <tbody>
+                                    ${dash.failing_outlets.map(o => {
+                                        const catLabel = {gaming_news:'News',gaming_vc:'VC',gaming_streamer:'Streamer'}[o.category]||'?';
+                                        const catColor = {gaming_news:'cyan',gaming_vc:'green',gaming_streamer:'orange'}[o.category]||'accent';
+                                        return `<tr>
+                                        <td style="color:var(--text-primary);font-weight:500">${o.name}</td>
+                                        <td><span class="badge badge-${catColor}">${catLabel}</span></td>
+                                        <td style="color:var(--red);font-weight:600">${o.failures}</td>
+                                        <td>${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}</td>
+                                        <td>${timeAgo(o.last_scraped)}</td>
+                                    </tr>`}).join('')}
+                                </tbody>
+                            </table>` : '<div style="padding:24px;text-align:center;color:var(--green)">All outlets healthy</div>'}
+                        </div>
+                    </div>
+
+                    <!-- Recent jobs -->
+                    <div class="card" style="margin-top:8px">
+                        <div class="card-header">Recent Scrape Jobs</div>
+                        <table>
+                            <thead><tr><th>Job ID</th><th>Type</th><th>Status</th><th>Started</th><th>Duration</th><th>Found</th><th>New</th><th>Errors</th></tr></thead>
+                            <tbody>
+                                ${dash.recent_jobs.map(j => `<tr class="status-${j.status}">
+                                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem">#${j.id}</td>
+                                    <td>${j.type}</td>
+                                    <td>${statusBadge(j.status)}</td>
+                                    <td>${timeAgo(j.started)}</td>
+                                    <td>${j.duration_s ? j.duration_s.toFixed(1) + 's' : '-'}</td>
+                                    <td>${j.found ?? '-'}</td>
+                                    <td style="color:var(--green);font-weight:600">${j.new ?? '-'}</td>
+                                    <td style="color:${j.errors > 0 ? 'var(--red)' : 'var(--text-muted)'}">${j.errors ?? 0}</td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (err) {
+                document.getElementById('content').innerHTML = `
+                    <div class="card" style="padding:40px;text-align:center">
+                        <div style="color:var(--red);font-weight:600;margin-bottom:8px">Failed to load dashboard</div>
+                        <div style="color:var(--text-muted);font-size:0.85rem">${err.message}</div>
+                        <button class="refresh-btn" style="margin-top:16px" onclick="loadDashboard()">Retry</button>
+                    </div>`;
+            }
+        }
+
+        loadDashboard();
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>

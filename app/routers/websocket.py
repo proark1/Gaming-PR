@@ -126,7 +126,17 @@ class ConnectionManager:
         if outlet_filter and article_data.get("outlet_id") != outlet_filter:
             return False
 
+        category_filter = filters.get("outlet_category")
+        if category_filter and article_data.get("outlet_category") != category_filter:
+            return False
+
         return True
+
+    async def update_filters(self, websocket: WebSocket, new_filters: dict):
+        """Thread-safe filter update for a connected client."""
+        async with self._get_lock():
+            if websocket in self._connections:
+                self._connections[websocket] = new_filters
 
     @property
     def connection_count(self) -> int:
@@ -143,12 +153,13 @@ async def live_feed(
     language: Optional[str] = Query(default=None),
     article_type: Optional[str] = Query(default=None),
     outlet_id: Optional[int] = Query(default=None),
+    outlet_category: Optional[str] = Query(default=None),
 ):
     """
     WebSocket live feed endpoint.
 
     Connect to receive real-time article notifications.
-    Optional query params for filtering: ?language=en&article_type=review
+    Optional query params for filtering: ?language=en&article_type=review&outlet_category=gaming_vc
     """
     filters = {}
     if language:
@@ -157,6 +168,8 @@ async def live_feed(
         filters["article_type"] = article_type
     if outlet_id:
         filters["outlet_id"] = outlet_id
+    if outlet_category:
+        filters["outlet_category"] = outlet_category
 
     await ws_manager.connect(websocket, filters)
 
@@ -176,8 +189,7 @@ async def live_feed(
                 msg = json.loads(data)
                 if msg.get("type") == "update_filters":
                     new_filters = msg.get("filters", {})
-                    async with ws_manager._get_lock():
-                        ws_manager._connections[websocket] = new_filters
+                    await ws_manager.update_filters(websocket, new_filters)
                     await websocket.send_json({
                         "type": "filters_updated",
                         "filters": new_filters,

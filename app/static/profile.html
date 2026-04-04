@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Page-specific styles (shared styles loaded by nav.js) */
+
+        .container { max-width: 800px; }
+
+        /* Login prompt */
+        .login-prompt {
+            text-align: center; padding: 80px 20px;
+        }
+        .login-prompt .icon { font-size: 3rem; margin-bottom: 16px; }
+        .login-prompt .msg { font-size: 1.1rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+        .login-prompt .sub { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px; }
+        .login-prompt .prompt-btn {
+            background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none;
+            padding: 12px 32px; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            font-family: inherit; transition: all .2s; box-shadow: 0 4px 16px rgba(124,92,255,0.3);
+        }
+        .login-prompt .prompt-btn:hover { transform: translateY(-1px); }
+
+        /* Profile card */
+        .profile-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 36px; margin-bottom: 24px;
+        }
+        .profile-header { display: flex; align-items: center; gap: 20px; margin-bottom: 28px; }
+        .profile-avatar {
+            width: 72px; height: 72px; border-radius: 16px;
+            background: linear-gradient(135deg, var(--accent), #ec4899);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; font-weight: 800; color: #fff; flex-shrink: 0;
+        }
+        .profile-name { font-size: 1.4rem; font-weight: 800; }
+        .profile-role { font-size: 0.85rem; color: var(--text-secondary); }
+
+        /* Info grid */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+        .info-item { padding: 16px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius); }
+        .info-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 6px; }
+        .info-value { font-size: 1rem; font-weight: 600; color: var(--text-primary); word-break: break-all; }
+        .info-value.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; }
+
+        /* Quick links */
+        .quick-section { margin-top: 32px; }
+        .quick-title { font-size: 1rem; font-weight: 700; margin-bottom: 14px; }
+        .quick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .quick-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 18px; text-decoration: none; color: var(--text-primary); transition: all .2s;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .quick-card:hover { border-color: var(--accent); background: var(--bg-card-hover); transform: translateY(-2px); }
+        .quick-icon { font-size: 1.3rem; flex-shrink: 0; }
+        .quick-label { font-size: 0.88rem; font-weight: 600; }
+        .quick-desc { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* API token section */
+        .token-section { margin-top: 28px; }
+        .token-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+        .token-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+        .token-desc { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px; }
+        .token-box {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px;
+            padding: 10px 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+            color: var(--cyan); word-break: break-all;
+        }
+        .token-text { flex: 1; user-select: all; }
+        .copy-btn {
+            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+            padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;
+            font-family: inherit; transition: all .2s; white-space: nowrap; flex-shrink: 0;
+        }
+        .copy-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+
+        /* Danger zone */
+        .danger-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+        .danger-title { font-size: 0.95rem; font-weight: 700; color: var(--red); margin-bottom: 10px; }
+        .logout-btn-lg {
+            background: var(--red-dim); border: 1px solid rgba(239,68,68,0.3); color: var(--red);
+            padding: 10px 24px; border-radius: 10px; font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; font-family: inherit; transition: all .2s;
+        }
+        .logout-btn-lg:hover { background: rgba(239,68,68,0.2); }
+
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="profile"></script>
+
+    <div class="container">
+        <h1>Profile</h1>
+        <div class="subtitle">Your account details and API access</div>
+
+        <div id="content">
+            <div class="loading"><div class="spinner"></div> Loading profile...</div>
+        </div>
+    </div>
+
+    <script>
+        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        async function loadProfile() {
+            const content = document.getElementById('content');
+            const token = gprGetToken();
+            const userLocal = JSON.parse(localStorage.getItem('gpr_user') || 'null');
+
+            if (!token || !userLocal) {
+                content.innerHTML = `
+                    <div class="login-prompt">
+                        <div class="icon">&#128274;</div>
+                        <div class="msg">You're not logged in</div>
+                        <div class="sub">Log in or create an account to view your profile</div>
+                        <button class="prompt-btn" onclick="gprOpenModal('login')">Log in</button>
+                    </div>`;
+                return;
+            }
+
+            // Try to fetch fresh user data from API
+            let user = userLocal;
+            try {
+                const res = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    user = await res.json();
+                    localStorage.setItem('gpr_user', JSON.stringify(user));
+                }
+            } catch (e) { /* use cached data */ }
+
+            const initials = (user.username || '?').slice(0, 2).toUpperCase();
+            const maskedToken = token.length > 20 ? token.slice(0, 12) + '...' + token.slice(-8) : token;
+
+            content.innerHTML = `
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar">${esc(initials)}</div>
+                        <div>
+                            <div class="profile-name">${esc(user.username)}</div>
+                            <div class="profile-role">
+                                ${user.is_admin ? '<span class="badge badge-accent" style="background:linear-gradient(135deg,rgba(124,92,255,0.2),rgba(236,72,153,0.2));color:#d8b4fe;margin-right:6px">admin</span>' : ''}
+                                ${user.is_active !== false ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Username</div>
+                            <div class="info-value">${esc(user.username)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Email</div>
+                            <div class="info-value mono">${esc(user.email)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">User ID</div>
+                            <div class="info-value mono">#${user.id}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Role</div>
+                            <div class="info-value">${user.is_admin ? 'Administrator' : 'User'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Account Created</div>
+                            <div class="info-value">${user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Token -->
+                <div class="token-section">
+                    <div class="divider"></div>
+                    <h3 style="font-size:var(--text-md);font-weight:700;margin-bottom:14px;color:var(--text-secondary)">API Token</h3>
+                    <div class="token-card">
+                        <div class="token-title">Bearer Token</div>
+                        <div class="token-desc">Use this Bearer token to authenticate API requests. Include it in the Authorization header.</div>
+                        <div class="token-box">
+                            <span class="token-text" id="token-display">${esc(maskedToken)}</span>
+                            <button class="copy-btn" id="token-toggle" onclick="toggleToken()">Show</button>
+                            <button class="copy-btn" onclick="copyToken()">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick links -->
+                <div class="quick-section">
+                    <div class="divider"></div>
+                    <h3 style="font-size:var(--text-md);font-weight:700;margin-bottom:14px;color:var(--text-secondary)">Quick Links</h3>
+                    <div class="quick-title" style="display:none">Quick Actions</div>
+                    <div class="quick-grid">
+                        <a class="quick-card" href="/manage/articles">
+                            <span class="quick-icon">&#9997;&#65039;</span>
+                            <div><div class="quick-label">My Articles</div><div class="quick-desc">Create and manage articles</div></div>
+                        </a>
+                        <a class="quick-card" href="/translations">
+                            <span class="quick-icon">&#127760;</span>
+                            <div><div class="quick-label">Translations</div><div class="quick-desc">View article translations</div></div>
+                        </a>
+                        <a class="quick-card" href="/webhooks">
+                            <span class="quick-icon">&#128279;</span>
+                            <div><div class="quick-label">Webhooks</div><div class="quick-desc">Manage webhook endpoints</div></div>
+                        </a>
+                        <a class="quick-card" href="/emails">
+                            <span class="quick-icon">&#9993;&#65039;</span>
+                            <div><div class="quick-label">Email</div><div class="quick-desc">Domains and sending</div></div>
+                        </a>
+                        <a class="quick-card" href="/scraper">
+                            <span class="quick-icon">&#9881;&#65039;</span>
+                            <div><div class="quick-label">Scraper</div><div class="quick-desc">Run and manage scrapes</div></div>
+                        </a>
+                        <a class="quick-card" href="/docs">
+                            <span class="quick-icon">&#128214;</span>
+                            <div><div class="quick-label">API Docs</div><div class="quick-desc">Full API reference</div></div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Danger zone -->
+                <div class="danger-section">
+                    <div class="divider"></div>
+                    <h3 style="font-size:var(--text-md);font-weight:700;margin-bottom:12px;color:var(--red)">Session</h3>
+                    <button class="logout-btn-lg" onclick="gprLogout(); loadProfile();">Log out</button>
+                </div>
+            `;
+        }
+
+        let tokenVisible = false;
+        function toggleToken() {
+            const token = gprGetToken();
+            const display = document.getElementById('token-display');
+            const btn = document.getElementById('token-toggle');
+            if (!token) return;
+            tokenVisible = !tokenVisible;
+            display.textContent = tokenVisible ? token : (token.slice(0, 12) + '...' + token.slice(-8));
+            btn.textContent = tokenVisible ? 'Hide' : 'Show';
+        }
+
+        function copyToken() {
+            const token = gprGetToken();
+            if (!token) return;
+            navigator.clipboard.writeText(token).then(() => {
+                const btns = document.querySelectorAll('.copy-btn');
+                const copyBtn = btns[btns.length - 1];
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+            });
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>

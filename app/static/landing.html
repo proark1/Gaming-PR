@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gaming PR Platform — The World's Most Advanced Gaming News Engine</title>
-    <meta name="description" content="Scrape 80+ gaming outlets across 10 languages. Full content extraction, auto-translation, WebSocket live feed, and powerful APIs.">
+    <meta name="description" content="Scrape 185+ gaming outlets across 34 languages. Full content extraction, auto-translation, WebSocket live feed, and powerful APIs.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -125,6 +125,226 @@
         }
 
         .nav-links a:hover { color: var(--text-primary); }
+
+        .nav-auth { display: flex; align-items: center; gap: 12px; }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+        }
+
+        .btn-ghost:hover { color: var(--text-primary); border-color: var(--accent); }
+
+        .btn-nav-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--accent), #6344e0);
+            color: white;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            font-family: inherit;
+        }
+
+        .btn-nav-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px var(--accent-glow);
+        }
+
+        /* ─── Auth Modal ─── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.4rem;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover { color: var(--text-primary); }
+
+        .modal h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .modal .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+
+        .form-group { margin-bottom: 18px; }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .form-group input:focus { border-color: var(--accent); }
+
+        .form-group input::placeholder { color: var(--text-muted); }
+
+        .form-submit {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--accent), #6344e0);
+            color: white;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            font-family: inherit;
+            transition: all 0.3s;
+            margin-top: 6px;
+        }
+
+        .form-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 28px var(--accent-glow);
+        }
+
+        .form-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .form-error.visible { display: block; }
+
+        .form-switch {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .form-switch a {
+            color: var(--accent-light);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .form-switch a:hover { text-decoration: underline; }
+
+        /* Logged-in user pill */
+        .user-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 8px 6px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .user-pill .avatar {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--accent), var(--pink));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .user-pill .logout-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: inherit;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .user-pill .logout-btn:hover { color: #f87171; }
 
         .btn {
             display: inline-flex;
@@ -688,6 +908,7 @@
             .extraction-grid { grid-template-columns: 1fr; }
             .api-endpoints { grid-template-columns: 1fr; }
             .nav-links { display: none; }
+            .nav-auth .btn-ghost, .nav-auth .btn-nav-primary { padding: 6px 12px; font-size: 0.8rem; }
             section { padding: 64px 0; }
             .hero { padding: 140px 0 80px; }
             footer .container { flex-direction: column; gap: 16px; text-align: center; }
@@ -727,12 +948,16 @@
             <div class="logo-icon">GP</div>
             Gaming PR
         </a>
-        <div class="nav-links">
+        <div class="nav-links" id="navLinks">
             <a href="#features">Features</a>
             <a href="#email">Email</a>
             <a href="#languages">Languages</a>
             <a href="#api">API</a>
             <a href="/docs" class="btn btn-primary">API Docs</a>
+        </div>
+        <div class="nav-auth" id="navAuth">
+            <button class="btn-ghost" onclick="openModal('login')">Log in</button>
+            <button class="btn-nav-primary" onclick="openModal('register')">Sign up</button>
         </div>
     </div>
 </nav>
@@ -749,7 +974,7 @@
             <span class="gradient-text">gaming news engine</span>
         </h1>
         <p class="animate d2">
-            Scrape 80+ gaming outlets across 10 languages in real-time. Full content extraction,
+            Scrape 185+ gaming outlets across 34 languages in real-time. Full content extraction,
             auto-translation, WebSocket live feed, integrated email sending from your own domain,
             and a powerful REST API &mdash; all in one platform.
         </p>
@@ -790,11 +1015,11 @@
     <div class="container">
         <div class="stats-grid">
             <div class="stat-card animate">
-                <div class="stat-number">80+</div>
+                <div class="stat-number">185+</div>
                 <div class="stat-label">Gaming Outlets</div>
             </div>
             <div class="stat-card animate d1">
-                <div class="stat-number">10</div>
+                <div class="stat-number">34</div>
                 <div class="stat-label">Languages</div>
             </div>
             <div class="stat-card animate d2">
@@ -936,7 +1161,7 @@
     <div class="container">
         <div class="section-header">
             <div class="tag">Global Coverage</div>
-            <h2>10 languages, 80+ outlets</h2>
+            <h2>34 languages, 185+ outlets</h2>
             <p>Comprehensive coverage of the world's biggest gaming media markets.</p>
         </div>
 
@@ -1082,7 +1307,7 @@
                 <div class="api-info">
                     <h4>Scrape All Outlets</h4>
                     <code>/api/scraper/run</code>
-                    <p>Trigger a full scrape across 80+ outlets</p>
+                    <p>Trigger a full scrape across 185+ outlets</p>
                 </div>
             </div>
             <div class="api-card">
@@ -1193,7 +1418,183 @@
     </div>
 </footer>
 
+<!-- Auth Modals -->
+<div class="modal-overlay" id="loginModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModals()">&times;</button>
+        <h2>Welcome back</h2>
+        <p class="subtitle">Log in to your Gaming PR account</p>
+        <div class="form-error" id="loginError"></div>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="loginUsername">Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter your username" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="form-submit" id="loginSubmit">Log in</button>
+        </form>
+        <p class="form-switch">Don't have an account? <a onclick="switchModal('register')">Sign up</a></p>
+    </div>
+</div>
+
+<div class="modal-overlay" id="registerModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModals()">&times;</button>
+        <h2>Create an account</h2>
+        <p class="subtitle">Join the Gaming PR Platform</p>
+        <div class="form-error" id="registerError"></div>
+        <form id="registerForm" onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label for="regUsername">Username</label>
+                <input type="text" id="regUsername" placeholder="Choose a username" required>
+            </div>
+            <div class="form-group">
+                <label for="regEmail">Email</label>
+                <input type="email" id="regEmail" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="regPassword">Password</label>
+                <input type="password" id="regPassword" placeholder="At least 8 characters" required minlength="8">
+            </div>
+            <button type="submit" class="form-submit" id="registerSubmit">Create account</button>
+        </form>
+        <p class="form-switch">Already have an account? <a onclick="switchModal('login')">Log in</a></p>
+    </div>
+</div>
+
 <script>
+    // ─── Auth Logic ───
+    const API = '/api/auth';
+
+    function openModal(type) {
+        closeModals();
+        document.getElementById(type + 'Modal').classList.add('active');
+    }
+
+    function closeModals() {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+        document.querySelectorAll('.form-error').forEach(e => { e.textContent = ''; e.classList.remove('visible'); });
+    }
+
+    function switchModal(type) { closeModals(); openModal(type); }
+
+    function showError(id, msg) {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.classList.add('visible');
+    }
+
+    function setLoggedIn(user, token) {
+        localStorage.setItem('gpr_token', token);
+        localStorage.setItem('gpr_user', JSON.stringify(user));
+        renderAuthState();
+        closeModals();
+    }
+
+    function logout() {
+        localStorage.removeItem('gpr_token');
+        localStorage.removeItem('gpr_user');
+        renderAuthState();
+    }
+
+    function renderAuthState() {
+        const container = document.getElementById('navAuth');
+        const navLinks = document.getElementById('navLinks');
+        const user = JSON.parse(localStorage.getItem('gpr_user') || 'null');
+        if (user) {
+            const initials = user.username.slice(0, 2).toUpperCase();
+            container.innerHTML =
+                '<div class="user-pill">' +
+                    '<span class="avatar">' + initials + '</span>' +
+                    '<span>' + user.username + '</span>' +
+                    '<button class="logout-btn" onclick="logout()">Log out</button>' +
+                '</div>';
+            navLinks.innerHTML =
+                '<a href="/dashboard">Dashboard</a>' +
+                '<a href="/articles">Articles</a>' +
+                '<a href="/manage/articles">My Articles</a>' +
+                '<a href="/translations">Translations</a>' +
+                '<a href="/outlets">Outlets</a>' +
+                '<a href="/scraper">Scraper</a>' +
+                '<a href="/feed">Live Feed</a>' +
+                '<a href="/emails">Email</a>' +
+                '<a href="/webhooks">Webhooks</a>' +
+                '<a href="/export">Export</a>' +
+                '<a href="/docs" class="btn btn-primary">API Docs</a>';
+        } else {
+            container.innerHTML =
+                '<button class="btn-ghost" onclick="openModal(\'login\')">Log in</button>' +
+                '<button class="btn-nav-primary" onclick="openModal(\'register\')">Sign up</button>';
+            navLinks.innerHTML =
+                '<a href="#features">Features</a>' +
+                '<a href="#email">Email</a>' +
+                '<a href="#languages">Languages</a>' +
+                '<a href="#api">API</a>' +
+                '<a href="/docs" class="btn btn-primary">API Docs</a>';
+        }
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('loginSubmit');
+        btn.disabled = true; btn.textContent = 'Logging in...';
+        try {
+            const res = await fetch(API + '/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('loginUsername').value,
+                    password: document.getElementById('loginPassword').value,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Login failed');
+            setLoggedIn(data.user, data.access_token);
+        } catch (err) {
+            showError('loginError', err.message);
+        } finally {
+            btn.disabled = false; btn.textContent = 'Log in';
+        }
+    }
+
+    async function handleRegister(e) {
+        e.preventDefault();
+        const btn = document.getElementById('registerSubmit');
+        btn.disabled = true; btn.textContent = 'Creating account...';
+        try {
+            const res = await fetch(API + '/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('regUsername').value,
+                    email: document.getElementById('regEmail').value,
+                    password: document.getElementById('regPassword').value,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Registration failed');
+            setLoggedIn(data.user, data.access_token);
+        } catch (err) {
+            showError('registerError', err.message);
+        } finally {
+            btn.disabled = false; btn.textContent = 'Create account';
+        }
+    }
+
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeModals(); });
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+
+    // Restore auth state on page load
+    renderAuthState();
+
     // Intersection Observer for scroll animations
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {

@@ -1,9 +1,13 @@
+import os
+import secrets
+
 from pydantic_settings import BaseSettings
 
 
 SUPPORTED_LANGUAGES = {
     "en": "English",
     "zh-CN": "Mandarin Chinese",
+    "zh-HK": "Cantonese Chinese",
     "hi": "Hindi",
     "es": "Spanish",
     "fr": "French",
@@ -12,11 +16,34 @@ SUPPORTED_LANGUAGES = {
     "pt": "Portuguese",
     "ru": "Russian",
     "ja": "Japanese",
+    "ko": "Korean",
+    "de": "German",
+    "it": "Italian",
+    "tr": "Turkish",
+    "th": "Thai",
+    "id": "Indonesian",
+    "pl": "Polish",
+    "nl": "Dutch",
+    "sv": "Swedish",
+    "no": "Norwegian",
+    "da": "Danish",
+    "fi": "Finnish",
+    "cs": "Czech",
+    "ro": "Romanian",
+    "hu": "Hungarian",
+    "vi": "Vietnamese",
+    "ms": "Malay",
+    "tl": "Filipino",
+    "uk": "Ukrainian",
+    "el": "Greek",
+    "he": "Hebrew",
+    "fa": "Persian",
+    "sw": "Swahili",
 }
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/gaming_pr"
+    DATABASE_URL: str = "sqlite:///gaming_pr.db"
     SCRAPE_INTERVAL_MINUTES: int = 30
     TRANSLATION_PROVIDER: str = "google"
     SCRAPE_CONCURRENCY: int = 10
@@ -39,6 +66,14 @@ class Settings(BaseSettings):
     ENABLE_ADAPTIVE_SCHEDULING: bool = True
     ENABLE_WEBHOOKS: bool = True
     ENABLE_CHANGE_TRACKING: bool = True
+
+    # Auth / JWT — auto-generates secure key if not set via env
+    JWT_SECRET_KEY: str = os.environ.get("JWT_SECRET_KEY", secrets.token_urlsafe(48))
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRATION_MINUTES: int = 1440  # 24 hours
+
+    # Claude AI (for personalized outreach)
+    ANTHROPIC_API_KEY: str = ""
 
     # Email service (external)
     EMAIL_SERVICE_URL: str = "http://localhost:3000"

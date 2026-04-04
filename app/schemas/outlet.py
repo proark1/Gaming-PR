@@ -18,7 +18,15 @@ class OutletBase(BaseModel):
     social_twitter: Optional[str] = None
     social_facebook: Optional[str] = None
     social_youtube: Optional[str] = None
+    social_linkedin: Optional[str] = None
+    social_instagram: Optional[str] = None
+    social_tiktok: Optional[str] = None
+    social_discord: Optional[str] = None
+    social_twitch: Optional[str] = None
     contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_page_url: Optional[str] = None
+    contact_form_url: Optional[str] = None
 
 
 class OutletCreate(OutletBase):
@@ -36,7 +44,15 @@ class OutletUpdate(BaseModel):
     social_twitter: Optional[str] = None
     social_facebook: Optional[str] = None
     social_youtube: Optional[str] = None
+    social_linkedin: Optional[str] = None
+    social_instagram: Optional[str] = None
+    social_tiktok: Optional[str] = None
+    social_discord: Optional[str] = None
+    social_twitch: Optional[str] = None
     contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_page_url: Optional[str] = None
+    contact_form_url: Optional[str] = None
     scraper_config: Optional[dict] = None
 
 
@@ -53,6 +69,7 @@ class OutletResponse(OutletBase):
     total_articles_scraped: int = 0
     consecutive_failures: int = 0
     avg_articles_per_scrape: float = 0.0
+    scraper_config: Optional[dict] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translations — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Page-specific styles (shared styles loaded by nav.js) */
+
+        .container { max-width: 1100px; }
+
+        /* Article selector */
+        .selector { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 28px; padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); flex-wrap: wrap; }
+        .sel-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px; }
+        .sel-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .sel-select { background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-primary); padding: 10px 12px; border-radius: 8px; font-size: 0.86rem; font-family: inherit; outline: none; width: 100%; cursor: pointer; }
+        .sel-select option { background: var(--bg-primary); }
+        .sel-btn { align-self: flex-end; background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+        .sel-btn:hover { opacity: 0.85; }
+        .sel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Source article card */
+        .source-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; }
+        .source-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+        .source-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; align-items: center; }
+        .source-body { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; max-height: 150px; overflow-y: auto; padding: 12px; background: var(--bg-primary); border-radius: 8px; }
+        /* Stats bar */
+        .trans-stats { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+        .ts { padding: 10px 18px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; text-align: center; }
+        .ts .val { font-size: 1.3rem; font-weight: 800; }
+        .ts .lbl { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .ts .val.green { color: var(--green); }
+        .ts .val.orange { color: var(--orange); }
+        .ts .val.red { color: var(--red); }
+
+        /* Retry button */
+        .retry-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .retry-btn { background: var(--orange-dim); border: 1px solid rgba(245,158,11,0.3); color: var(--orange); padding: 8px 18px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .2s; }
+        .retry-btn:hover { background: rgba(245,158,11,0.2); }
+        .retry-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .retry-hint { font-size: 0.78rem; color: var(--text-muted); }
+
+        /* Translation cards */
+        .trans-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+        .trans-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; transition: border-color .2s; }
+        .trans-card:hover { border-color: rgba(124,92,255,0.3); }
+        .trans-card.status-completed { border-left: 3px solid var(--green); }
+        .trans-card.status-pending, .trans-card.status-in_progress { border-left: 3px solid var(--orange); }
+        .trans-card.status-failed { border-left: 3px solid var(--red); }
+        .trans-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .trans-lang { font-size: 0.95rem; font-weight: 700; }
+        .trans-title { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; line-height: 1.4; }
+        .trans-body { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; max-height: 120px; overflow-y: auto; padding: 10px; background: var(--bg-primary); border-radius: 6px; }
+        .trans-empty { font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
+        .trans-time { font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; }
+
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="translations"></script>
+
+    <div class="container">
+        <h1>Translations</h1>
+        <div class="subtitle">View auto-translated articles across 9 languages and retry failed translations</div>
+
+        <!-- Article selector -->
+        <div class="selector">
+            <div class="sel-group">
+                <span class="sel-label">Select Article</span>
+                <select class="sel-select" id="article-select">
+                    <option value="">Loading articles...</option>
+                </select>
+            </div>
+            <button class="sel-btn" onclick="loadTranslations()">View Translations</button>
+        </div>
+
+        <!-- Content area -->
+        <div id="content">
+            <div class="empty">
+                <div style="font-size:2rem;margin-bottom:10px">&#127760;</div>
+                <div style="font-size:1.05rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px">Select an article above</div>
+                <div>View its translations across all supported languages</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allLanguages = {};
+
+        function authHeaders() {
+            const t = gprGetToken();
+            return t ? { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' } : null;
+        }
+        function isLoggedIn() { return !!gprGetToken(); }
+        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function timeAgo(iso) {
+            if (!iso) return 'N/A';
+            const d = (Date.now() - new Date(iso).getTime()) / 1000;
+            if (d < 60) return Math.round(d) + 's ago';
+            if (d < 3600) return Math.round(d/60) + 'm ago';
+            if (d < 86400) return Math.round(d/3600) + 'h ago';
+            return Math.round(d/86400) + 'd ago';
+        }
+        function statusBadge(s) {
+            const m = { completed: 'green', pending: 'orange', in_progress: 'cyan', failed: 'red' };
+            return `<span class="badge badge-${m[s]||'accent'}">${s}</span>`;
+        }
+
+        async function init() {
+            // Load languages
+            try {
+                const res = await fetch('/api/languages');
+                allLanguages = await res.json();
+            } catch (e) {}
+
+            // Load articles
+            try {
+                const res = await fetch('/api/articles/?skip=0&limit=100');
+                const articles = await res.json();
+                const sel = document.getElementById('article-select');
+                sel.innerHTML = '<option value="">-- Select an article --</option>';
+                articles.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = `#${a.id} — ${a.title} (${a.source_language})`;
+                    sel.appendChild(opt);
+                });
+
+                // Check URL param
+                const params = new URLSearchParams(window.location.search);
+                const preselect = params.get('article_id');
+                if (preselect) {
+                    sel.value = preselect;
+                    loadTranslations();
+                }
+            } catch (e) {
+                document.getElementById('article-select').innerHTML = '<option value="">Failed to load articles</option>';
+            }
+        }
+
+        async function loadTranslations() {
+            const articleId = document.getElementById('article-select').value;
+            if (!articleId) return;
+
+            const content = document.getElementById('content');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div> Loading translations...</div>';
+
+            try {
+                // Fetch article with translations
+                const [artRes, transRes] = await Promise.all([
+                    fetch(`/api/articles/${articleId}?include_translations=true`),
+                    fetch(`/api/articles/${articleId}/translations/`),
+                ]);
+                const article = await artRes.json();
+                const translations = await transRes.json();
+
+                const completed = translations.filter(t => t.status === 'completed').length;
+                const pending = translations.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
+                const failed = translations.filter(t => t.status === 'failed').length;
+                const total = Object.keys(allLanguages).length - 1; // exclude source
+
+                content.innerHTML = `
+                    <!-- Source article -->
+                    <div class="source-card">
+                        <div class="source-title">${esc(article.title)}</div>
+                        <div class="source-meta">
+                            ${article.author_name ? `<span>${esc(article.author_name)}</span>` : ''}
+                            <span class="badge badge-accent">${article.source_language} (source)</span>
+                            <span>Created ${timeAgo(article.created_at)}</span>
+                            <span>Updated ${timeAgo(article.updated_at)}</span>
+                        </div>
+                        <div class="source-body">${esc(article.body)}</div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="trans-stats">
+                        <div class="ts"><div class="val green">${completed}</div><div class="lbl">Completed</div></div>
+                        <div class="ts"><div class="val orange">${pending}</div><div class="lbl">Pending</div></div>
+                        <div class="ts"><div class="val red">${failed}</div><div class="lbl">Failed</div></div>
+                        <div class="ts"><div class="val" style="color:var(--text-primary)">${translations.length}/${total}</div><div class="lbl">Languages</div></div>
+                    </div>
+
+                    <!-- Retry -->
+                    ${failed > 0 || translations.length < total ? `
+                    <div class="retry-row">
+                        <button class="retry-btn" id="retryBtn" onclick="retryTranslations(${articleId})">Retry Failed Translations</button>
+                        <span class="retry-hint">${failed > 0 ? `${failed} translation(s) failed` : 'Some languages not yet translated'} — retrying will re-run all translations</span>
+                    </div>` : ''}
+
+                    <!-- Translation cards -->
+                    <div class="trans-grid" id="trans-grid">
+                        ${translations.length === 0 ? '<div class="empty" style="grid-column:1/-1">No translations yet. They may still be processing.</div>' :
+                        translations.map(t => `
+                            <div class="trans-card status-${t.status}">
+                                <div class="trans-header">
+                                    <span class="trans-lang">${allLanguages[t.language] || t.language}</span>
+                                    ${statusBadge(t.status)}
+                                </div>
+                                ${t.translated_title ? `<div class="trans-title">${esc(t.translated_title)}</div>` : ''}
+                                ${t.translated_body ? `<div class="trans-body">${esc(t.translated_body).substring(0, 1000)}</div>` :
+                                    t.status === 'failed' ? '<div class="trans-empty">Translation failed</div>' :
+                                    '<div class="trans-empty">Translation in progress...</div>'}
+                                <div class="trans-time">Translated ${timeAgo(t.created_at)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (err) {
+                content.innerHTML = `<div class="empty" style="color:var(--red)">Failed to load: ${err.message}</div>`;
+            }
+        }
+
+        async function retryTranslations(articleId) {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const btn = document.getElementById('retryBtn');
+            btn.disabled = true; btn.textContent = 'Retrying...';
+            try {
+                const res = await fetch(`/api/articles/${articleId}/translations/retry`, { method: 'POST', headers: h });
+                if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Failed'); }
+                btn.textContent = 'Queued!';
+                setTimeout(() => loadTranslations(), 2000);
+            } catch (e) {
+                btn.textContent = 'Error: ' + e.message;
+                setTimeout(() => { btn.disabled = false; btn.textContent = 'Retry Failed Translations'; }, 3000);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -44,6 +44,15 @@ ARTICLE_TYPES = {
     "list": ["top", "best", "ranking", "list"],
     "deal": ["deal", "sale", "discount", "oferta", "セール"],
     "trailer": ["trailer", "tráiler", "トレーラー", "трейлер"],
+    # VC / investment article types
+    "investment": ["investment", "funding", "raised", "series a", "series b", "series c", "seed round", "pre-seed", "投資", "融资"],
+    "portfolio": ["portfolio", "backed", "our companies", "portfolio company"],
+    "exit": ["acquisition", "acquired", "ipo", "merger", "exit", "buyout"],
+    # Streamer / content creator article types
+    "stream": ["stream", "live stream", "going live", "streaming", "配信", "стрим"],
+    "vod": ["vod", "past broadcast", "full stream", "rerun"],
+    "clip": ["clip", "highlight", "best of", "montage", "クリップ"],
+    "announcement": ["announcement", "update", "giveaway", "merch", "unboxing"],
 }
 
 # CSS selectors for article body, ordered by specificity
@@ -87,7 +96,8 @@ STRIP_TAGS = [
 
 
 def extract_full_article(url: str, timeout: int = 20, language: str = "en",
-                         use_stealth: bool = True, use_browser_fallback: bool = True) -> dict:
+                         use_stealth: bool = True, use_browser_fallback: bool = True,
+                         session: requests.Session = None) -> dict:
     """
     Extract everything possible from an article URL.
 
@@ -95,6 +105,7 @@ def extract_full_article(url: str, timeout: int = 20, language: str = "en",
     partial data with errors logged in the 'extraction_errors' field.
 
     Features stealth headers and Playwright browser fallback for JS-heavy sites.
+    Pass a `session` to reuse TCP connections across multiple article extractions.
     """
     result = {
         "url": url,
@@ -150,7 +161,8 @@ def extract_full_article(url: str, timeout: int = 20, language: str = "en",
     html_text = None
 
     try:
-        response = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+        requester = session if session is not None else requests
+        response = requester.get(url, headers=headers, timeout=timeout, allow_redirects=True)
         result["http_status_code"] = response.status_code
         response.raise_for_status()
         html_text = response.text
@@ -831,3 +843,97 @@ def _needs_browser_check(url: str, html_text: str) -> bool:
     except Exception as e:
         logger.debug(f"Browser check failed for {url}: {e}")
         return False
+
+
+# URL path patterns that commonly host contact or submission forms
+_CONTACT_FORM_PATHS = [
+    "/contact", "/contact-us", "/contactus", "/contact_us",
+    "/submit", "/submit-news", "/submit-tip", "/tips", "/tip",
+    "/press", "/press-contact", "/media", "/media-contact",
+    "/about/contact", "/about/press", "/pitch",
+    "/advertise", "/partnership", "/partnerships",
+    "/feedback", "/get-in-touch", "/reach-us",
+]
+
+# Keywords in link text that suggest a contact/submit page
+_CONTACT_LINK_KEYWORDS = [
+    "contact", "submit", "tip", "tips", "press", "media",
+    "pitch", "advertise", "feedback", "get in touch", "reach us",
+    "reach out", "send us", "write for", "contribute",
+]
+
+
+def detect_contact_form_url(outlet_url: str, timeout: int = 10,
+                             language: str = "en",
+                             use_stealth: bool = True) -> Optional[str]:
+    """
+    Detect the URL of a contact or submission form on an outlet's website.
+
+    Fetches the outlet homepage, discovers candidate contact/submit pages from
+    known path patterns and link text, then checks each candidate for an HTML
+    <form> element.  Returns the first URL that contains a contact/submit form,
+    or None if none is found.
+    """
+    parsed_base = urlparse(outlet_url)
+    base = f"{parsed_base.scheme}://{parsed_base.netloc}"
+
+    headers = HEADERS
+    if use_stealth:
+        try:
+            headers = get_session_headers(parsed_base.netloc, language=language)
+        except Exception:
+            pass
+
+    def _has_contact_form(url: str) -> bool:
+        """Return True if the page at *url* contains a form that looks like a contact/submit form."""
+        try:
+            resp = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+            if resp.status_code != 200:
+                return False
+            soup = BeautifulSoup(resp.text, "lxml")
+            for form in soup.find_all("form"):
+                # Look for tell-tale input names or submit buttons suggesting contact/submit intent
+                form_html = str(form).lower()
+                contact_signals = [
+                    "name", "email", "message", "subject", "contact",
+                    "submit", "send", "tip", "press",
+                ]
+                if any(signal in form_html for signal in contact_signals):
+                    return True
+        except Exception:
+            pass
+        return False
+
+    # Build candidate URL list ---------------------------------------------------
+    candidates: list[str] = []
+    seen_paths: set[str] = set()
+
+    # 1. Well-known paths
+    for path in _CONTACT_FORM_PATHS:
+        candidates.append(base + path)
+        seen_paths.add(path)
+
+    # 2. Links found on the homepage that hint at contact/submit pages
+    try:
+        resp = requests.get(outlet_url, headers=headers, timeout=timeout, allow_redirects=True)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, "lxml")
+            for a in soup.find_all("a", href=True):
+                href = a.get("href", "").strip()
+                text = a.get_text(strip=True).lower()
+                if any(kw in text for kw in _CONTACT_LINK_KEYWORDS):
+                    full = urljoin(outlet_url, href)
+                    path = urlparse(full).path.rstrip("/") or "/"
+                    if urlparse(full).netloc == parsed_base.netloc and path not in seen_paths:
+                        candidates.append(full)
+                        seen_paths.add(path)
+    except Exception:
+        pass
+
+    # Check each candidate -------------------------------------------------------
+    for url in candidates:
+        if _has_contact_form(url):
+            logger.debug(f"Contact form found at {url}")
+            return url
+
+    return None

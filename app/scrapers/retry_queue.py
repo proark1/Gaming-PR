@@ -36,6 +36,7 @@ class RetryQueue:
 
     def __init__(self, max_size: int = 1000):
         self.max_size = max_size
+        self._lock = threading.Lock()
         self._queue: deque[RetryItem] = deque(maxlen=max_size)
         self._seen_urls: set[str] = set()
         self._lock = threading.Lock()

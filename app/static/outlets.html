@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outlets — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Page-specific styles (shared styles loaded by nav.js) */
+
+        /* Stats */
+        .stats-bar { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+        .stat-pill { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; display: flex; flex-direction: column; gap: 2px; min-width: 130px; }
+        .stat-pill .label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-pill .value { font-size: 1.3rem; font-weight: 800; }
+        .stat-pill .value.accent { color: var(--accent-light); }
+        .stat-pill .value.green { color: var(--green); }
+        .stat-pill .value.orange { color: var(--orange); }
+
+        /* Toolbar */
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 14px 18px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); align-items: flex-end; }
+        .fg input { width: 200px; }
+        .fg select { min-width: 130px; }
+        .tbtn { padding: 7px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: all .2s; }
+        .tbtn-primary { background: var(--accent); color: #fff; }
+        .tbtn-primary:hover { opacity: 0.85; }
+        .tbtn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .tbtn-ghost:hover { border-color: var(--accent); color: var(--text-primary); }
+        .tbtn-green { background: var(--green); color: #fff; }
+        .tbtn-green:hover { opacity: 0.85; }
+        .tbtn-green:disabled { opacity: 0.4; cursor: not-allowed; }
+        .toolbar-right { margin-left: auto; display: flex; gap: 8px; align-items: flex-end; }
+        .selected-count { font-size: 0.8rem; color: var(--accent-light); font-weight: 600; padding: 8px 0; }
+
+        .tbtn-accent { background: var(--accent); color: #fff; }
+        .tbtn-accent:hover { opacity: 0.85; }
+        .tbtn-accent:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        /* Table */
+        .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { color: var(--text-secondary); }
+        .cb-cell { width: 36px; text-align: center; }
+        .cb-cell input { accent-color: var(--accent); cursor: pointer; }
+        .outlet-name-cell { color: var(--text-primary); font-weight: 600; cursor: pointer; }
+        .outlet-name-cell:hover { color: var(--accent-light); }
+        .email-cell { font-size: 0.78rem; color: var(--accent-light); }
+        .email-cell a { color: inherit; text-decoration: none; }
+        .email-cell a:hover { text-decoration: underline; }
+        .phone-cell { font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; }
+        .no-data { color: var(--text-muted); font-size: 0.75rem; }
+        .contact-cell { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+        .contact-link { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 5px; font-size: 0.72rem; font-weight: 600; text-decoration: none; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-secondary); white-space: nowrap; }
+        .contact-link:hover { color: var(--text-primary); border-color: var(--accent); }
+        .contact-link.email { color: var(--accent-light); border-color: rgba(124,92,255,0.3); }
+        .contact-link.twitter { color: #1d9bf0; border-color: rgba(29,155,240,0.3); }
+        .contact-link.linkedin { color: #0a66c2; border-color: rgba(10,102,194,0.3); }
+        .contact-link.web { color: var(--cyan); border-color: rgba(6,182,212,0.3); }
+
+        /* Detail panel (slide-in from right) */
+        .detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; }
+        .detail-overlay.open { display: block; }
+        .detail-panel {
+            position: fixed; top: 0; right: 0; bottom: 0; width: 520px; max-width: 90vw;
+            background: var(--bg-secondary); border-left: 1px solid var(--border);
+            z-index: 201; transform: translateX(100%); transition: transform .25s ease;
+            overflow-y: auto; padding: 28px;
+        }
+        .detail-panel.open { transform: translateX(0); }
+        .dp-close { position: absolute; top: 16px; right: 16px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; font-size: 1.1rem; transition: all .2s; }
+        .dp-close:hover { border-color: var(--accent); color: var(--text-primary); }
+        .dp-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding-right: 40px; }
+        .dp-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; color: var(--accent-light); flex-shrink: 0; overflow: hidden; }
+        .dp-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .dp-name { font-size: 1.2rem; font-weight: 800; }
+        .dp-url { font-size: 0.8rem; color: var(--text-muted); word-break: break-all; }
+        .dp-url a { color: inherit; text-decoration: none; }
+        .dp-url a:hover { color: var(--accent-light); }
+        .dp-section { margin-bottom: 22px; }
+        .dp-section-title { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+        .dp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .dp-field { }
+        .dp-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+        .dp-value { font-size: 0.88rem; color: var(--text-primary); }
+        .dp-value a { color: var(--accent-light); text-decoration: none; }
+        .dp-value a:hover { text-decoration: underline; }
+        .dp-value.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+        .dp-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; padding: 10px; background: var(--bg-primary); border-radius: 8px; }
+        .dp-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .dp-btn { padding: 8px 18px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: all .2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .dp-btn-primary { background: var(--accent); color: #fff; }
+        .dp-btn-primary:hover { opacity: 0.85; }
+        .dp-btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .dp-btn-ghost:hover { border-color: var(--accent); color: var(--text-primary); }
+        .dp-btn-green { background: var(--green); color: #fff; }
+        .dp-btn-green:hover { opacity: 0.85; }
+        .dp-btn-green:disabled { opacity: 0.4; cursor: not-allowed; }
+        /* Admin edit form */
+        .admin-edit-form { display: flex; flex-direction: column; gap: 10px; }
+        .ae-row { display: flex; flex-direction: column; gap: 3px; }
+        .ae-row label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+        .ae-row input, .ae-row select { padding: 8px 10px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 0.84rem; font-family: inherit; outline: none; }
+        .ae-row input:focus, .ae-row select:focus { border-color: var(--accent); }
+
+        .scrape-log { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-secondary); background: var(--bg-primary); border-radius: 8px; padding: 10px; line-height: 1.6; max-height: 200px; overflow-y: auto; }
+        .scrape-log .ok { color: var(--green); }
+        .scrape-log .err { color: var(--red); }
+        .scrape-log .info { color: var(--cyan); }
+
+        /* Email modal */
+        .email-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 250; align-items: center; justify-content: center; }
+        .email-overlay.open { display: flex; }
+        .email-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .email-modal h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+        .email-modal .sub { font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 20px; }
+        .email-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .em-fg { margin-bottom: 14px; }
+        .em-fg label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; }
+        .em-fg input, .em-fg textarea, .em-fg select { width: 100%; padding: 10px 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.88rem; font-family: inherit; outline: none; }
+        .em-fg input:focus, .em-fg textarea:focus, .em-fg select:focus { border-color: var(--accent); }
+        .em-fg textarea { min-height: 120px; resize: vertical; }
+        .em-fg .hint { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; }
+        .em-recipients { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+        .em-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(124,92,255,0.1); color: var(--accent-light); border-radius: 6px; font-size: 0.76rem; font-weight: 500; }
+        .em-chip .name { color: var(--text-primary); font-weight: 600; }
+        .em-submit { width: 100%; padding: 12px; border-radius: 10px; font-weight: 600; font-size: 0.92rem; border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; font-family: inherit; margin-top: 8px; transition: all .2s; }
+        .em-submit:hover { transform: translateY(-1px); }
+        .em-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .em-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .em-error.visible { display: block; }
+        .em-success { background: var(--green-dim); border: 1px solid rgba(34,197,94,0.3); color: var(--green); padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .em-success.visible { display: block; }
+
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="outlets"></script>
+
+    <div class="container">
+        <h1>Gaming Outlets</h1>
+        <div class="subtitle">Gaming news outlets, VC firms, and streamers — click any source for details, select multiple to send emails</div>
+
+        <div class="stats-bar" id="stats-bar"></div>
+
+        <!-- Toolbar: filters + actions -->
+        <div class="toolbar" id="outlet-toolbar">
+            <div class="fg">
+                <span class="fg-label">Search</span>
+                <input id="f-search" type="text" placeholder="Search outlet name...">
+            </div>
+            <div class="fg">
+                <span class="fg-label">Source Type</span>
+                <select id="f-category">
+                    <option value="">All Types</option>
+                    <option value="gaming_news">News Outlets</option>
+                    <option value="gaming_vc">Gaming VCs</option>
+                    <option value="gaming_streamer">Streamers</option>
+                </select>
+            </div>
+            <div class="fg">
+                <span class="fg-label">Language</span>
+                <select id="f-language"><option value="">All</option></select>
+            </div>
+            <div class="fg">
+                <span class="fg-label">Status</span>
+                <select id="f-active"><option value="">All</option><option value="true">Active</option><option value="false">Inactive</option></select>
+            </div>
+            <button class="tbtn tbtn-primary" onclick="loadOutletsAndChips()">Filter</button>
+            <button class="tbtn tbtn-ghost" onclick="clearFilters()">Clear</button>
+            <div class="toolbar-right">
+                <span class="selected-count" id="sel-count"></span>
+                <button class="tbtn tbtn-accent" id="scrape-articles-btn" onclick="bulkScrapeArticles()" disabled>Scrape Articles</button>
+                <button class="tbtn tbtn-accent" id="scrape-contacts-btn" onclick="bulkScrapeContacts()" disabled>Scrape Contacts</button>
+                <button class="tbtn tbtn-green" id="email-btn" onclick="openEmailModal()" disabled>Email Selected</button>
+            </div>
+        </div>
+
+        <div id="outlet-filter-chips"></div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="cb-cell"><input type="checkbox" id="select-all" onchange="toggleAll(this.checked)"></th>
+                        <th class="sortable" id="sort-name" onclick="sortBy('name')">Outlet</th>
+                        <th class="sortable" id="sort-language" onclick="sortBy('language')">Language</th>
+                        <th>Country</th>
+                        <th class="sortable" id="sort-category" onclick="sortBy('category')">Category</th>
+                        <th>Contact</th>
+                        <th class="sortable" id="sort-is_active" onclick="sortBy('is_active')">Status</th>
+                        <th class="sortable" id="sort-total_articles_scraped" onclick="sortBy('total_articles_scraped')">Articles</th>
+                    </tr>
+                </thead>
+                <tbody id="outlet-tbody">
+                    <tr><td colspan="8"><div class="loading"><div class="spinner"></div> Loading outlets...</div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+    <div class="detail-panel" id="detail-panel">
+        <button class="dp-close" onclick="closeDetail()">&times;</button>
+        <div id="detail-content"></div>
+    </div>
+
+    <!-- Email Modal -->
+    <div class="email-overlay" id="email-overlay" onclick="if(event.target===this)closeEmailModal()">
+        <div class="email-modal">
+            <button class="close-btn" onclick="closeEmailModal()">&times;</button>
+            <h2>Send Email to Outlets</h2>
+            <div class="sub" id="em-sub">Sending to 0 outlets</div>
+            <div class="em-error" id="em-error"></div>
+            <div class="em-success" id="em-success"></div>
+            <div class="em-recipients" id="em-recipients"></div>
+            <form onsubmit="handleSendEmail(event)">
+                <div class="em-fg">
+                    <label>From Domain</label>
+                    <select id="em-domain" required><option value="">Loading domains...</option></select>
+                </div>
+                <div class="em-fg">
+                    <label>From Email</label>
+                    <input type="email" id="em-from" placeholder="press@yourdomain.com" required>
+                </div>
+                <div class="em-fg">
+                    <label>From Name</label>
+                    <input type="text" id="em-fromname" placeholder="Gaming PR Team">
+                </div>
+                <div class="em-fg">
+                    <label>Subject</label>
+                    <input type="text" id="em-subject" placeholder="Email subject line" required>
+                </div>
+                <div class="em-fg">
+                    <label>HTML Body</label>
+                    <textarea id="em-html" placeholder="<h1>Hello!</h1><p>Your press release content...</p>"></textarea>
+                </div>
+                <div class="em-fg">
+                    <label>Plain Text</label>
+                    <textarea id="em-text" placeholder="Plain text version..." style="min-height:80px"></textarea>
+                </div>
+                <button type="submit" class="em-submit" id="em-btn">Send to All Selected Outlets</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allOutlets = [];
+        let selectedIds = new Set();
+        let allLanguages = {};
+        let sortField = 'name';
+        let sortAsc = true;
+
+        function esc(s) { return gprEsc(s); }
+        function timeAgo(d) { return gprTimeAgo(d) || 'Never'; }
+        function authHeaders() { const t = gprGetToken(); return t ? { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' } : null; }
+        function isLoggedIn() { return !!gprGetToken(); }
+
+        async function loadLanguages() {
+            try {
+                const res = await fetch('/api/languages');
+                allLanguages = await res.json();
+                const sel = document.getElementById('f-language');
+                for (const [code, name] of Object.entries(allLanguages)) {
+                    const opt = document.createElement('option');
+                    opt.value = code; opt.textContent = name;
+                    sel.appendChild(opt);
+                }
+            } catch (e) {}
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/outlets/stats');
+                const s = await res.json();
+                const withEmail = allOutlets.filter(o => o.contact_email).length;
+                document.getElementById('stats-bar').innerHTML = `
+                    <div class="stat-pill stat-card--hero"><span class="label">Total Outlets</span><span class="value accent">${s.total_outlets}</span></div>
+                    <div class="stat-pill"><span class="label">Active</span><span class="value green">${s.active_outlets}</span></div>
+                    <div class="stat-pill"><span class="label">With Email</span><span class="value accent">${withEmail}</span></div>
+                    <div class="stat-pill"><span class="label">With Failures</span><span class="value orange">${s.outlets_with_failures}</span></div>
+                    <div class="stat-pill"><span class="label">Articles Scraped</span><span class="value accent">${(s.total_articles_scraped || 0).toLocaleString()}</span></div>
+                `;
+            } catch (e) {}
+        }
+
+        function sortBy(field) {
+            if (sortField === field) sortAsc = !sortAsc;
+            else { sortField = field; sortAsc = true; }
+            document.querySelectorAll('th.sortable').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+            const activeTh = document.getElementById('sort-' + field);
+            if (activeTh) activeTh.classList.add(sortAsc ? 'sort-asc' : 'sort-desc');
+            renderTable();
+        }
+
+        async function loadOutlets() {
+            document.getElementById('outlet-tbody').innerHTML = '<tr><td colspan="8"><div class="loading"><div class="spinner"></div> Loading...</div></td></tr>';
+            const params = new URLSearchParams();
+            const search = document.getElementById('f-search').value.trim();
+            const category = document.getElementById('f-category').value;
+            const language = document.getElementById('f-language').value;
+            const active = document.getElementById('f-active').value;
+            if (search) params.set('search', search);
+            if (category) params.set('category', category);
+            if (language) params.set('language', language);
+            if (active) params.set('is_active', active);
+            try {
+                const res = await fetch('/api/outlets/?' + params.toString());
+                allOutlets = await res.json();
+                selectedIds.clear();
+                renderTable();
+                loadStats();
+            } catch (err) {
+                document.getElementById('outlet-tbody').innerHTML = `<tr><td colspan="8"><div class="empty-state" style="color:var(--red)">Failed: ${err.message}</div></td></tr>`;
+            }
+        }
+
+        function renderTable() {
+            const sorted = [...allOutlets].sort((a, b) => {
+                let va = (a[sortField] || ''), vb = (b[sortField] || '');
+                if (typeof va === 'string') va = va.toLowerCase();
+                if (typeof vb === 'string') vb = vb.toLowerCase();
+                if (va < vb) return sortAsc ? -1 : 1;
+                if (va > vb) return sortAsc ? 1 : -1;
+                return 0;
+            });
+            const tbody = document.getElementById('outlet-tbody');
+            if (!sorted.length) {
+                tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No outlets found</div></td></tr>';
+                return;
+            }
+            tbody.innerHTML = sorted.map(o => `
+                <tr class="${selectedIds.has(o.id) ? 'selected' : ''}">
+                    <td class="cb-cell"><input type="checkbox" ${selectedIds.has(o.id)?'checked':''} onchange="toggleSelect(${o.id}, this.checked)"></td>
+                    <td class="outlet-name-cell" onclick="openDetail(${o.id})">${esc(o.name)}</td>
+                    <td><span class="badge badge-accent">${o.language}</span></td>
+                    <td>${esc(o.country || o.region || '-')}</td>
+                    <td>${o.category ? `<span class="badge badge-cyan">${esc(o.category)}</span>` : '<span class="no-data">-</span>'}</td>
+                    <td>${(() => {
+                        const links = [];
+                        if (o.contact_email) links.push(`<a class="contact-link email" href="mailto:${esc(o.contact_email.split(',')[0].trim())}">✉ Email</a>`);
+                        if (o.social_twitter) links.push(`<a class="contact-link twitter" href="${esc(o.social_twitter)}" target="_blank" rel="noopener">𝕏 Twitter</a>`);
+                        if (o.social_linkedin) links.push(`<a class="contact-link linkedin" href="${esc(o.social_linkedin)}" target="_blank" rel="noopener">in LinkedIn</a>`);
+                        if (o.contact_page_url) links.push(`<a class="contact-link web" href="${esc(o.contact_page_url)}" target="_blank" rel="noopener">↗ Contact</a>`);
+                        if (o.contact_form_url && !o.contact_page_url) links.push(`<a class="contact-link web" href="${esc(o.contact_form_url)}" target="_blank" rel="noopener">↗ Form</a>`);
+                        if (!links.length) return '<span class="no-data">N/A</span>';
+                        const visible = links.slice(0, 2).join('');
+                        const extra = links.length > 2 ? `<span class="contact-more-badge" onclick="openDetail(${o.id})" title="See all contacts">+${links.length-2} more</span>` : '';
+                        return `<div class="contact-cell">${visible}${extra}</div>`;
+                    })()}</td>
+                    <td>${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">off</span>'}</td>
+                    <td>${(o.total_articles_scraped || 0).toLocaleString()}</td>
+                </tr>
+            `).join('');
+            updateSelectionUI();
+        }
+
+        function toggleSelect(id, checked) {
+            if (checked) selectedIds.add(id); else selectedIds.delete(id);
+            updateSelectionUI();
+            // Update row class
+            renderTable();
+        }
+
+        function toggleAll(checked) {
+            if (checked) allOutlets.forEach(o => selectedIds.add(o.id));
+            else selectedIds.clear();
+            renderTable();
+        }
+
+        function updateSelectionUI() {
+            const count = selectedIds.size;
+            const withEmail = [...selectedIds].filter(id => allOutlets.find(o => o.id === id)?.contact_email).length;
+            document.getElementById('sel-count').textContent = count ? `${count} selected` : '';
+            document.getElementById('email-btn').disabled = withEmail === 0;
+            document.getElementById('scrape-articles-btn').disabled = count === 0;
+            document.getElementById('scrape-contacts-btn').disabled = count === 0;
+        }
+
+        // ─── Detail Panel ───
+        function isAdmin() { const u = JSON.parse(localStorage.getItem('gpr_user') || 'null'); return u && u.is_admin; }
+
+        function openDetail(id) {
+            const o = allOutlets.find(x => x.id === id);
+            if (!o) return;
+            const langName = allLanguages[o.language] || o.language;
+            const admin = isAdmin();
+            const emails = (o.contact_email || '').split(',').map(e => e.trim()).filter(Boolean);
+
+            document.getElementById('detail-content').innerHTML = `
+                <div class="dp-header">
+                    <div class="dp-icon">${o.favicon_url ? `<img src="${esc(o.favicon_url)}" onerror="this.parentElement.textContent='${esc(o.name).charAt(0)}'">` : esc(o.name).charAt(0)}</div>
+                    <div>
+                        <div class="dp-name">${esc(o.name)}</div>
+                        <div class="dp-url"><a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.url)}</a></div>
+                    </div>
+                </div>
+
+                ${o.description ? `<div class="dp-section"><div class="dp-desc">${esc(o.description)}</div></div>` : ''}
+
+                <div class="dp-section">
+                    <div class="dp-section-title">Contact Information</div>
+                    <div class="dp-grid">
+                        <div class="dp-field" style="grid-column:1/-1"><div class="dp-label">Email${emails.length > 1 ? 's' : ''}</div><div class="dp-value">${emails.length ? emails.map(e => `<a href="mailto:${esc(e)}" style="display:inline-block;margin-right:8px">${esc(e)}</a>`).join('') : '<span class="no-data">Not found yet</span>'}</div></div>
+                        <div class="dp-field"><div class="dp-label">Phone</div><div class="dp-value mono">${o.contact_phone ? esc(o.contact_phone) : '<span class="no-data">Not found yet</span>'}</div></div>
+                        <div class="dp-field"><div class="dp-label">Contact Page</div><div class="dp-value">${o.contact_page_url ? `<a href="${esc(o.contact_page_url)}" target="_blank">${esc(o.contact_page_url)}</a>` : '<span class="no-data">-</span>'}</div></div>
+                    </div>
+                </div>
+
+                <div class="dp-section">
+                    <div class="dp-section-title">Outlet Details</div>
+                    <div class="dp-grid">
+                        <div class="dp-field"><div class="dp-label">Language</div><div class="dp-value">${esc(langName)} (${o.language})</div></div>
+                        <div class="dp-field"><div class="dp-label">Country</div><div class="dp-value">${esc(o.country || '-')}</div></div>
+                        <div class="dp-field"><div class="dp-label">Region</div><div class="dp-value">${esc(o.region || '-')}</div></div>
+                        <div class="dp-field"><div class="dp-label">Category</div><div class="dp-value">${esc(o.category || '-')}</div></div>
+                        <div class="dp-field"><div class="dp-label">Priority</div><div class="dp-value">${o.priority}</div></div>
+                        <div class="dp-field"><div class="dp-label">Scraper Type</div><div class="dp-value">${esc(o.scraper_type)}</div></div>
+                        <div class="dp-field"><div class="dp-label">Status</div><div class="dp-value">${o.is_active ? '<span class="badge badge-green">active</span>' : '<span class="badge badge-red">inactive</span>'}</div></div>
+                        <div class="dp-field"><div class="dp-label">RSS Feed</div><div class="dp-value mono" style="font-size:0.76rem;word-break:break-all">${o.rss_feed_url ? `<a href="${esc(o.rss_feed_url)}" target="_blank">${esc(o.rss_feed_url)}</a>` : '<span class="no-data">None (generic scraper)</span>'}</div></div>
+                    </div>
+                </div>
+
+                <div class="dp-section">
+                    <div class="dp-section-title">Scraping Stats</div>
+                    <div class="dp-grid">
+                        <div class="dp-field"><div class="dp-label">Articles Scraped</div><div class="dp-value">${(o.total_articles_scraped || 0).toLocaleString()}</div></div>
+                        <div class="dp-field"><div class="dp-label">Avg per Run</div><div class="dp-value">${o.avg_articles_per_scrape ? o.avg_articles_per_scrape.toFixed(1) : '0'}</div></div>
+                        <div class="dp-field"><div class="dp-label">Last Scraped</div><div class="dp-value">${o.last_scraped_at ? new Date(o.last_scraped_at).toLocaleString() : 'Never'}</div></div>
+                        <div class="dp-field"><div class="dp-label">Failures</div><div class="dp-value" style="color:${o.consecutive_failures > 0 ? 'var(--red)' : 'inherit'}">${o.consecutive_failures || 0}</div></div>
+                    </div>
+                </div>
+
+                ${o.social_twitter || o.social_facebook || o.social_youtube ? `<div class="dp-section">
+                    <div class="dp-section-title">Social</div>
+                    <div class="dp-grid">
+                        ${o.social_twitter ? `<div class="dp-field"><div class="dp-label">Twitter</div><div class="dp-value"><a href="${esc(o.social_twitter)}" target="_blank">${esc(o.social_twitter)}</a></div></div>` : ''}
+                        ${o.social_facebook ? `<div class="dp-field"><div class="dp-label">Facebook</div><div class="dp-value"><a href="${esc(o.social_facebook)}" target="_blank">${esc(o.social_facebook)}</a></div></div>` : ''}
+                        ${o.social_youtube ? `<div class="dp-field"><div class="dp-label">YouTube</div><div class="dp-value"><a href="${esc(o.social_youtube)}" target="_blank">${esc(o.social_youtube)}</a></div></div>` : ''}
+                    </div>
+                </div>` : ''}
+
+                ${admin ? `<div class="dp-section">
+                    <div class="dp-section-title" style="color:var(--orange)">Admin — Edit Outlet</div>
+                    <div class="admin-edit-form">
+                        <div class="ae-row"><label>Contact Email(s)</label><input type="text" id="ae-email" value="${esc(o.contact_email || '')}" placeholder="press@site.com, editor@site.com"></div>
+                        <div class="ae-row"><label>Phone</label><input type="text" id="ae-phone" value="${esc(o.contact_phone || '')}" placeholder="+1-555-1234"></div>
+                        <div class="ae-row"><label>Description</label><input type="text" id="ae-desc" value="${esc(o.description || '')}" placeholder="Description of outlet"></div>
+                        <div class="ae-row"><label>Category</label><input type="text" id="ae-cat" value="${esc(o.category || '')}" placeholder="gaming_news"></div>
+                        <div class="ae-row"><label>Priority (1-10)</label><input type="number" id="ae-prio" value="${o.priority || 5}" min="1" max="10"></div>
+                        <div class="ae-row"><label>RSS Feed URL</label><input type="text" id="ae-rss" value="${esc(o.rss_feed_url || '')}" placeholder="https://site.com/feed/"></div>
+                        <div class="ae-row"><label>Twitter</label><input type="text" id="ae-twitter" value="${esc(o.social_twitter || '')}" placeholder="https://twitter.com/outlet"></div>
+                        <div class="ae-row"><label>Active</label><select id="ae-active"><option value="true" ${o.is_active ? 'selected' : ''}>Active</option><option value="false" ${!o.is_active ? 'selected' : ''}>Inactive</option></select></div>
+                        <button class="dp-btn dp-btn-primary" onclick="saveOutlet(${o.id})" id="ae-save-btn">Save Changes</button>
+                        <span id="ae-status" style="font-size:0.8rem;margin-left:10px"></span>
+                    </div>
+                </div>` : ''}
+
+                <div class="dp-section">
+                    <div class="dp-section-title">Outreach Profile <button style="float:right;font-size:0.7rem;padding:2px 8px;cursor:pointer;border:1px solid var(--border);border-radius:4px;background:none;color:var(--text-muted)" onclick="refreshOutletProfile(${o.id})">↺ Refresh</button></div>
+                    ${o.outreach_profile ? `<pre style="font-size:0.75rem;color:var(--text-secondary);background:var(--bg-primary);padding:10px;border-radius:6px;overflow:auto;max-height:200px;white-space:pre-wrap;word-break:break-word">${esc(JSON.stringify(JSON.parse(o.outreach_profile), null, 2))}</pre>` : `<div style="color:var(--text-muted);font-size:0.82rem">No profile yet. Click ↺ Refresh to compile from current data.</div>`}
+                </div>
+                <div class="dp-section">
+                    <div class="dp-section-title">Actions</div>
+                    <div class="dp-actions">
+                        <a class="dp-btn dp-btn-primary" href="${esc(o.url)}" target="_blank">Visit Website</a>
+                        ${emails.length ? `<a class="dp-btn dp-btn-ghost" href="mailto:${esc(emails[0])}">Send Email</a>` : ''}
+                        ${o.contact_page_url ? `<a class="dp-btn dp-btn-ghost" href="${esc(o.contact_page_url)}" target="_blank">Contact Page</a>` : ''}
+                        <button class="dp-btn dp-btn-green" onclick="scrapeOutlet(${o.id}, '${esc(o.name)}')" ${!isLoggedIn()?'disabled':''}>Scrape Articles</button>
+                        <button class="dp-btn dp-btn-ghost" onclick="scrapeOutletContacts(${o.id}, '${esc(o.name)}')" ${!isLoggedIn()?'disabled':''}>Scrape Contacts</button>
+                    </div>
+                    <div id="scrape-result-${o.id}" style="margin-top:10px"></div>
+                </div>
+            `;
+            document.getElementById('detail-overlay').classList.add('open');
+            document.getElementById('detail-panel').classList.add('open');
+        }
+
+        async function saveOutlet(id) {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const btn = document.getElementById('ae-save-btn');
+            const status = document.getElementById('ae-status');
+            btn.disabled = true; btn.textContent = 'Saving...';
+            status.textContent = '';
+            try {
+                const body = {
+                    contact_email: document.getElementById('ae-email').value || null,
+                    contact_phone: document.getElementById('ae-phone').value || null,
+                    description: document.getElementById('ae-desc').value || null,
+                    category: document.getElementById('ae-cat').value || null,
+                    priority: parseInt(document.getElementById('ae-prio').value) || 5,
+                    rss_feed_url: document.getElementById('ae-rss').value || null,
+                    social_twitter: document.getElementById('ae-twitter').value || null,
+                    is_active: document.getElementById('ae-active').value === 'true',
+                };
+                const res = await fetch(`/api/outlets/${id}`, { method: 'PATCH', headers: h, body: JSON.stringify(body) });
+                if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Failed'); }
+                status.innerHTML = '<span style="color:var(--green)">Saved!</span>';
+                btn.textContent = 'Save Changes'; btn.disabled = false;
+                loadOutlets();
+            } catch (e) {
+                status.innerHTML = `<span style="color:var(--red)">${esc(e.message)}</span>`;
+                btn.textContent = 'Save Changes'; btn.disabled = false;
+            }
+        }
+
+        function closeDetail() {
+            document.getElementById('detail-overlay').classList.remove('open');
+            document.getElementById('detail-panel').classList.remove('open');
+        }
+
+        async function refreshOutletProfile(id) {
+            try {
+                const r = await fetch(`/api/outlets/${id}/refresh-profile`, { method: 'POST' });
+                if (!r.ok) throw new Error(await r.text());
+                const updated = await r.json();
+                const idx = allOutlets.findIndex(x => x.id === id);
+                if (idx !== -1) { allOutlets[idx] = updated; openDetail(id); }
+            } catch (e) { alert('Failed to refresh profile: ' + e.message); }
+        }
+
+        async function scrapeOutlet(id, name) {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const el = document.getElementById('scrape-result-' + id);
+            el.innerHTML = '<div class="scrape-log"><span class="info">Starting scrape for ' + esc(name) + '...</span></div>';
+            try {
+                const res = await fetch(`/api/scraper/run/${id}?extract_content=true&run_async=false`, { method: 'POST', headers: h });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed');
+                el.innerHTML = `<div class="scrape-log">
+                    <span class="ok">Scrape complete for ${esc(name)}</span><br>
+                    Articles found: <strong>${data.articles_found ?? 0}</strong><br>
+                    New articles: <strong class="ok">${data.new_articles ?? 0}</strong><br>
+                    Full content: <strong>${data.full_content_extracted ?? 0}</strong><br>
+                    ${(data.errors || []).length > 0 ? '<span class="err">Errors: ' + (data.errors || []).join(', ') + '</span><br>' : ''}
+                    Status: <strong>${data.status}</strong>
+                </div>`;
+                loadOutlets();
+            } catch (e) {
+                el.innerHTML = `<div class="scrape-log"><span class="err">Failed: ${esc(e.message)}</span></div>`;
+            }
+        }
+
+        async function scrapeOutletContacts(id, name) {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const el = document.getElementById('scrape-result-' + id);
+            el.innerHTML = '<div class="scrape-log"><span class="info">Scraping contacts for ' + esc(name) + '...</span></div>';
+            try {
+                const res = await fetch(`/api/scraper/run/${id}?extract_content=false&run_async=false`, { method: 'POST', headers: h });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed');
+                el.innerHTML = `<div class="scrape-log">
+                    <span class="ok">Contact scrape triggered for ${esc(name)}</span><br>
+                    Status: <strong>${data.status}</strong><br>
+                    <span class="info">Refresh the page to see updated contact info</span>
+                </div>`;
+                setTimeout(() => loadOutlets(), 2000);
+            } catch (e) {
+                el.innerHTML = `<div class="scrape-log"><span class="err">Failed: ${esc(e.message)}</span></div>`;
+            }
+        }
+
+        // ─── Email Modal ───
+        async function openEmailModal() {
+            if (!isLoggedIn()) return gprOpenModal('login');
+            const recipients = [...selectedIds]
+                .map(id => allOutlets.find(o => o.id === id))
+                .filter(o => o && o.contact_email);
+            if (!recipients.length) return alert('No selected outlets have email addresses.');
+
+            document.getElementById('em-sub').textContent = `Sending to ${recipients.length} outlet${recipients.length > 1 ? 's' : ''}`;
+            document.getElementById('em-recipients').innerHTML = recipients.map(o =>
+                `<span class="em-chip"><span class="name">${esc(o.name)}</span> ${esc(o.contact_email)}</span>`
+            ).join('');
+            document.getElementById('em-error').classList.remove('visible');
+            document.getElementById('em-success').classList.remove('visible');
+
+            // Load domains
+            try {
+                const res = await fetch('/api/email/domains');
+                const domains = await res.json();
+                const sel = document.getElementById('em-domain');
+                sel.innerHTML = '<option value="">Select domain...</option>' + domains.map(d =>
+                    `<option value="${d.id}">${esc(d.domain)} (${d.status})</option>`
+                ).join('');
+            } catch (e) {}
+
+            document.getElementById('email-overlay').classList.add('open');
+        }
+
+        function closeEmailModal() { document.getElementById('email-overlay').classList.remove('open'); }
+
+        async function handleSendEmail(e) {
+            e.preventDefault();
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const btn = document.getElementById('em-btn');
+            btn.disabled = true; btn.textContent = 'Sending...';
+            document.getElementById('em-error').classList.remove('visible');
+
+            const recipients = [...selectedIds]
+                .map(id => allOutlets.find(o => o.id === id))
+                .filter(o => o && o.contact_email);
+
+            const domainId = parseInt(document.getElementById('em-domain').value);
+            const fromEmail = document.getElementById('em-from').value;
+            const fromName = document.getElementById('em-fromname').value || null;
+            const subject = document.getElementById('em-subject').value;
+            const html = document.getElementById('em-html').value || null;
+            const text = document.getElementById('em-text').value || null;
+
+            let sent = 0, failed = 0;
+            for (const outlet of recipients) {
+                try {
+                    const res = await fetch('/api/email/send', {
+                        method: 'POST', headers: h,
+                        body: JSON.stringify({
+                            domain_id: domainId, from_email: fromEmail, from_name: fromName,
+                            to: [outlet.contact_email], subject, html, text,
+                        }),
+                    });
+                    if (res.ok) sent++; else failed++;
+                } catch (err) { failed++; }
+            }
+
+            if (failed === 0) {
+                const suc = document.getElementById('em-success');
+                suc.textContent = `Successfully sent to ${sent} outlet${sent > 1 ? 's' : ''}!`;
+                suc.classList.add('visible');
+                btn.textContent = 'Sent!';
+                setTimeout(() => closeEmailModal(), 2000);
+            } else {
+                const el = document.getElementById('em-error');
+                el.textContent = `Sent ${sent}, failed ${failed}. Check your domain and email settings.`;
+                el.classList.add('visible');
+            }
+            btn.disabled = false; btn.textContent = `Send to All Selected Outlets`;
+        }
+
+        function clearFilters() {
+            document.getElementById('f-search').value = '';
+            document.getElementById('f-category').value = '';
+            document.getElementById('f-language').value = '';
+            document.getElementById('f-active').value = '';
+            const container = document.getElementById('outlet-filter-chips');
+            if (container) container.innerHTML = '';
+            loadOutlets();
+        }
+
+        function renderOutletFilterChips() {
+            const CAT_LABELS = {gaming_news:'News Outlets', gaming_vc:'Gaming VCs', gaming_streamer:'Streamers'};
+            const search = document.getElementById('f-search').value.trim();
+            const category = document.getElementById('f-category').value;
+            const language = document.getElementById('f-language').value;
+            const active = document.getElementById('f-active').value;
+            const chips = [];
+            if (search) chips.push(`<span class="filter-chip">Search: <strong>${esc(search)}</strong><button class="filter-chip-remove" onclick="clearOutletFilter('search')">×</button></span>`);
+            if (category) chips.push(`<span class="filter-chip">Type: <strong>${esc(CAT_LABELS[category] || category)}</strong><button class="filter-chip-remove" onclick="clearOutletFilter('category')">×</button></span>`);
+            if (language) chips.push(`<span class="filter-chip">Language: <strong>${esc(language)}</strong><button class="filter-chip-remove" onclick="clearOutletFilter('language')">×</button></span>`);
+            if (active) chips.push(`<span class="filter-chip">Status: <strong>${esc(active === 'true' ? 'Active' : 'Inactive')}</strong><button class="filter-chip-remove" onclick="clearOutletFilter('active')">×</button></span>`);
+            const container = document.getElementById('outlet-filter-chips');
+            if (container) container.innerHTML = chips.length ? `<div class="filter-chips">${chips.join('')}</div>` : '';
+        }
+
+        window.clearOutletFilter = function(key) {
+            const map = {search:'f-search', category:'f-category', language:'f-language', active:'f-active'};
+            if (map[key]) { const el = document.getElementById(map[key]); if (el) el.value = ''; }
+            loadOutletsAndChips();
+        };
+
+        function loadOutletsAndChips() { loadOutlets().then(() => renderOutletFilterChips()); }
+
+        document.getElementById('f-search').addEventListener('keydown', e => { if (e.key === 'Enter') loadOutlets(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDetail(); closeEmailModal(); } });
+
+        // ─── Bulk Scrape (background with notifications) ───
+        let bulkRunning = false;
+
+        function setBtnLoading(id, loading, text) {
+            const btn = document.getElementById(id);
+            if (loading) {
+                btn.disabled = true;
+                btn.dataset.origText = btn.dataset.origText || btn.textContent;
+                btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></span>' + text;
+            } else {
+                btn.disabled = false;
+                btn.textContent = text || btn.dataset.origText || 'Done';
+            }
+        }
+
+        async function bulkScrapeArticles() {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const ids = [...selectedIds];
+            if (!ids.length) return;
+            const outlets = ids.map(id => allOutlets.find(o => o.id === id)).filter(Boolean);
+            const total = outlets.length;
+            const jobIdx = JSON.parse(localStorage.getItem('gpr_bg_jobs') || '[]').length;
+
+            gprTrackJob(`Scraping ${total} outlet${total > 1 ? 's' : ''}`, ids, 'articles');
+            gprToast('Scrape Started', `Scraping articles from ${total} outlet${total > 1 ? 's' : ''} in background`, 'info', 4000);
+
+            bulkRunning = true;
+            let done = 0, totalNew = 0, totalFound = 0;
+            setBtnLoading('scrape-articles-btn', true, `0/${total}`);
+
+            for (const o of outlets) {
+                try {
+                    const res = await fetch(`/api/scraper/run/${o.id}?extract_content=true&run_async=false`, { method: 'POST', headers: h });
+                    if (res.ok) { const d = await res.json(); totalFound += d.articles_found || 0; totalNew += d.new_articles || 0; }
+                } catch (e) { /* continue */ }
+                done++;
+                gprUpdateJobProgress(jobIdx, done);
+                setBtnLoading('scrape-articles-btn', true, `${done}/${total}`);
+            }
+
+            setBtnLoading('scrape-articles-btn', false, 'Scrape Articles');
+            bulkRunning = false;
+            gprCompleteJob(jobIdx, `${totalFound} found, ${totalNew} new across ${total} outlets`);
+            loadOutlets();
+        }
+
+        async function bulkScrapeContacts() {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const ids = [...selectedIds];
+            if (!ids.length) return;
+            const outlets = ids.map(id => allOutlets.find(o => o.id === id)).filter(Boolean);
+            const total = outlets.length;
+            const jobIdx = JSON.parse(localStorage.getItem('gpr_bg_jobs') || '[]').length;
+
+            gprTrackJob(`Scanning ${total} outlet${total > 1 ? 's' : ''}`, ids, 'contacts');
+            gprToast('Contact Scan Started', `Scanning ${total} outlet${total > 1 ? 's' : ''} for contact data`, 'info', 4000);
+
+            bulkRunning = true;
+            let done = 0, found = 0;
+            setBtnLoading('scrape-contacts-btn', true, `0/${total}`);
+
+            for (const o of outlets) {
+                try {
+                    const res = await fetch(`/api/scraper/run/${o.id}?extract_content=false&run_async=false`, { method: 'POST', headers: h });
+                    if (res.ok) found++;
+                } catch (e) { /* continue */ }
+                done++;
+                gprUpdateJobProgress(jobIdx, done);
+                setBtnLoading('scrape-contacts-btn', true, `${done}/${total}`);
+            }
+
+            setBtnLoading('scrape-contacts-btn', false, 'Scrape Contacts');
+            bulkRunning = false;
+            gprCompleteJob(jobIdx, `${found}/${total} outlets scanned successfully`);
+            loadOutlets();
+        }
+
+        // Sync with global category
+        const _initCat = typeof gprGetCategory === 'function' ? gprGetCategory() : '';
+        if (_initCat) document.getElementById('f-category').value = _initCat;
+        window.addEventListener('gpr-category-change', e => {
+            document.getElementById('f-category').value = e.detail.category || '';
+            loadOutlets();
+        });
+
+        loadLanguages();
+        loadOutlets();
+    </script>
+</body>
+</html>

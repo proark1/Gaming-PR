@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email — Gaming PR Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Page-specific styles (shared styles loaded by nav.js) */
+
+        .container { max-width: 1300px; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 4px; width: fit-content; }
+        .tab {
+            padding: 8px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            background: transparent; border: none; color: var(--text-muted); font-family: inherit; transition: all .2s;
+        }
+        .tab:hover { color: var(--text-secondary); }
+        .tab.active { background: var(--accent); color: #fff; }
+
+        /* Stat value color helpers */
+        .stat-value.accent { color: var(--accent-light); }
+        .stat-value.green { color: var(--green); }
+        .stat-value.cyan { color: var(--cyan); }
+        .stat-value.red { color: var(--red); }
+        .stat-value.orange { color: var(--orange); }
+
+        .card { margin-bottom: 20px; }
+
+        /* Buttons */
+        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .act-btn {
+            background: var(--bg-primary); border: 1px solid var(--border); color: var(--text-secondary);
+            padding: 6px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .2s;
+        }
+        .act-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .act-btn.danger:hover { border-color: var(--red); color: var(--red); }
+        .act-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .add-btn {
+            background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; border: none;
+            padding: 8px 18px; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer;
+            font-family: inherit; transition: all .2s; box-shadow: 0 4px 16px rgba(124,92,255,0.3);
+        }
+        .add-btn:hover { transform: translateY(-1px); }
+
+        /* Modals */
+        .form-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
+        .form-overlay.active { display: flex; }
+        .form-modal { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; max-width: 540px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        .form-modal h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; }
+        .form-modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.3rem; }
+        .fg textarea { min-height: 100px; resize: vertical; }
+        .submit-btn { width: 100%; padding: 11px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; background: linear-gradient(135deg, var(--accent), #6344e0); color: #fff; font-family: inherit; margin-top: 8px; transition: all .2s; }
+        .submit-btn:hover { transform: translateY(-1px); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .form-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .form-error.visible { display: block; }
+        .form-success { background: var(--green-dim); border: 1px solid rgba(34,197,94,0.3); color: var(--green); padding: 9px 12px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 14px; display: none; }
+        .form-success.visible { display: block; }
+
+        /* DNS record table */
+        .dns-table { font-size: 0.78rem; }
+        .dns-table td { font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; word-break: break-all; }
+
+        /* Section panels */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .login-notice { text-align: center; padding: 12px; background: var(--orange-dim); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; color: var(--orange); font-size: 0.84rem; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <script src="/static/nav.js" data-active="emails"></script>
+
+    <div class="container">
+        <h1>Email Management</h1>
+        <div class="subtitle">Connect domains, send emails, and track delivery metrics</div>
+
+        <div id="login-notice" class="login-notice" style="display:none">Log in to manage domains and send emails.</div>
+
+        <!-- Stats -->
+        <div class="stat-grid" id="stats"></div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('domains')">Domains</button>
+            <button class="tab" onclick="switchTab('emails')">Sent Emails</button>
+        </div>
+
+        <!-- Domains Panel -->
+        <div class="panel active" id="panel-domains">
+            <div class="card">
+                <div class="card-header">
+                    <span>Connected Domains</span>
+                    <button class="add-btn" onclick="openDomainForm()">+ Add Domain</button>
+                </div>
+                <div id="domains-list"><div class="loading"><div class="spinner"></div> Loading domains...</div></div>
+            </div>
+        </div>
+
+        <!-- Emails Panel -->
+        <div class="panel" id="panel-emails">
+            <div class="card">
+                <div class="card-header">
+                    <span>Sent Emails</span>
+                    <button class="add-btn" onclick="openSendForm()">+ Send Email</button>
+                </div>
+                <div id="emails-list"><div class="loading"><div class="spinner"></div> Loading emails...</div></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+                <button class="act-btn" id="btn-prev-email" onclick="prevEmailPage()" disabled>Previous</button>
+                <span id="email-page-info" style="padding:6px 10px;font-size:0.82rem;color:var(--text-muted)"></span>
+                <button class="act-btn" id="btn-next-email" onclick="nextEmailPage()">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Domain Modal -->
+    <div class="form-overlay" id="domainOverlay" onclick="if(event.target===this)closeDomainForm()">
+        <div class="form-modal">
+            <button class="close-btn" onclick="closeDomainForm()">&times;</button>
+            <h2>Add Domain</h2>
+            <div class="form-error" id="domainError"></div>
+            <div class="form-success" id="domainSuccess"></div>
+            <form onsubmit="handleAddDomain(event)">
+                <div class="fg"><label>Domain</label><input type="text" id="d-domain" placeholder="mail.example.com" required><div class="hint">The domain you'll send emails from</div></div>
+                <div class="fg"><label>Default From Name</label><input type="text" id="d-fromname" placeholder="Gaming PR"></div>
+                <div class="fg"><label>Default From Email</label><input type="email" id="d-fromemail" placeholder="news@example.com"></div>
+                <button type="submit" class="submit-btn" id="domainBtn">Add Domain</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Send Email Modal -->
+    <div class="form-overlay" id="sendOverlay" onclick="if(event.target===this)closeSendForm()">
+        <div class="form-modal">
+            <button class="close-btn" onclick="closeSendForm()">&times;</button>
+            <h2>Send Email</h2>
+            <div class="form-error" id="sendError"></div>
+            <div class="form-success" id="sendSuccess"></div>
+            <form onsubmit="handleSendEmail(event)">
+                <div class="fg"><label>Domain</label><select id="e-domain" required></select></div>
+                <div class="fg"><label>From Email</label><input type="email" id="e-from" placeholder="news@yourdomain.com" required></div>
+                <div class="fg"><label>From Name</label><input type="text" id="e-fromname" placeholder="Gaming PR News"></div>
+                <div class="fg"><label>To (comma-separated)</label><input type="text" id="e-to" placeholder="user@example.com" required><div class="hint">Separate multiple with commas</div></div>
+                <div class="fg"><label>Subject</label><input type="text" id="e-subject" placeholder="Email subject" required></div>
+                <div class="fg"><label>HTML Body</label><textarea id="e-html" placeholder="<h1>Hello!</h1><p>Your content here...</p>"></textarea></div>
+                <div class="fg"><label>Plain Text Body</label><textarea id="e-text" placeholder="Plain text fallback" style="min-height:60px"></textarea></div>
+                <button type="submit" class="submit-btn" id="sendBtn">Send Email</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let emailPage = 1;
+        const EMAIL_PER_PAGE = 30;
+
+        function authHeaders() {
+            const t = gprGetToken();
+            return t ? { 'Authorization': 'Bearer ' + t, 'Content-Type': 'application/json' } : null;
+        }
+        function isLoggedIn() { return !!gprGetToken(); }
+        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        function timeAgo(iso) {
+            if (!iso) return 'N/A';
+            const d = (Date.now() - new Date(iso).getTime()) / 1000;
+            if (d < 60) return Math.round(d) + 's ago';
+            if (d < 3600) return Math.round(d/60) + 'm ago';
+            if (d < 86400) return Math.round(d/3600) + 'h ago';
+            return Math.round(d/86400) + 'd ago';
+        }
+        function statusBadge(s) {
+            const m = { delivered: 'green', sent: 'cyan', bounced: 'orange', failed: 'red', pending: 'accent', verified: 'green', unverified: 'orange' };
+            return `<span class="badge badge-${m[s]||'accent'}">${s}</span>`;
+        }
+
+        function checkLogin() {
+            document.getElementById('login-notice').style.display = isLoggedIn() ? 'none' : 'block';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelector(`.tab[onclick*="${tab}"]`).classList.add('active');
+            document.getElementById('panel-' + tab).classList.add('active');
+        }
+
+        // ─── Stats ───
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/email/stats');
+                const s = await res.json();
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-card"><div class="stat-label">Total Sent</div><div class="stat-value accent">${s.total_sent}</div></div>
+                    <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value green">${s.total_delivered}</div></div>
+                    <div class="stat-card"><div class="stat-label">Opens</div><div class="stat-value cyan">${s.total_opens}</div></div>
+                    <div class="stat-card"><div class="stat-label">Clicks</div><div class="stat-value cyan">${s.total_clicks}</div></div>
+                    <div class="stat-card"><div class="stat-label">Bounced</div><div class="stat-value orange">${s.total_bounced}</div></div>
+                    <div class="stat-card"><div class="stat-label">Failed</div><div class="stat-value red">${s.total_failed}</div></div>
+                    <div class="stat-card"><div class="stat-label">Domains</div><div class="stat-value accent">${s.domains_connected}</div></div>
+                    <div class="stat-card"><div class="stat-label">Verified</div><div class="stat-value green">${s.domains_verified}</div></div>
+                `;
+            } catch (e) { document.getElementById('stats').innerHTML = ''; }
+        }
+
+        // ─── Domains ───
+        async function loadDomains() {
+            const el = document.getElementById('domains-list');
+            el.innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
+            checkLogin();
+            try {
+                const res = await fetch('/api/email/domains');
+                const domains = await res.json();
+                if (!domains.length) { el.innerHTML = '<div class="empty">No domains connected yet.</div>'; return; }
+                el.innerHTML = `<table>
+                    <thead><tr><th>Domain</th><th>Status</th><th>From Default</th><th>Created</th><th>Verified</th><th>Actions</th></tr></thead>
+                    <tbody>${domains.map(d => `<tr>
+                        <td style="color:var(--text-primary);font-weight:500">${esc(d.domain)}</td>
+                        <td>${statusBadge(d.status)}</td>
+                        <td style="font-size:0.78rem">${esc(d.from_email_default || '-')}</td>
+                        <td>${timeAgo(d.created_at)}</td>
+                        <td>${d.verified_at ? timeAgo(d.verified_at) : '<span style="color:var(--text-muted)">-</span>'}</td>
+                        <td>
+                            <div class="btn-row">
+                                <button class="act-btn" onclick="verifyDomain(${d.id})" ${!isLoggedIn()?'disabled':''}>Verify DNS</button>
+                                <button class="act-btn danger" onclick="deleteDomain(${d.id})" ${!isLoggedIn()?'disabled':''}>Delete</button>
+                            </div>
+                        </td>
+                    </tr>`).join('')}</tbody>
+                </table>`;
+                // Populate send form domain select
+                const sel = document.getElementById('e-domain');
+                sel.innerHTML = '<option value="">Select domain...</option>' + domains.map(d => `<option value="${d.id}">${esc(d.domain)} (${d.status})</option>`).join('');
+            } catch (e) { el.innerHTML = `<div class="empty" style="color:var(--red)">Failed: ${e.message}</div>`; }
+        }
+
+        async function verifyDomain(id) {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            try {
+                const res = await fetch(`/api/email/domains/${id}/verify`, { method: 'POST', headers: h });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed');
+                alert('Verification triggered. Status: ' + data.status);
+                loadDomains(); loadStats();
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        async function deleteDomain(id) {
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            if (!confirm('Delete this domain?')) return;
+            try {
+                await fetch(`/api/email/domains/${id}`, { method: 'DELETE', headers: h });
+                loadDomains(); loadStats();
+            } catch (e) { alert('Error: ' + e.message); }
+        }
+
+        function openDomainForm() {
+            if (!isLoggedIn()) return gprOpenModal('login');
+            document.getElementById('domainOverlay').classList.add('active');
+            document.getElementById('domainError').classList.remove('visible');
+            document.getElementById('domainSuccess').classList.remove('visible');
+        }
+        function closeDomainForm() { document.getElementById('domainOverlay').classList.remove('active'); }
+
+        async function handleAddDomain(e) {
+            e.preventDefault();
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const btn = document.getElementById('domainBtn');
+            btn.disabled = true; btn.textContent = 'Adding...';
+            document.getElementById('domainError').classList.remove('visible');
+            try {
+                const res = await fetch('/api/email/domains', {
+                    method: 'POST', headers: h,
+                    body: JSON.stringify({
+                        domain: document.getElementById('d-domain').value,
+                        from_name_default: document.getElementById('d-fromname').value || null,
+                        from_email_default: document.getElementById('d-fromemail').value || null,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed');
+                const suc = document.getElementById('domainSuccess');
+                suc.textContent = 'Domain added! Configure DNS records to verify.';
+                suc.classList.add('visible');
+                setTimeout(() => { closeDomainForm(); loadDomains(); loadStats(); }, 1200);
+            } catch (err) {
+                const el = document.getElementById('domainError');
+                el.textContent = err.message; el.classList.add('visible');
+            } finally { btn.disabled = false; btn.textContent = 'Add Domain'; }
+        }
+
+        // ─── Emails ───
+        async function loadEmails() {
+            const el = document.getElementById('emails-list');
+            el.innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
+            try {
+                const res = await fetch(`/api/email/emails?page=${emailPage}&per_page=${EMAIL_PER_PAGE}`);
+                const data = await res.json();
+                const emails = data.emails || [];
+                document.getElementById('email-page-info').textContent = `Page ${data.page} (${data.total} total)`;
+                document.getElementById('btn-prev-email').disabled = emailPage <= 1;
+                document.getElementById('btn-next-email').disabled = emails.length < EMAIL_PER_PAGE;
+
+                if (!emails.length) { el.innerHTML = '<div class="empty">No emails sent yet.</div>'; return; }
+                el.innerHTML = `<table>
+                    <thead><tr><th>To</th><th>Subject</th><th>Status</th><th>Opens</th><th>Clicks</th><th>Sent</th></tr></thead>
+                    <tbody>${emails.map(e => `<tr>
+                        <td style="font-size:0.8rem">${esc((e.to_emails||[]).join(', '))}</td>
+                        <td style="color:var(--text-primary);font-weight:500;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.subject)}</td>
+                        <td>${statusBadge(e.status)}</td>
+                        <td>${e.opens}</td>
+                        <td>${e.clicks}</td>
+                        <td>${timeAgo(e.sent_at || e.created_at)}</td>
+                    </tr>`).join('')}</tbody>
+                </table>`;
+            } catch (e) { el.innerHTML = `<div class="empty" style="color:var(--red)">Failed: ${e.message}</div>`; }
+        }
+
+        function prevEmailPage() { emailPage = Math.max(1, emailPage - 1); loadEmails(); }
+        function nextEmailPage() { emailPage++; loadEmails(); }
+
+        function openSendForm() {
+            if (!isLoggedIn()) return gprOpenModal('login');
+            document.getElementById('sendOverlay').classList.add('active');
+            document.getElementById('sendError').classList.remove('visible');
+            document.getElementById('sendSuccess').classList.remove('visible');
+        }
+        function closeSendForm() { document.getElementById('sendOverlay').classList.remove('active'); }
+
+        async function handleSendEmail(e) {
+            e.preventDefault();
+            const h = authHeaders();
+            if (!h) return gprOpenModal('login');
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true; btn.textContent = 'Sending...';
+            document.getElementById('sendError').classList.remove('visible');
+            try {
+                const toList = document.getElementById('e-to').value.split(',').map(s => s.trim()).filter(Boolean);
+                const res = await fetch('/api/email/send', {
+                    method: 'POST', headers: h,
+                    body: JSON.stringify({
+                        domain_id: parseInt(document.getElementById('e-domain').value),
+                        from_email: document.getElementById('e-from').value,
+                        from_name: document.getElementById('e-fromname').value || null,
+                        to: toList,
+                        subject: document.getElementById('e-subject').value,
+                        html: document.getElementById('e-html').value || null,
+                        text: document.getElementById('e-text').value || null,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed');
+                const suc = document.getElementById('sendSuccess');
+                suc.textContent = 'Email sent successfully!';
+                suc.classList.add('visible');
+                setTimeout(() => { closeSendForm(); loadEmails(); loadStats(); }, 1200);
+            } catch (err) {
+                const el = document.getElementById('sendError');
+                el.textContent = err.message; el.classList.add('visible');
+            } finally { btn.disabled = false; btn.textContent = 'Send Email'; }
+        }
+
+        loadStats();
+        loadDomains();
+        loadEmails();
+    </script>
+</body>
+</html>
