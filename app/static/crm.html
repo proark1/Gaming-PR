@@ -235,7 +235,7 @@ async function changeStage() {
     try {
         await fetch(`/api/crm/stage/${currentContact.type}/${currentContact.id}`, {
             method: 'PUT', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ new_stage: stage })
+            body: JSON.stringify({ stage: stage })
         });
         toast('Stage updated'); loadTimeline(); loadPipeline();
     } catch(e) { toast('Failed to update stage'); }

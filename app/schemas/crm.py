@@ -25,6 +25,6 @@ class StageUpdate(BaseModel):
 
 
 class PipelineSummary(BaseModel):
-    streamers: dict  # {stage: count}
-    outlets: dict
-    investors: dict
+    streamer: dict  # {stage: [{id, name, total_outreach_count}]}
+    outlet: dict
+    vc: dict

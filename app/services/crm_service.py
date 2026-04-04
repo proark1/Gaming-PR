@@ -127,22 +127,27 @@ def add_note(
 
 
 def get_pipeline_summary(db: Session) -> dict:
-    """Pipeline overview: count contacts by stage for each type."""
-    result = {}
+    """Pipeline overview: contacts grouped by stage for each type (with id/name)."""
+    result = {"streamer": {}, "outlet": {}, "vc": {}}
 
     for contact_type, model in _MODELS.items():
         if not hasattr(model, "relationship_stage"):
             continue
-        counts = (
-            db.query(model.relationship_stage, func.count(model.id))
+
+        contacts = (
+            db.query(model)
             .filter(model.is_active.is_(True))
-            .group_by(model.relationship_stage)
             .all()
         )
-        stage_counts = {}
-        for stage, count in counts:
-            stage_counts[stage or "new"] = count
-        result[contact_type if contact_type != "vc" else "investors"] = stage_counts
+        by_stage: dict[str, list] = {}
+        for c in contacts:
+            stage = getattr(c, "relationship_stage", None) or "new"
+            by_stage.setdefault(stage, []).append({
+                "id": c.id,
+                "name": getattr(c, "name", None) or getattr(c, "outlet_name", "Unknown"),
+                "total_outreach_count": getattr(c, "total_outreach_count", 0) or 0,
+            })
+        result[contact_type] = by_stage
 
     return result
 
