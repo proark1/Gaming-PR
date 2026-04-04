@@ -30,12 +30,69 @@ HEADERS = {
 }
 
 GAMING_PLATFORMS = [
-    "PS5", "PS4", "PlayStation 5", "PlayStation 4", "PlayStation",
-    "Xbox Series X", "Xbox Series S", "Xbox One", "Xbox",
-    "Nintendo Switch", "Switch", "Nintendo",
-    "PC", "Steam", "Epic Games", "GOG",
-    "iOS", "Android", "Mobile",
-    "VR", "PSVR2", "Meta Quest", "Steam Deck",
+    # PlayStation family
+    "PS5", "PS5 Pro", "PS4", "PS4 Pro", "PS3", "PS2", "PS1", "PSX",
+    "PlayStation 5", "PlayStation 5 Pro", "PlayStation 4", "PlayStation 4 Pro",
+    "PlayStation 3", "PlayStation 2", "PlayStation",
+    "PS Vita", "PlayStation Vita", "PSP", "PlayStation Portable",
+    "PlayStation VR2", "PSVR2", "PSVR", "PlayStation VR",
+    # Xbox family
+    "Xbox Series X", "Xbox Series S", "Xbox Series X|S",
+    "Xbox One", "Xbox One X", "Xbox One S",
+    "Xbox 360", "Xbox",
+    "Xbox Game Pass", "Xbox Cloud Gaming",
+    # Nintendo family
+    "Nintendo Switch", "Nintendo Switch 2", "Switch 2",
+    "Nintendo Switch OLED", "Switch OLED", "Switch Lite", "Switch",
+    "Nintendo 3DS", "3DS", "Nintendo DS", "DS",
+    "Wii U", "Wii", "GameCube", "Nintendo 64", "N64",
+    "Super Nintendo", "SNES", "NES", "Game Boy", "Game Boy Advance", "GBA",
+    "Nintendo",
+    # PC platforms and storefronts
+    "PC", "Windows", "Mac", "macOS", "Linux", "SteamOS",
+    "Steam", "Epic Games Store", "Epic Games",
+    "GOG", "GOG Galaxy",
+    "Humble Bundle", "Humble Store",
+    "Battle.net", "Blizzard",
+    "EA App", "EA Play", "Origin",
+    "Ubisoft Connect", "Uplay",
+    "Microsoft Store", "Windows Store",
+    "itch.io", "Game Jolt",
+    "Amazon Luna",
+    # Mobile
+    "iOS", "iPhone", "iPad", "iPadOS",
+    "Android", "Google Play", "Apple Arcade",
+    "Mobile", "Netflix Games",
+    # Cloud gaming
+    "GeForce Now", "NVIDIA GeForce Now",
+    "Xbox Cloud Gaming", "xCloud",
+    "PlayStation Now", "PS Now",
+    "PlayStation Plus", "PS Plus",
+    "Google Stadia", "Stadia",
+    "Shadow PC",
+    # VR / AR / XR
+    "VR", "AR", "XR", "Mixed Reality",
+    "Meta Quest 3", "Meta Quest 2", "Meta Quest Pro", "Meta Quest",
+    "Quest 3", "Quest 2", "Oculus Quest", "Oculus Rift", "Oculus",
+    "Apple Vision Pro", "Vision Pro",
+    "Valve Index", "HTC Vive", "HP Reverb",
+    "PlayStation VR2", "PSVR2",
+    # Handheld PC / portable
+    "Steam Deck", "Steam Deck OLED",
+    "ROG Ally", "ROG Ally X", "ASUS ROG Ally",
+    "Lenovo Legion Go", "Legion Go",
+    "MSI Claw",
+    "Ayaneo", "GPD Win",
+    "Razer Edge",
+    # Retro / classic consoles
+    "Sega Genesis", "Mega Drive", "Sega Saturn", "Sega Dreamcast", "Dreamcast",
+    "Sega Master System", "Sega Game Gear", "Sega",
+    "Atari 2600", "Atari Jaguar", "Atari VCS", "Atari",
+    "Neo Geo", "TurboGrafx-16", "PC Engine",
+    "Commodore 64", "Amiga", "ZX Spectrum",
+    "ColecoVision", "Intellivision",
+    "Analogue Pocket", "MiSTer", "Evercade",
+    "Retro", "Emulator",
 ]
 
 ARTICLE_TYPES = {
