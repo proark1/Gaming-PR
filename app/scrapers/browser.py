@@ -80,8 +80,8 @@ def fetch_with_browser(
             # Wait for dynamic content to load
             try:
                 page.wait_for_load_state(wait_for, timeout=min(timeout, 15000))
-            except Exception:
-                pass  # Continue with what we have
+            except Exception as e:
+                logger.debug(f"Browser wait_for_load_state timed out for {url}: {e}")
 
             # Scroll to trigger lazy-loaded content
             page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
@@ -157,8 +157,8 @@ def needs_browser(url: str, response_text: str = "") -> bool:
             body = soup.find("body")
             if body:
                 body_text = body.get_text(strip=True)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Body text extraction failed during browser check: {e}")
 
         # Very little text content despite having HTML
         if text_len > 1000 and len(body_text) < 200:

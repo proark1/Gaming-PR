@@ -5,16 +5,12 @@ import requests
 from bs4 import BeautifulSoup
 
 from app.scrapers.base import BaseScraper
+from app.scrapers.constants import DEFAULT_HEADERS
 from app.scrapers.stealth import get_session_headers
 
 logger = logging.getLogger(__name__)
 
-FALLBACK_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-}
+FALLBACK_HEADERS = DEFAULT_HEADERS
 
 SKIP_PATTERNS = {
     "/tag/", "/category/", "/author/", "/page/",
@@ -40,7 +36,8 @@ class GenericHtmlScraper(BaseScraper):
         try:
             domain = urlparse(self.outlet.url).netloc
             headers = get_session_headers(domain, language=self.outlet.language)
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Stealth headers failed for {self.outlet.name}, using fallback: {e}")
             headers = FALLBACK_HEADERS
 
         try:
@@ -52,7 +49,8 @@ class GenericHtmlScraper(BaseScraper):
 
         try:
             soup = BeautifulSoup(response.text, "lxml")
-        except Exception:
+        except Exception as e:
+            logger.debug(f"lxml parser failed for {self.outlet.name}, using html.parser: {e}")
             soup = BeautifulSoup(response.text, "html.parser")
 
         articles = []

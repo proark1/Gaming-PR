@@ -16,18 +16,13 @@ from urllib.parse import urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup, Comment
 
+from app.scrapers.constants import DEFAULT_HEADERS
 from app.scrapers.stealth import get_stealth_headers, get_session_headers
 
 logger = logging.getLogger(__name__)
 
 # Fallback headers (used when stealth is disabled)
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate",
-}
+HEADERS = DEFAULT_HEADERS
 
 GAMING_PLATFORMS = [
     "PS5", "PS4", "PlayStation 5", "PlayStation 4", "PlayStation",
@@ -149,8 +144,8 @@ def extract_full_article(url: str, timeout: int = 20, language: str = "en",
         try:
             domain = urlparse(url).netloc
             headers = get_session_headers(domain, language=language)
-        except Exception:
-            pass  # Fall back to default headers
+        except Exception as e:
+            logger.debug(f"Stealth headers failed for {url}, using defaults: {e}")
 
     html_text = None
 
@@ -180,7 +175,8 @@ def extract_full_article(url: str, timeout: int = 20, language: str = "en",
 
     try:
         soup = BeautifulSoup(html_text, "lxml")
-    except Exception:
+    except Exception as e:
+        logger.debug(f"lxml parser failed, falling back to html.parser: {e}")
         soup = BeautifulSoup(html_text, "html.parser")
 
     # Extract everything in parallel sections
@@ -453,7 +449,8 @@ def _extract_body_content(soup: BeautifulSoup, url: str, result: dict):
                 if content_el and len(content_el.get_text(strip=True)) > 100:
                     break
                 content_el = None
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Content selector '{selector}' failed: {e}")
                 continue
 
         if not content_el:
@@ -746,7 +743,8 @@ def _get_best_srcset(srcset: str) -> Optional[str]:
                         best_width = width
                         best_url = url
         return best_url or None
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Failed to parse srcset: {e}")
         return None
 
 
@@ -801,8 +799,8 @@ def _parse_date_string(date_str: str) -> Optional[str]:
         if len(clean) < 100:
             from email.utils import parsedate_to_datetime
             return parsedate_to_datetime(clean).isoformat()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Date string parsing failed for '{date_str}': {e}")
 
     return None
 
@@ -830,5 +828,6 @@ def _needs_browser_check(url: str, html_text: str) -> bool:
     try:
         from app.scrapers.browser import needs_browser
         return needs_browser(url, html_text)
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Browser check failed for {url}: {e}")
         return False

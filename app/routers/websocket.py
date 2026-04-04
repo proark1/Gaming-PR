@@ -57,7 +57,8 @@ class ConnectionManager:
                 if self._matches_filters(article_data, filters):
                     try:
                         await ws.send_text(message)
-                    except Exception:
+                    except Exception as e:
+                        logger.debug(f"WebSocket send failed, marking connection dead: {e}")
                         dead.append(ws)
 
             for ws in dead:
@@ -79,7 +80,8 @@ class ConnectionManager:
             for ws in self._connections:
                 try:
                     await ws.send_text(message)
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"WebSocket progress send failed: {e}")
                     dead.append(ws)
             for ws in dead:
                 self._connections.pop(ws, None)
@@ -100,7 +102,8 @@ class ConnectionManager:
             for ws in self._connections:
                 try:
                     await ws.send_text(message)
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"WebSocket stats send failed: {e}")
                     dead.append(ws)
             for ws in dead:
                 self._connections.pop(ws, None)

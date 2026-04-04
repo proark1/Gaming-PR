@@ -7,15 +7,12 @@ import feedparser
 import requests
 
 from app.scrapers.base import BaseScraper
+from app.scrapers.constants import DEFAULT_HEADERS
 from app.scrapers.stealth import get_session_headers
 
 logger = logging.getLogger(__name__)
 
-FALLBACK_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "application/rss+xml, application/xml, text/xml, */*",
-}
+FALLBACK_HEADERS = {**DEFAULT_HEADERS, "Accept": "application/rss+xml, application/xml, text/xml, */*"}
 
 
 class RssScraper(BaseScraper):
@@ -30,7 +27,8 @@ class RssScraper(BaseScraper):
             try:
                 headers = get_session_headers(domain, language=self.outlet.language)
                 headers["Accept"] = "application/rss+xml, application/xml, text/xml, */*"
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Stealth headers failed for {self.outlet.name}, using fallback: {e}")
                 headers = FALLBACK_HEADERS
 
             resp = requests.get(self.outlet.rss_feed_url, headers=headers, timeout=20)
@@ -171,5 +169,6 @@ class RssScraper(BaseScraper):
         from bs4 import BeautifulSoup
         try:
             return BeautifulSoup(html, "lxml").get_text(separator=" ", strip=True)
-        except Exception:
+        except Exception as e:
+            logger.debug(f"lxml parser failed in _html_to_text, using html.parser: {e}")
             return BeautifulSoup(html, "html.parser").get_text(separator=" ", strip=True)

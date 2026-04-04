@@ -8,7 +8,7 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from urllib.parse import urljoin, urlparse
-from xml.etree import ElementTree
+from defusedxml.ElementTree import fromstring, ParseError
 
 import requests
 
@@ -68,8 +68,8 @@ def parse_sitemap(sitemap_url: str, max_age_days: int = 7, max_urls: int = 200) 
         return []
 
     try:
-        root = ElementTree.fromstring(resp.content)
-    except ElementTree.ParseError as e:
+        root = fromstring(resp.content)
+    except ParseError as e:
         logger.warning(f"Failed to parse sitemap XML {sitemap_url}: {e}")
         return []
 

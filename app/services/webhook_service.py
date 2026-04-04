@@ -22,6 +22,12 @@ logger = logging.getLogger(__name__)
 _executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="webhook")
 
 
+def shutdown_executor():
+    """Shutdown the webhook thread pool executor."""
+    _executor.shutdown(wait=False)
+    logger.info("Webhook executor shut down.")
+
+
 def notify_new_article(db: Session, article_data: dict):
     """Send webhook notifications for a new article."""
     _dispatch(db, "new_article", article_data)

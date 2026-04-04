@@ -100,6 +100,9 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown(wait=False)
     logger.info("Scheduler shut down.")
 
+    from app.services.webhook_service import shutdown_executor
+    shutdown_executor()
+
 
 app = FastAPI(
     title="Gaming PR Platform",

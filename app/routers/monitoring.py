@@ -1,8 +1,11 @@
 """
 Real-time health monitoring and scraper dashboard.
 """
+import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, case, text
@@ -156,7 +159,8 @@ def detailed_health(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
         db_ok = True
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Database health check failed: {e}")
         db_ok = False
 
     # Check if scraping is working

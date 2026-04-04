@@ -263,8 +263,8 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
                         try:
                             from app.services.change_tracker import track_change
                             track_change(db, scraped, scraped.full_body_text, scraped.title)
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.debug(f"Initial change tracking failed for {url}: {e}")
 
                 except Exception as e:
                     logger.warning(f"Content extraction failed for {url}: {e}")
@@ -310,8 +310,8 @@ def scrape_outlet(db: Session, outlet: GamingOutlet, extract_content: bool = Tru
                         "author": scraped.author,
                         "featured_image_url": scraped.featured_image_url,
                     })
-            except Exception:
-                pass  # WebSocket is best-effort
+            except Exception as e:
+                logger.debug(f"WebSocket broadcast failed: {e}")
 
         except Exception as e:
             logger.error(f"Error processing article {url}: {e}")
@@ -422,8 +422,8 @@ async def _scrape_all_async(db: Session, extract_content: bool, adaptive: bool =
                 "total_new_articles": job.total_new_articles,
                 "total_outlets_scraped": job.total_outlets_scraped,
             })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Webhook notification for scrape complete failed: {e}")
 
     # Process retry queue
     if settings.ENABLE_RETRY_QUEUE:
@@ -464,8 +464,8 @@ def _broadcast_to_websocket(ws_manager, article_data: dict):
             loop = asyncio.new_event_loop()
             loop.run_until_complete(ws_manager.broadcast_article(article_data))
             loop.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"WebSocket broadcast from sync context failed: {e}")
 
 
 def _scrape_outlet_thread(outlet_id: int, extract_content: bool) -> dict:
@@ -670,8 +670,8 @@ def _update_outlet_failure(db: Session, outlet: GamingOutlet):
                 "consecutive_failures": outlet.consecutive_failures,
                 "is_active": outlet.is_active,
             })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Webhook notification for outlet failure failed: {e}")
 
     db.commit()
 

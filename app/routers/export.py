@@ -2,6 +2,7 @@
 import csv
 import io
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -9,15 +10,23 @@ from xml.etree.ElementTree import Element, SubElement, tostring
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
+logger = logging.getLogger(__name__)
+
 from app.database import get_db
 from app.models.scraped_article import ScrapedArticle
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
 
+MAX_EXPORT_LIMIT = 10000
+
+
 def _build_query(db: Session, language: str = None, outlet_id: int = None,
                  article_type: str = None, days: int = None, limit: int = 1000):
     """Build a filtered query for exports."""
+    limit = min(max(limit, 1), MAX_EXPORT_LIMIT)
+    if days is not None:
+        days = max(days, 1)
     query = db.query(ScrapedArticle)
     if language:
         query = query.filter(ScrapedArticle.language == language)
@@ -154,8 +163,8 @@ def export_rss(
                 SubElement(item, "pubDate").text = a.published_at.strftime(
                     "%a, %d %b %Y %H:%M:%S GMT"
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to format pubDate for article {a.id}: {e}")
         if a.featured_image_url:
             SubElement(item, "media:content", url=a.featured_image_url, medium="image")
         if a.categories:
