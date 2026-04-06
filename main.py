@@ -148,6 +148,12 @@ def login_page():
     return HTMLResponse(content=html_path.read_text(), status_code=200)
 
 
+@app.get("/register", response_class=HTMLResponse)
+def register_page():
+    html_path = Path(__file__).parent / "app" / "static" / "register.html"
+    return HTMLResponse(content=html_path.read_text(), status_code=200)
+
+
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard_page():
     html_path = Path(__file__).parent / "app" / "static" / "dashboard.html"
