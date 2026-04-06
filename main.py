@@ -140,6 +140,12 @@ def landing_page():
     return HTMLResponse(content=html_path.read_text(), status_code=200)
 
 
+@app.get("/login", response_class=HTMLResponse)
+def login_page():
+    html_path = Path(__file__).parent / "app" / "static" / "login.html"
+    return HTMLResponse(content=html_path.read_text(), status_code=200)
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "version": "4.0.0"}
