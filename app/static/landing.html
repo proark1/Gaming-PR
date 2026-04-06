@@ -711,6 +711,171 @@
         .animate.d2 { animation-delay: 0.2s; }
         .animate.d3 { animation-delay: 0.3s; }
         .animate.d4 { animation-delay: 0.4s; }
+
+        /* ─── Live Dashboard ─── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 40px;
+        }
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+        .dash-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            min-height: 200px;
+        }
+        .dash-panel h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .dash-panel h3 .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            display: inline-block;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .dash-loading, .dash-error, .dash-empty {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding: 20px 0;
+            text-align: center;
+        }
+        .dash-error { color: #f87171; }
+        .dash-error button {
+            margin-top: 10px;
+            background: transparent;
+            color: var(--accent-light);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 6px 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .dash-error button:hover { background: rgba(124, 92, 255, 0.15); }
+        .outlet-list, .article-list {
+            list-style: none;
+            max-height: 360px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        .outlet-item, .article-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(42, 42, 58, 0.4);
+            font-size: 0.88rem;
+            gap: 12px;
+        }
+        .outlet-item:last-child, .article-item:last-child { border-bottom: none; }
+        .outlet-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+        .outlet-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .outlet-lang {
+            font-size: 0.75rem;
+            background: rgba(124, 92, 255, 0.15);
+            color: var(--accent-light);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .outlet-badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .badge-active { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+        .badge-inactive { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+        .article-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+        .article-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .article-title a:hover { color: var(--accent-light); }
+        .article-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .dash-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .dash-overview-stat {
+            background: rgba(124, 92, 255, 0.06);
+            border: 1px solid rgba(124, 92, 255, 0.12);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .dash-overview-stat .val {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .dash-overview-stat .lbl {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .dash-panel.full-width {
+            grid-column: 1 / -1;
+        }
+        .dash-filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .dash-filter-bar select {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            font-family: inherit;
+        }
     </style>
 </head>
 <body>
@@ -728,6 +893,7 @@
             Gaming PR
         </a>
         <div class="nav-links">
+            <a href="#dashboard">Dashboard</a>
             <a href="#features">Features</a>
             <a href="#email">Email</a>
             <a href="#languages">Languages</a>
@@ -804,6 +970,55 @@
             <div class="stat-card animate d3">
                 <div class="stat-number">30m</div>
                 <div class="stat-label">Scrape Interval</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Live Dashboard -->
+<section id="dashboard">
+    <div class="container">
+        <div class="section-header">
+            <div class="tag">Live Dashboard</div>
+            <h2>Real-time platform status</h2>
+            <p>Live data from the scraping engine — outlets, articles, and system health.</p>
+        </div>
+
+        <!-- Overview stats row -->
+        <div id="dash-overview">
+            <div class="dash-loading">Loading dashboard data...</div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Outlets panel -->
+            <div class="dash-panel">
+                <h3><span class="dot"></span> News Outlets</h3>
+                <div class="dash-filter-bar">
+                    <select id="outlet-lang-filter">
+                        <option value="">All languages</option>
+                    </select>
+                    <select id="outlet-status-filter">
+                        <option value="">All statuses</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div id="dash-outlets">
+                    <div class="dash-loading">Loading outlets...</div>
+                </div>
+            </div>
+
+            <!-- Articles panel -->
+            <div class="dash-panel">
+                <h3><span class="dot"></span> Recent Articles</h3>
+                <div class="dash-filter-bar">
+                    <select id="article-lang-filter">
+                        <option value="">All languages</option>
+                    </select>
+                </div>
+                <div id="dash-articles">
+                    <div class="dash-loading">Loading articles...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -1221,6 +1436,177 @@
             : 'rgba(10, 10, 15, 0.8)';
         lastScroll = scrollY;
     });
+
+    // ═══════════════════════════════════════════
+    // Live Dashboard
+    // ═══════════════════════════════════════════
+
+    function safeArray(val) {
+        return Array.isArray(val) ? val : [];
+    }
+
+    function safeObj(val) {
+        return (val && typeof val === 'object' && !Array.isArray(val)) ? val : {};
+    }
+
+    function timeAgo(dateStr) {
+        if (!dateStr) return '';
+        const diff = Date.now() - new Date(dateStr).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return mins + 'm ago';
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return hrs + 'h ago';
+        return Math.floor(hrs / 24) + 'd ago';
+    }
+
+    function renderError(container, msg, retryFn) {
+        container.innerHTML =
+            '<div class="dash-error">' + msg +
+            '<br><button onclick="(' + retryFn.toString() + ')()">Retry</button></div>';
+    }
+
+    async function fetchJSON(url) {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return resp.json();
+    }
+
+    // ── Dashboard overview ──
+    async function loadDashboard() {
+        const el = document.getElementById('dash-overview');
+        try {
+            const data = await fetchJSON('/api/monitoring/dashboard');
+            const ov = safeObj(data.overview);
+            el.innerHTML =
+                '<div class="dash-overview-grid">' +
+                '<div class="dash-overview-stat"><div class="val">' + (ov.active_outlets || 0) + '</div><div class="lbl">Active Outlets</div></div>' +
+                '<div class="dash-overview-stat"><div class="val">' + (ov.total_articles || 0).toLocaleString() + '</div><div class="lbl">Total Articles</div></div>' +
+                '<div class="dash-overview-stat"><div class="val">' + (ov.articles_last_24h || 0) + '</div><div class="lbl">Last 24h</div></div>' +
+                '<div class="dash-overview-stat"><div class="val">' + (ov.full_content_articles || 0).toLocaleString() + '</div><div class="lbl">Full Content</div></div>' +
+                '<div class="dash-overview-stat"><div class="val">' + Math.round(ov.extraction_rate_pct || 0) + '%</div><div class="lbl">Extraction Rate</div></div>' +
+                '<div class="dash-overview-stat"><div class="val">' + (ov.articles_last_7d || 0).toLocaleString() + '</div><div class="lbl">Last 7 Days</div></div>' +
+                '</div>';
+        } catch (e) {
+            renderError(el, 'Failed to load dashboard: ' + e.message, loadDashboard);
+        }
+    }
+
+    // ── Outlets panel ──
+    let allOutlets = [];
+
+    function renderOutlets(outlets) {
+        const container = document.getElementById('dash-outlets');
+        const list = safeArray(outlets);
+        if (list.length === 0) {
+            container.innerHTML = '<div class="dash-empty">No outlets found. Seed the database or add outlets via the API.</div>';
+            return;
+        }
+        let html = '<ul class="outlet-list">';
+        for (const o of list) {
+            const active = o.is_active !== false;
+            html +=
+                '<li class="outlet-item">' +
+                '<span class="outlet-name">' + (o.name || 'Unknown') + '</span>' +
+                '<span class="outlet-meta">' +
+                '<span class="outlet-lang">' + (o.language || '?') + '</span>' +
+                '<span class="outlet-badge ' + (active ? 'badge-active' : 'badge-inactive') + '">' + (active ? 'Active' : 'Off') + '</span>' +
+                '</span></li>';
+        }
+        html += '</ul>';
+        container.innerHTML = html;
+    }
+
+    function filterOutlets() {
+        const lang = document.getElementById('outlet-lang-filter').value;
+        const status = document.getElementById('outlet-status-filter').value;
+        let filtered = safeArray(allOutlets);
+        if (lang) filtered = filtered.filter(o => o.language === lang);
+        if (status !== '') filtered = filtered.filter(o => String(o.is_active) === status);
+        renderOutlets(filtered);
+    }
+
+    async function loadOutlets() {
+        const container = document.getElementById('dash-outlets');
+        try {
+            const data = await fetchJSON('/api/outlets/');
+            allOutlets = safeArray(data);
+            renderOutlets(allOutlets);
+
+            // Populate language filter
+            const langs = [...new Set(safeArray(allOutlets).map(o => o.language).filter(Boolean))].sort();
+            const sel = document.getElementById('outlet-lang-filter');
+            langs.forEach(l => {
+                const opt = document.createElement('option');
+                opt.value = l;
+                opt.textContent = l;
+                sel.appendChild(opt);
+            });
+            sel.addEventListener('change', filterOutlets);
+            document.getElementById('outlet-status-filter').addEventListener('change', filterOutlets);
+        } catch (e) {
+            allOutlets = [];
+            renderError(container, 'Failed to load outlets: ' + e.message, loadOutlets);
+        }
+    }
+
+    // ── Articles panel ──
+    let allArticles = [];
+
+    function renderArticles(articles) {
+        const container = document.getElementById('dash-articles');
+        const list = safeArray(articles);
+        if (list.length === 0) {
+            container.innerHTML = '<div class="dash-empty">No articles scraped yet. Trigger a scrape via POST /api/scraper/run.</div>';
+            return;
+        }
+        let html = '<ul class="article-list">';
+        for (const a of list) {
+            const url = a.url || '#';
+            html +=
+                '<li class="article-item">' +
+                '<span class="article-title"><a href="' + url + '" target="_blank" rel="noopener">' + (a.title || 'Untitled') + '</a></span>' +
+                '<span class="article-time">' + timeAgo(a.scraped_at || a.published_at) + '</span>' +
+                '</li>';
+        }
+        html += '</ul>';
+        container.innerHTML = html;
+    }
+
+    function filterArticles() {
+        const lang = document.getElementById('article-lang-filter').value;
+        let filtered = safeArray(allArticles);
+        if (lang) filtered = filtered.filter(a => a.language === lang);
+        renderArticles(filtered);
+    }
+
+    async function loadArticles() {
+        const container = document.getElementById('dash-articles');
+        try {
+            const data = await fetchJSON('/api/scraper/articles?limit=50');
+            allArticles = safeArray(data);
+            renderArticles(allArticles);
+
+            // Populate language filter
+            const langs = [...new Set(safeArray(allArticles).map(a => a.language).filter(Boolean))].sort();
+            const sel = document.getElementById('article-lang-filter');
+            langs.forEach(l => {
+                const opt = document.createElement('option');
+                opt.value = l;
+                opt.textContent = l;
+                sel.appendChild(opt);
+            });
+            sel.addEventListener('change', filterArticles);
+        } catch (e) {
+            allArticles = [];
+            renderError(container, 'Failed to load articles: ' + e.message, loadArticles);
+        }
+    }
+
+    // ── Boot dashboard ──
+    loadDashboard();
+    loadOutlets();
+    loadArticles();
 </script>
 </body>
 </html>

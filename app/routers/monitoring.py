@@ -24,13 +24,13 @@ def dashboard(db: Session = Depends(get_db)):
     last_24h = now - timedelta(hours=24)
     last_7d = now - timedelta(days=7)
 
-    # Overall counts
-    total_outlets = db.query(func.count(GamingOutlet.id)).scalar()
-    active_outlets = db.query(func.count(GamingOutlet.id)).filter(GamingOutlet.is_active.is_(True)).scalar()
-    total_articles = db.query(func.count(ScrapedArticle.id)).scalar()
-    articles_24h = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.scraped_at >= last_24h).scalar()
-    articles_7d = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.scraped_at >= last_7d).scalar()
-    full_content_count = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.is_full_content.is_(True)).scalar()
+    # Overall counts (ensure non-None with or 0)
+    total_outlets = db.query(func.count(GamingOutlet.id)).scalar() or 0
+    active_outlets = db.query(func.count(GamingOutlet.id)).filter(GamingOutlet.is_active.is_(True)).scalar() or 0
+    total_articles = db.query(func.count(ScrapedArticle.id)).scalar() or 0
+    articles_24h = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.scraped_at >= last_24h).scalar() or 0
+    articles_7d = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.scraped_at >= last_7d).scalar() or 0
+    full_content_count = db.query(func.count(ScrapedArticle.id)).filter(ScrapedArticle.is_full_content.is_(True)).scalar() or 0
 
     # Coverage by language
     lang_coverage = {}
