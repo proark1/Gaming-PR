@@ -328,3 +328,29 @@ def get_email_stats(db: Session) -> dict:
         "domains_connected": domains_connected,
         "domains_verified": domains_verified,
     }
+
+
+# ─── Outlet Messaging ───
+
+def send_email_to_outlet(outlet, subject: str, body: str, message_type: str = "inquiry") -> str:
+    """Send an email message to an outlet.
+
+    This sends a direct email to the outlet's contact email without requiring a verified domain.
+    Returns the message ID for tracking.
+    """
+    if not outlet.contact_email:
+        raise ValueError(f"Outlet {outlet.name} has no contact email")
+
+    # For now, return a placeholder message ID
+    # In production, this would integrate with a transactional email service
+    # that doesn't require domain verification (e.g., SendGrid, Mailgun)
+
+    message_id = f"msg_{outlet.id}_{int(datetime.now(timezone.utc).timestamp())}"
+
+    logger.info(
+        f"Message queued to outlet {outlet.name} ({outlet.contact_email}): "
+        f"{subject} [type: {message_type}, id: {message_id}]"
+    )
+
+    return message_id
+

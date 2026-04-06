@@ -16,6 +16,7 @@ from app.routers.export import router as export_router
 from app.routers.websocket import router as websocket_router
 from app.routers.email import router as email_router
 from app.routers.auth import router as auth_router
+from app.routers.messages import router as messages_router
 from app.seed.outlets import seed_outlets
 
 logging.basicConfig(level=logging.INFO)
@@ -125,6 +126,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(messages_router)
 app.include_router(articles.router)
 app.include_router(translations.router)
 app.include_router(outlets.router)
