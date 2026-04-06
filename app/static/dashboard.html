@@ -146,6 +146,45 @@
             font-size: 14px;
         }
 
+        /* ─── Tabs ─── */
+        .tabs-container {
+            display: flex;
+            gap: 12px;
+            margin: 32px 0 24px 0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(124, 92, 255, 0.08);
+            border: 1px solid rgba(124, 92, 255, 0.2);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            background: rgba(124, 92, 255, 0.15);
+            border-color: rgba(124, 92, 255, 0.3);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .tab-icon {
+            font-size: 16px;
+        }
+
         /* ─── Grid ─── */
         .dashboard-grid {
             display: grid;
@@ -323,16 +362,32 @@
         <p>Manage gaming outlets, streamers, and VCs</p>
     </div>
 
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <button class="tab-btn active" data-category="all" onclick="switchCategory('all')">
+            <span class="tab-icon">📋</span> All Sources
+        </button>
+        <button class="tab-btn" data-category="outlets" onclick="switchCategory('outlets')">
+            <span class="tab-icon">📰</span> News Outlets
+        </button>
+        <button class="tab-btn" data-category="streamers" onclick="switchCategory('streamers')">
+            <span class="tab-icon">🎥</span> Streamers
+        </button>
+        <button class="tab-btn" data-category="vcs" onclick="switchCategory('vcs')">
+            <span class="tab-icon">💼</span> VCs / Influencers
+        </button>
+    </div>
+
     <div class="dashboard-grid">
-        <!-- All Outlets -->
+        <!-- Content Panel -->
         <div class="panel" style="grid-column: 1 / -1;">
             <div class="panel-header">
-                <span class="panel-icon">📰</span>
-                <span class="panel-title">All Outlets, Streamers & VCs</span>
-                <span class="panel-count" id="all-outlets-count">0</span>
+                <span class="panel-icon" id="panel-icon">📋</span>
+                <span class="panel-title" id="panel-title">All Sources</span>
+                <span class="panel-count" id="panel-count">0</span>
             </div>
-            <div id="all-outlets-panel">
-                <div class="loading">Loading outlets...</div>
+            <div id="content-panel">
+                <div class="loading">Loading sources...</div>
             </div>
         </div>
     </div>
@@ -370,30 +425,62 @@
         window.location.href = '/login';
     }
 
+    // ─── Data ───
+    let allOutlets = [];
+    let currentCategory = 'all';
+
+    // ─── Category Icons & Labels ───
+    const categoryInfo = {
+        all: { icon: '📋', label: 'All Sources', filter: () => true },
+        outlets: { icon: '📰', label: 'News Outlets', filter: (o) => !o.category || o.category.includes('gaming') || o.category.includes('news') || o.category.includes('esports') || o.category.includes('console') || o.category.includes('mobile') || o.category.includes('pc') },
+        streamers: { icon: '🎥', label: 'Streamers', filter: (o) => o.category && o.category.includes('stream') },
+        vcs: { icon: '💼', label: 'VCs / Influencers', filter: (o) => o.category && (o.category.includes('vc') || o.category.includes('influencer') || o.category.includes('creator')) }
+    };
+
+    // ─── Tab Switching ───
+    function switchCategory(category) {
+        currentCategory = category;
+
+        // Update active tab
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.category === category);
+        });
+
+        // Update panel header
+        const info = categoryInfo[category];
+        document.getElementById('panel-icon').textContent = info.icon;
+        document.getElementById('panel-title').textContent = info.label;
+
+        // Re-render with filter
+        renderOutlets();
+    }
+
     // ─── Data Loading ───
     async function loadAllOutlets() {
         try {
             const response = await fetch('/api/outlets/');
-            const outlets = await response.json();
-            renderAllOutlets(outlets || []);
+            allOutlets = Array.isArray(await response.json()) ? await response.json() : [];
+            renderOutlets();
         } catch (err) {
-            document.getElementById('all-outlets-panel').innerHTML =
-                '<div class="error">Failed to load outlets<br><button onclick="loadAllOutlets()">Retry</button></div>';
+            document.getElementById('content-panel').innerHTML =
+                '<div class="error">Failed to load sources<br><button onclick="loadAllOutlets()">Retry</button></div>';
         }
     }
 
-    function renderAllOutlets(outlets) {
-        const list = Array.isArray(outlets) ? outlets : [];
-        document.getElementById('all-outlets-count').textContent = list.length;
+    function renderOutlets() {
+        const info = categoryInfo[currentCategory];
+        const filtered = allOutlets.filter(info.filter);
 
-        if (list.length === 0) {
-            document.getElementById('all-outlets-panel').innerHTML =
-                '<div class="empty">No outlets found. Add outlets via /api/outlets/ POST endpoint.</div>';
+        document.getElementById('panel-count').textContent = filtered.length;
+
+        if (filtered.length === 0) {
+            document.getElementById('content-panel').innerHTML =
+                '<div class="empty">No ' + info.label.toLowerCase() + ' found yet.</div>';
             return;
         }
 
         let html = '<ul class="items-list">';
-        for (const o of list) {
+        for (const o of filtered) {
             const active = o.is_active ? 'badge-active' : 'badge-inactive';
             const category = (o.category || 'uncategorized').replace(/_/g, ' ');
             html +=
@@ -401,15 +488,16 @@
                 '<span class="item-name" title="' + (o.name || '—') + '">' + (o.name || '—') + '</span>' +
                 '<span class="item-meta">' +
                 '<span class="badge badge-lang" title="' + (o.language || '?') + '">' + (o.language || '?') + '</span>' +
-                '<span class="badge" style="background: rgba(156,163,175,0.15); color: #d1d5db;" title="' + category + '">' + category.substring(0, 8) + '</span>' +
+                '<span class="badge" style="background: rgba(156,163,175,0.15); color: #d1d5db;" title="' + category + '">' + category.substring(0, 10) + '</span>' +
                 '<span class="badge ' + active + '">' + (o.is_active ? 'On' : 'Off') + '</span>' +
                 '</span></li>';
         }
         html += '</ul>';
-        document.getElementById('all-outlets-panel').innerHTML = html;
+        document.getElementById('content-panel').innerHTML = html;
     }
 
     // ─── Init ───
+    window.switchCategory = switchCategory;
     checkAuth();
     loadAllOutlets();
 </script>
