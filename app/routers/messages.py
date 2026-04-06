@@ -3,7 +3,9 @@ from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+import base64
 
+from app.config import settings
 from app.database import get_db
 from app.models.message import Message, MessageStatus
 from app.models.outlet import GamingOutlet
@@ -17,12 +19,36 @@ def get_current_user(token: Optional[str] = Query(None), db: Session = Depends(g
     """Get current user from token."""
     if not token:
         raise HTTPException(status_code=401, detail="No token provided")
-    # For now, return a placeholder - in production would validate token
-    # For testing, we'll look up user by checking if any user exists
-    user = db.query(User).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
+
+    try:
+        # Decode token to extract email
+        decoded = base64.b64decode(token.encode()).decode()
+        email = decoded.split(':')[0]
+
+        # Check if it's the admin user
+        if email == settings.ADMIN_EMAIL:
+            # Create or get admin user
+            user = db.query(User).filter(User.email == email).first()
+            if not user:
+                user = User(email=email, password_hash="", full_name="Administrator")
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+            return user
+
+        # Look up user by email
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        if not user.is_active:
+            raise HTTPException(status_code=403, detail="User account is inactive")
+
+        return user
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 @router.post("/", response_model=MessageResponse)
