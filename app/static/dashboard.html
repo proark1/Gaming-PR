@@ -31,7 +31,7 @@
             color: var(--text-primary);
             min-height: 100vh;
             display: grid;
-            grid-template-columns: 280px 1fr;
+            grid-template-columns: 280px 1fr 360px;
             grid-template-rows: 70px 1fr;
         }
 
@@ -230,10 +230,22 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 0;
+            padding: 14px 12px;
             border-bottom: 1px solid rgba(42, 42, 58, 0.4);
             font-size: 13px;
             gap: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .item:hover {
+            background: rgba(124, 92, 255, 0.08);
+        }
+
+        .item.selected {
+            background: rgba(124, 92, 255, 0.15);
+            border-left: 3px solid var(--accent);
         }
 
         .item:last-child { border-bottom: none; }
@@ -304,13 +316,256 @@
             background: rgba(124, 92, 255, 0.15);
         }
 
+        /* ─── Message Panel ─── */
+        .message-panel {
+            grid-row: 2;
+            grid-column: 3;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 5;
+        }
+
+        .message-panel.hidden {
+            display: none;
+        }
+
+        .panel-header {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .panel-header-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 4px 0 0;
+        }
+
+        .close-panel {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .close-panel:hover {
+            color: var(--text-primary);
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .compose-section {
+            background: rgba(124, 92, 255, 0.1);
+            border: 1px solid rgba(124, 92, 255, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .compose-section h3 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--accent-light);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.2);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-light);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(124, 92, 255, 0.2);
+            color: var(--accent-light);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(124, 92, 255, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .messages-section {
+            flex: 1;
+            min-height: 200px;
+        }
+
+        .messages-section h3 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .message-item {
+            background: rgba(124, 92, 255, 0.08);
+            border: 1px solid rgba(124, 92, 255, 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .message-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .message-item-subject {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .message-item-status {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .status-draft {
+            background: rgba(156, 163, 175, 0.2);
+            color: #d1d5db;
+        }
+
+        .status-sent {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--green);
+        }
+
+        .status-failed {
+            background: rgba(248, 113, 113, 0.2);
+            color: var(--red);
+        }
+
+        .message-item-body {
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+
+        .message-item-time {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .no-outlet {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .no-outlet-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+
         @media (max-width: 1024px) {
             body { grid-template-columns: 240px 1fr; }
+            .message-panel { display: none; }
             main { padding: 30px 24px; }
         }
 
         @media (max-width: 768px) {
             body { grid-template-columns: 1fr; }
+            .message-panel { display: none; }
             aside { grid-column: 1; grid-row: 1 / 3; height: 70px; width: 100%; padding: 0; display: flex; align-items: center; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; overflow-y: hidden; }
             main { grid-row: 2; grid-column: 1; padding: 24px; }
             .sidebar-section { display: none; }
@@ -388,6 +643,47 @@
     </div>
 </main>
 
+<div class="message-panel hidden" id="message-panel">
+    <div class="panel-header">
+        <div>
+            <h2 id="panel-outlet-name">—</h2>
+            <div class="panel-header-subtitle" id="panel-outlet-category">—</div>
+        </div>
+        <button class="close-panel" onclick="closeMessagePanel()">✕</button>
+    </div>
+    <div class="panel-content">
+        <div class="compose-section">
+            <h3>✉️ Compose Message</h3>
+            <div class="form-group">
+                <label>Subject</label>
+                <input type="text" id="compose-subject" placeholder="E.g., Partnership Inquiry">
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select id="compose-type">
+                    <option value="inquiry">General Inquiry</option>
+                    <option value="interview_request">Interview Request</option>
+                    <option value="partnership">Partnership Offer</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Message</label>
+                <textarea id="compose-body" placeholder="Write your message here..."></textarea>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-secondary" id="btn-draft" onclick="saveDraft()">Save Draft</button>
+                <button class="btn btn-primary" id="btn-send" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <div class="messages-section">
+            <h3>📋 Recent Messages</h3>
+            <div id="messages-list"></div>
+        </div>
+    </div>
+</div>
+
 <script>
     // ─── Auth Check ───
     function checkAuth() {
@@ -423,6 +719,8 @@
     // ─── Data & Views ───
     let allOutlets = [];
     let currentView = 'all';
+    let selectedOutlet = null;
+    const token = localStorage.getItem('auth_token');
 
     const viewInfo = {
         all: {
@@ -515,8 +813,9 @@
         for (const o of filtered) {
             const active = o.is_active ? 'badge-active' : 'badge-inactive';
             const category = (o.category || 'uncategorized').replace(/_/g, ' ');
+            const selected = selectedOutlet && selectedOutlet.id === o.id ? 'selected' : '';
             html +=
-                '<li class="item">' +
+                '<li class="item ' + selected + '" onclick="selectOutlet(' + o.id + ')">' +
                 '<span class="item-name" title="' + (o.name || '—') + '">' + (o.name || '—') + '</span>' +
                 '<span class="item-meta">' +
                 '<span class="badge badge-lang">' + (o.language || '?') + '</span>' +
@@ -526,6 +825,193 @@
         }
         html += '</ul>';
         document.getElementById('content-area').innerHTML = html;
+    }
+
+    // ─── Messaging ───
+    function selectOutlet(outletId) {
+        selectedOutlet = allOutlets.find(o => o.id === outletId);
+        if (!selectedOutlet) return;
+
+        // Update panel header
+        const category = (selectedOutlet.category || 'uncategorized').replace(/_/g, ' ');
+        document.getElementById('panel-outlet-name').textContent = selectedOutlet.name || '—';
+        document.getElementById('panel-outlet-category').textContent = category;
+
+        // Clear form
+        document.getElementById('compose-subject').value = '';
+        document.getElementById('compose-body').value = '';
+        document.getElementById('compose-type').value = 'inquiry';
+
+        // Show panel
+        document.getElementById('message-panel').classList.remove('hidden');
+
+        // Load messages for this outlet
+        loadOutletMessages();
+
+        // Re-render to highlight selected item
+        renderView();
+    }
+
+    function closeMessagePanel() {
+        selectedOutlet = null;
+        document.getElementById('message-panel').classList.add('hidden');
+        renderView();
+    }
+
+    async function loadOutletMessages() {
+        if (!selectedOutlet) return;
+        const list = document.getElementById('messages-list');
+        list.innerHTML = '<div class="loading">Loading messages...</div>';
+
+        try {
+            const response = await fetch(
+                `/api/outlets/${selectedOutlet.id}/messages?token=${token}`
+            );
+            if (!response.ok) throw new Error('Failed to load messages');
+            const messages = await response.json();
+
+            if (!Array.isArray(messages) || messages.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; text-align: center; padding: 20px;">No messages yet</div>';
+                return;
+            }
+
+            let html = '';
+            for (const msg of messages) {
+                const status = msg.status || 'draft';
+                const time = new Date(msg.created_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                html +=
+                    '<div class="message-item">' +
+                    '<div class="message-item-header">' +
+                    '<span class="message-item-subject">' + (msg.subject || '(no subject)') + '</span>' +
+                    '<span class="message-item-status status-' + status + '">' + status.toUpperCase() + '</span>' +
+                    '</div>' +
+                    '<div class="message-item-body">' + (msg.body || '').substring(0, 100) + (msg.body && msg.body.length > 100 ? '...' : '') + '</div>' +
+                    '<div class="message-item-time">' + time + '</div>' +
+                    '</div>';
+            }
+            list.innerHTML = html;
+        } catch (err) {
+            list.innerHTML = '<div class="error">Failed to load messages<br><button onclick="loadOutletMessages()" style="margin-top: 8px;">Retry</button></div>';
+        }
+    }
+
+    async function saveDraft() {
+        if (!selectedOutlet) {
+            alert('Please select an outlet first');
+            return;
+        }
+
+        const subject = document.getElementById('compose-subject').value.trim();
+        const body = document.getElementById('compose-body').value.trim();
+        const messageType = document.getElementById('compose-type').value;
+
+        if (!subject || !body) {
+            alert('Please fill in subject and message');
+            return;
+        }
+
+        const btn = document.getElementById('btn-draft');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        try {
+            const response = await fetch('/api/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    outlet_id: selectedOutlet.id,
+                    subject: subject,
+                    body: body,
+                    message_type: messageType
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to save draft');
+
+            // Clear form
+            document.getElementById('compose-subject').value = '';
+            document.getElementById('compose-body').value = '';
+
+            // Reload messages
+            await loadOutletMessages();
+            alert('Draft saved');
+        } catch (err) {
+            alert('Error saving draft: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Save Draft';
+        }
+    }
+
+    async function sendMessage() {
+        if (!selectedOutlet) {
+            alert('Please select an outlet first');
+            return;
+        }
+
+        const subject = document.getElementById('compose-subject').value.trim();
+        const body = document.getElementById('compose-body').value.trim();
+        const messageType = document.getElementById('compose-type').value;
+
+        if (!subject || !body) {
+            alert('Please fill in subject and message');
+            return;
+        }
+
+        const btn = document.getElementById('btn-send');
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+
+        try {
+            // First create the message
+            const createResponse = await fetch('/api/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    outlet_id: selectedOutlet.id,
+                    subject: subject,
+                    body: body,
+                    message_type: messageType
+                })
+            });
+
+            if (!createResponse.ok) throw new Error('Failed to create message');
+            const message = await createResponse.json();
+
+            // Then send it
+            const sendResponse = await fetch(`/api/messages/${message.id}/send`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!sendResponse.ok) throw new Error('Failed to send message');
+
+            // Clear form
+            document.getElementById('compose-subject').value = '';
+            document.getElementById('compose-body').value = '';
+
+            // Reload messages
+            await loadOutletMessages();
+            alert('Message sent successfully!');
+        } catch (err) {
+            alert('Error sending message: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Send';
+        }
     }
 
     // ─── Init ───
