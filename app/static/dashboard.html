@@ -793,6 +793,11 @@
             });
 
             renderView();
+
+            // Auto-select first outlet to show message panel
+            if (allOutlets.length > 0) {
+                selectOutlet(allOutlets[0].id);
+            }
         } catch (err) {
             document.getElementById('content-area').innerHTML =
                 '<div class="error">Failed to load sources<br><button onclick="loadOutlets()">Retry</button></div>';
