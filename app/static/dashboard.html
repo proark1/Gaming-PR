@@ -200,8 +200,23 @@
 
         .items-list {
             list-style: none;
-            max-height: 400px;
+            max-height: 600px;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .items-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .items-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .items-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
         }
 
         .item {
@@ -309,39 +324,15 @@
     </div>
 
     <div class="dashboard-grid">
-        <!-- Gaming Outlets -->
-        <div class="panel">
+        <!-- All Outlets -->
+        <div class="panel" style="grid-column: 1 / -1;">
             <div class="panel-header">
                 <span class="panel-icon">📰</span>
-                <span class="panel-title">Gaming Outlets</span>
-                <span class="panel-count" id="outlets-count">0</span>
+                <span class="panel-title">All Outlets, Streamers & VCs</span>
+                <span class="panel-count" id="all-outlets-count">0</span>
             </div>
-            <div id="outlets-panel">
+            <div id="all-outlets-panel">
                 <div class="loading">Loading outlets...</div>
-            </div>
-        </div>
-
-        <!-- Streamers -->
-        <div class="panel">
-            <div class="panel-header">
-                <span class="panel-icon">🎥</span>
-                <span class="panel-title">Streamers</span>
-                <span class="panel-count" id="streamers-count">0</span>
-            </div>
-            <div id="streamers-panel">
-                <div class="loading">Loading streamers...</div>
-            </div>
-        </div>
-
-        <!-- VCs -->
-        <div class="panel">
-            <div class="panel-header">
-                <span class="panel-icon">💼</span>
-                <span class="panel-title">Venture Capital</span>
-                <span class="panel-count" id="vcs-count">0</span>
-            </div>
-            <div id="vcs-panel">
-                <div class="loading">Loading VCs...</div>
             </div>
         </div>
     </div>
@@ -380,119 +371,47 @@
     }
 
     // ─── Data Loading ───
-    async function loadOutlets() {
+    async function loadAllOutlets() {
         try {
             const response = await fetch('/api/outlets/');
             const outlets = await response.json();
-            renderOutlets(outlets || []);
+            renderAllOutlets(outlets || []);
         } catch (err) {
-            document.getElementById('outlets-panel').innerHTML =
-                '<div class="error">Failed to load outlets<br><button onclick="loadOutlets()">Retry</button></div>';
+            document.getElementById('all-outlets-panel').innerHTML =
+                '<div class="error">Failed to load outlets<br><button onclick="loadAllOutlets()">Retry</button></div>';
         }
     }
 
-    async function loadStreamers() {
-        try {
-            const response = await fetch('/api/outlets/?category=streamer');
-            const streamers = await response.json();
-            renderStreamers(streamers || []);
-        } catch (err) {
-            document.getElementById('streamers-panel').innerHTML =
-                '<div class="error">Failed to load streamers<br><button onclick="loadStreamers()">Retry</button></div>';
-        }
-    }
-
-    async function loadVCs() {
-        try {
-            const response = await fetch('/api/outlets/?category=vc');
-            const vcs = await response.json();
-            renderVCs(vcs || []);
-        } catch (err) {
-            document.getElementById('vcs-panel').innerHTML =
-                '<div class="error">Failed to load VCs<br><button onclick="loadVCs()">Retry</button></div>';
-        }
-    }
-
-    function renderOutlets(outlets) {
-        const list = outlets.filter(o => !o.category || o.category === 'gaming_news');
-        document.getElementById('outlets-count').textContent = list.length;
+    function renderAllOutlets(outlets) {
+        const list = Array.isArray(outlets) ? outlets : [];
+        document.getElementById('all-outlets-count').textContent = list.length;
 
         if (list.length === 0) {
-            document.getElementById('outlets-panel').innerHTML =
-                '<div class="empty">No gaming outlets found</div>';
+            document.getElementById('all-outlets-panel').innerHTML =
+                '<div class="empty">No outlets found. Add outlets via /api/outlets/ POST endpoint.</div>';
             return;
         }
 
         let html = '<ul class="items-list">';
-        for (const o of list.slice(0, 10)) {
+        for (const o of list) {
             const active = o.is_active ? 'badge-active' : 'badge-inactive';
+            const category = (o.category || 'uncategorized').replace(/_/g, ' ');
             html +=
                 '<li class="item">' +
-                '<span class="item-name">' + (o.name || '—') + '</span>' +
+                '<span class="item-name" title="' + (o.name || '—') + '">' + (o.name || '—') + '</span>' +
                 '<span class="item-meta">' +
-                '<span class="badge badge-lang">' + (o.language || '?') + '</span>' +
-                '<span class="badge ' + active + '">' + (o.is_active ? 'Active' : 'Off') + '</span>' +
+                '<span class="badge badge-lang" title="' + (o.language || '?') + '">' + (o.language || '?') + '</span>' +
+                '<span class="badge" style="background: rgba(156,163,175,0.15); color: #d1d5db;" title="' + category + '">' + category.substring(0, 8) + '</span>' +
+                '<span class="badge ' + active + '">' + (o.is_active ? 'On' : 'Off') + '</span>' +
                 '</span></li>';
         }
         html += '</ul>';
-        document.getElementById('outlets-panel').innerHTML = html;
-    }
-
-    function renderStreamers(streamers) {
-        const list = streamers.filter(s => s.category === 'streamer');
-        document.getElementById('streamers-count').textContent = list.length;
-
-        if (list.length === 0) {
-            document.getElementById('streamers-panel').innerHTML =
-                '<div class="empty">No streamers found</div>';
-            return;
-        }
-
-        let html = '<ul class="items-list">';
-        for (const s of list.slice(0, 10)) {
-            const active = s.is_active ? 'badge-active' : 'badge-inactive';
-            html +=
-                '<li class="item">' +
-                '<span class="item-name">' + (s.name || '—') + '</span>' +
-                '<span class="item-meta">' +
-                '<span class="badge badge-lang">' + (s.language || '?') + '</span>' +
-                '<span class="badge ' + active + '">' + (s.is_active ? 'Active' : 'Off') + '</span>' +
-                '</span></li>';
-        }
-        html += '</ul>';
-        document.getElementById('streamers-panel').innerHTML = html;
-    }
-
-    function renderVCs(vcs) {
-        const list = vcs.filter(v => v.category === 'vc');
-        document.getElementById('vcs-count').textContent = list.length;
-
-        if (list.length === 0) {
-            document.getElementById('vcs-panel').innerHTML =
-                '<div class="empty">No VCs found</div>';
-            return;
-        }
-
-        let html = '<ul class="items-list">';
-        for (const v of list.slice(0, 10)) {
-            const active = v.is_active ? 'badge-active' : 'badge-inactive';
-            html +=
-                '<li class="item">' +
-                '<span class="item-name">' + (v.name || '—') + '</span>' +
-                '<span class="item-meta">' +
-                '<span class="badge badge-lang">' + (v.language || '?') + '</span>' +
-                '<span class="badge ' + active + '">' + (v.is_active ? 'Active' : 'Off') + '</span>' +
-                '</span></li>';
-        }
-        html += '</ul>';
-        document.getElementById('vcs-panel').innerHTML = html;
+        document.getElementById('all-outlets-panel').innerHTML = html;
     }
 
     // ─── Init ───
     checkAuth();
-    loadOutlets();
-    loadStreamers();
-    loadVCs();
+    loadAllOutlets();
 </script>
 </body>
 </html>
