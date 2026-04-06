@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     EMAIL_SERVICE_URL: str = "http://localhost:3000"
     EMAIL_SERVICE_API_KEY: str = ""
 
+    # Auth
+    ADMIN_EMAIL: str = "admin@gaming-pr.com"
+    ADMIN_PASSWORD: str = "admin123"
+    SECRET_KEY: str = "your-secret-key-change-in-production"
+
     model_config = {"env_file": ".env"}
 
 

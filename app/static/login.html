@@ -369,14 +369,26 @@
         btn.textContent = 'Signing in...';
 
         try {
-            // For now, show a demo message
-            // In production, you'd authenticate against a real endpoint
-            successEl.textContent = '✓ Authentication ready! API endpoints require appropriate headers.';
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.detail || 'Login failed');
+            }
+
+            const data = await response.json();
+            localStorage.setItem('auth_token', data.token);
+
+            successEl.textContent = '✓ Login successful! Redirecting to dashboard...';
             successEl.style.display = 'block';
 
             setTimeout(() => {
-                window.location.href = '/';
-            }, 1500);
+                window.location.href = '/dashboard';
+            }, 1000);
         } catch (err) {
             errorEl.textContent = '✗ ' + (err.message || 'Login failed. Please try again.');
             errorEl.style.display = 'block';
@@ -387,8 +399,8 @@
     });
 
     function demoLogin() {
-        document.getElementById('email').value = 'demo@gaming-pr.com';
-        document.getElementById('password').value = 'demo-password';
+        document.getElementById('email').value = 'admin@gaming-pr.com';
+        document.getElementById('password').value = 'admin123';
         document.getElementById('login-form').dispatchEvent(new Event('submit'));
     }
 </script>

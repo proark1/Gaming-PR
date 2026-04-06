@@ -15,6 +15,7 @@ from app.routers.webhooks import router as webhooks_router
 from app.routers.export import router as export_router
 from app.routers.websocket import router as websocket_router
 from app.routers.email import router as email_router
+from app.routers.auth import router as auth_router
 from app.seed.outlets import seed_outlets
 
 logging.basicConfig(level=logging.INFO)
@@ -123,6 +124,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(articles.router)
 app.include_router(translations.router)
 app.include_router(outlets.router)
@@ -143,6 +145,12 @@ def landing_page():
 @app.get("/login", response_class=HTMLResponse)
 def login_page():
     html_path = Path(__file__).parent / "app" / "static" / "login.html"
+    return HTMLResponse(content=html_path.read_text(), status_code=200)
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard_page():
+    html_path = Path(__file__).parent / "app" / "static" / "dashboard.html"
     return HTMLResponse(content=html_path.read_text(), status_code=200)
 
 

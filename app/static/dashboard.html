@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Gaming PR Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-card: #16161f;
+            --border: #2a2a3a;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #5a5a72;
+            --accent: #7c5cff;
+            --accent-light: #9b7fff;
+            --green: #22c55e;
+            --red: #f87171;
+            --radius: 12px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(124, 92, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(124, 92, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ─── Header ─── */
+        header {
+            position: relative;
+            z-index: 10;
+            background: rgba(17, 17, 24, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            text-align: right;
+            font-size: 13px;
+        }
+
+        .user-email {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .user-role {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .logout-btn {
+            background: rgba(248, 113, 113, 0.1);
+            color: var(--red);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(248, 113, 113, 0.2);
+        }
+
+        /* ─── Main ─── */
+        main {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .dashboard-title {
+            margin-bottom: 40px;
+        }
+
+        .dashboard-title h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-title p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* ─── Grid ─── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-icon {
+            font-size: 24px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .panel-count {
+            margin-left: auto;
+            background: rgba(124, 92, 255, 0.15);
+            color: var(--accent-light);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .items-list {
+            list-style: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid rgba(42, 42, 58, 0.4);
+            font-size: 13px;
+            gap: 12px;
+        }
+
+        .item:last-child { border-bottom: none; }
+
+        .item-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+            align-items: center;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-lang {
+            background: rgba(124, 92, 255, 0.15);
+            color: var(--accent-light);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .badge-active {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--green);
+        }
+
+        .badge-inactive {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--red);
+        }
+
+        .loading, .error, .empty {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .error {
+            color: var(--red);
+        }
+
+        .error button {
+            margin-top: 12px;
+            background: transparent;
+            color: var(--accent-light);
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .error button:hover {
+            background: rgba(124, 92, 255, 0.15);
+        }
+    </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<header>
+    <div class="header-container">
+        <div class="header-logo">
+            <div class="logo-icon">GP</div>
+            <span>Gaming PR Dashboard</span>
+        </div>
+        <div class="header-user">
+            <div class="user-info">
+                <div class="user-email" id="user-email">—</div>
+                <div class="user-role">Administrator</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Sign Out</button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="dashboard-title">
+        <h1>Dashboard</h1>
+        <p>Manage gaming outlets, streamers, and VCs</p>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Gaming Outlets -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-icon">📰</span>
+                <span class="panel-title">Gaming Outlets</span>
+                <span class="panel-count" id="outlets-count">0</span>
+            </div>
+            <div id="outlets-panel">
+                <div class="loading">Loading outlets...</div>
+            </div>
+        </div>
+
+        <!-- Streamers -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-icon">🎥</span>
+                <span class="panel-title">Streamers</span>
+                <span class="panel-count" id="streamers-count">0</span>
+            </div>
+            <div id="streamers-panel">
+                <div class="loading">Loading streamers...</div>
+            </div>
+        </div>
+
+        <!-- VCs -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-icon">💼</span>
+                <span class="panel-title">Venture Capital</span>
+                <span class="panel-count" id="vcs-count">0</span>
+            </div>
+            <div id="vcs-panel">
+                <div class="loading">Loading VCs...</div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // ─── Auth Check ───
+    function checkAuth() {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+        verifyToken(token);
+    }
+
+    async function verifyToken(token) {
+        try {
+            const response = await fetch(`/api/auth/verify?token=${token}`);
+            if (!response.ok) {
+                localStorage.removeItem('auth_token');
+                window.location.href = '/login';
+                return;
+            }
+            const data = await response.json();
+            document.getElementById('user-email').textContent = data.email;
+        } catch (err) {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/login';
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('auth_token');
+        window.location.href = '/login';
+    }
+
+    // ─── Data Loading ───
+    async function loadOutlets() {
+        try {
+            const response = await fetch('/api/outlets/');
+            const outlets = await response.json();
+            renderOutlets(outlets || []);
+        } catch (err) {
+            document.getElementById('outlets-panel').innerHTML =
+                '<div class="error">Failed to load outlets<br><button onclick="loadOutlets()">Retry</button></div>';
+        }
+    }
+
+    async function loadStreamers() {
+        try {
+            const response = await fetch('/api/outlets/?category=streamer');
+            const streamers = await response.json();
+            renderStreamers(streamers || []);
+        } catch (err) {
+            document.getElementById('streamers-panel').innerHTML =
+                '<div class="error">Failed to load streamers<br><button onclick="loadStreamers()">Retry</button></div>';
+        }
+    }
+
+    async function loadVCs() {
+        try {
+            const response = await fetch('/api/outlets/?category=vc');
+            const vcs = await response.json();
+            renderVCs(vcs || []);
+        } catch (err) {
+            document.getElementById('vcs-panel').innerHTML =
+                '<div class="error">Failed to load VCs<br><button onclick="loadVCs()">Retry</button></div>';
+        }
+    }
+
+    function renderOutlets(outlets) {
+        const list = outlets.filter(o => !o.category || o.category === 'gaming_news');
+        document.getElementById('outlets-count').textContent = list.length;
+
+        if (list.length === 0) {
+            document.getElementById('outlets-panel').innerHTML =
+                '<div class="empty">No gaming outlets found</div>';
+            return;
+        }
+
+        let html = '<ul class="items-list">';
+        for (const o of list.slice(0, 10)) {
+            const active = o.is_active ? 'badge-active' : 'badge-inactive';
+            html +=
+                '<li class="item">' +
+                '<span class="item-name">' + (o.name || '—') + '</span>' +
+                '<span class="item-meta">' +
+                '<span class="badge badge-lang">' + (o.language || '?') + '</span>' +
+                '<span class="badge ' + active + '">' + (o.is_active ? 'Active' : 'Off') + '</span>' +
+                '</span></li>';
+        }
+        html += '</ul>';
+        document.getElementById('outlets-panel').innerHTML = html;
+    }
+
+    function renderStreamers(streamers) {
+        const list = streamers.filter(s => s.category === 'streamer');
+        document.getElementById('streamers-count').textContent = list.length;
+
+        if (list.length === 0) {
+            document.getElementById('streamers-panel').innerHTML =
+                '<div class="empty">No streamers found</div>';
+            return;
+        }
+
+        let html = '<ul class="items-list">';
+        for (const s of list.slice(0, 10)) {
+            const active = s.is_active ? 'badge-active' : 'badge-inactive';
+            html +=
+                '<li class="item">' +
+                '<span class="item-name">' + (s.name || '—') + '</span>' +
+                '<span class="item-meta">' +
+                '<span class="badge badge-lang">' + (s.language || '?') + '</span>' +
+                '<span class="badge ' + active + '">' + (s.is_active ? 'Active' : 'Off') + '</span>' +
+                '</span></li>';
+        }
+        html += '</ul>';
+        document.getElementById('streamers-panel').innerHTML = html;
+    }
+
+    function renderVCs(vcs) {
+        const list = vcs.filter(v => v.category === 'vc');
+        document.getElementById('vcs-count').textContent = list.length;
+
+        if (list.length === 0) {
+            document.getElementById('vcs-panel').innerHTML =
+                '<div class="empty">No VCs found</div>';
+            return;
+        }
+
+        let html = '<ul class="items-list">';
+        for (const v of list.slice(0, 10)) {
+            const active = v.is_active ? 'badge-active' : 'badge-inactive';
+            html +=
+                '<li class="item">' +
+                '<span class="item-name">' + (v.name || '—') + '</span>' +
+                '<span class="item-meta">' +
+                '<span class="badge badge-lang">' + (v.language || '?') + '</span>' +
+                '<span class="badge ' + active + '">' + (v.is_active ? 'Active' : 'Off') + '</span>' +
+                '</span></li>';
+        }
+        html += '</ul>';
+        document.getElementById('vcs-panel').innerHTML = html;
+    }
+
+    // ─── Init ───
+    checkAuth();
+    loadOutlets();
+    loadStreamers();
+    loadVCs();
+</script>
+</body>
+</html>
