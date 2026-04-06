@@ -1,7 +1,7 @@
 """Message endpoints for outlet communication."""
 from datetime import datetime, timezone
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from sqlalchemy.orm import Session
 import base64
 
@@ -15,8 +15,19 @@ from app.schemas.message import MessageCreate, MessageUpdate, MessageResponse, M
 router = APIRouter(prefix="/api/messages", tags=["messages"])
 
 
-def get_current_user(token: Optional[str] = Query(None), db: Session = Depends(get_db)) -> User:
-    """Get current user from token."""
+def get_current_user(
+    token: Optional[str] = Query(None),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+) -> User:
+    """Get current user from token (query param or Authorization header)."""
+    # Try to get token from Authorization header first
+    if authorization:
+        # Format: "Bearer <token>"
+        parts = authorization.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1]
+
     if not token:
         raise HTTPException(status_code=401, detail="No token provided")
 
