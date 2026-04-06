@@ -237,14 +237,21 @@
             cursor: pointer;
             border-radius: 8px;
             transition: all 0.2s;
+            border: none;
+            color: inherit;
+            font: inherit;
         }
 
         .item:hover {
-            background: rgba(124, 92, 255, 0.08);
+            background: rgba(124, 92, 255, 0.12);
+        }
+
+        .item:active {
+            background: rgba(124, 92, 255, 0.15);
         }
 
         .item.selected {
-            background: rgba(124, 92, 255, 0.15);
+            background: rgba(124, 92, 255, 0.2);
             border-left: 3px solid var(--accent);
         }
 
@@ -814,21 +821,20 @@
             return;
         }
 
-        let html = '<ul class="items-list">';
+        let html = '';
         for (const o of filtered) {
             const active = o.is_active ? 'badge-active' : 'badge-inactive';
             const category = (o.category || 'uncategorized').replace(/_/g, ' ');
             const selected = selectedOutlet && selectedOutlet.id === o.id ? 'selected' : '';
             html +=
-                '<li class="item ' + selected + '" onclick="selectOutlet(' + o.id + ')">' +
+                '<button class="item ' + selected + '" onclick="selectOutlet(' + o.id + ')" style="width: 100%; background: none; text-align: left;">' +
                 '<span class="item-name" title="' + (o.name || '—') + '">' + (o.name || '—') + '</span>' +
                 '<span class="item-meta">' +
                 '<span class="badge badge-lang">' + (o.language || '?') + '</span>' +
                 '<span class="badge" style="background: rgba(156,163,175,0.15); color: #d1d5db;">' + category.substring(0, 12) + '</span>' +
                 '<span class="badge ' + active + '">' + (o.is_active ? 'On' : 'Off') + '</span>' +
-                '</span></li>';
+                '</span></button>';
         }
-        html += '</ul>';
         document.getElementById('content-area').innerHTML = html;
     }
 
