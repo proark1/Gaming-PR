@@ -30,8 +30,9 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: 70px 1fr;
         }
 
         .bg-grid {
@@ -47,17 +48,12 @@
 
         /* ─── Header ─── */
         header {
+            grid-column: 1 / -1;
             position: relative;
-            z-index: 10;
+            z-index: 20;
             background: rgba(17, 17, 24, 0.8);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
-            padding: 20px 0;
-        }
-
-        .header-container {
-            max-width: 1400px;
-            margin: 0 auto;
             padding: 0 24px;
             display: flex;
             justify-content: space-between;
@@ -120,152 +116,124 @@
             background: rgba(248, 113, 113, 0.2);
         }
 
+        /* ─── Sidebar ─── */
+        aside {
+            grid-row: 2;
+            position: relative;
+            z-index: 10;
+            background: rgba(17, 17, 24, 0.6);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            padding: 0;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 12px 20px 8px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .menu-item {
+            padding: 0;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-link:hover {
+            color: var(--text-primary);
+            background: rgba(124, 92, 255, 0.1);
+        }
+
+        .menu-link.active {
+            color: var(--accent-light);
+            background: rgba(124, 92, 255, 0.15);
+            border-left-color: var(--accent);
+        }
+
+        .menu-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-count {
+            margin-left: auto;
+            background: rgba(124, 92, 255, 0.2);
+            color: var(--accent-light);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
         /* ─── Main ─── */
         main {
-            flex: 1;
+            grid-row: 2;
+            grid-column: 2;
             position: relative;
             z-index: 1;
-            max-width: 1400px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 40px 24px;
+            overflow-y: auto;
+            padding: 40px 32px;
         }
 
-        .dashboard-title {
-            margin-bottom: 40px;
+        .content-header {
+            margin-bottom: 32px;
         }
 
-        .dashboard-title h1 {
-            font-size: 32px;
+        .content-header h1 {
+            font-size: 28px;
             font-weight: 700;
             margin-bottom: 8px;
         }
 
-        .dashboard-title p {
+        .content-header p {
             color: var(--text-secondary);
             font-size: 14px;
-        }
-
-        /* ─── Tabs ─── */
-        .tabs-container {
-            display: flex;
-            gap: 12px;
-            margin: 32px 0 24px 0;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 18px;
-            background: rgba(124, 92, 255, 0.08);
-            border: 1px solid rgba(124, 92, 255, 0.2);
-            color: var(--text-secondary);
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        .tab-btn:hover {
-            background: rgba(124, 92, 255, 0.15);
-            border-color: rgba(124, 92, 255, 0.3);
-        }
-
-        .tab-btn.active {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-            color: white;
-            border-color: var(--accent);
-        }
-
-        .tab-icon {
-            font-size: 16px;
-        }
-
-        /* ─── Grid ─── */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            margin-bottom: 40px;
-        }
-
-        @media (max-width: 1200px) {
-            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
         }
 
         .panel {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 24px;
-        }
-
-        .panel-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .panel-icon {
-            font-size: 24px;
-        }
-
-        .panel-title {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .panel-count {
-            margin-left: auto;
-            background: rgba(124, 92, 255, 0.15);
-            color: var(--accent-light);
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            font-family: 'JetBrains Mono', monospace;
+            padding: 28px;
         }
 
         .items-list {
             list-style: none;
-            max-height: 600px;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-        }
-
-        .items-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .items-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .items-list::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
         }
 
         .item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
+            padding: 14px 0;
             border-bottom: 1px solid rgba(42, 42, 58, 0.4);
             font-size: 13px;
-            gap: 12px;
+            gap: 16px;
         }
 
         .item:last-child { border-bottom: none; }
@@ -311,10 +279,10 @@
         }
 
         .loading, .error, .empty {
-            padding: 20px;
+            padding: 40px 20px;
             text-align: center;
             color: var(--text-secondary);
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .error {
@@ -335,60 +303,87 @@
         .error button:hover {
             background: rgba(124, 92, 255, 0.15);
         }
+
+        @media (max-width: 1024px) {
+            body { grid-template-columns: 240px 1fr; }
+            main { padding: 30px 24px; }
+        }
+
+        @media (max-width: 768px) {
+            body { grid-template-columns: 1fr; }
+            aside { grid-column: 1; grid-row: 1 / 3; height: 70px; width: 100%; padding: 0; display: flex; align-items: center; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; overflow-y: hidden; }
+            main { grid-row: 2; grid-column: 1; padding: 24px; }
+            .sidebar-section { display: none; }
+            .sidebar-section:first-child { display: flex; padding: 0 20px; margin: 0; }
+            .sidebar-title { display: none; }
+            .sidebar-menu { display: flex; gap: 0; }
+            .menu-link { padding: 12px 12px; border: none; border-bottom: 2px solid transparent; border-radius: 0; }
+            .menu-link.active { border-bottom-color: var(--accent); background: transparent; }
+        }
     </style>
 </head>
 <body>
 <div class="bg-grid"></div>
 
 <header>
-    <div class="header-container">
-        <div class="header-logo">
-            <div class="logo-icon">GP</div>
-            <span>Gaming PR Dashboard</span>
+    <div class="header-logo">
+        <div class="logo-icon">GP</div>
+        <span>Gaming PR</span>
+    </div>
+    <div class="header-user">
+        <div class="user-info">
+            <div class="user-email" id="user-email">—</div>
+            <div class="user-role">Administrator</div>
         </div>
-        <div class="header-user">
-            <div class="user-info">
-                <div class="user-email" id="user-email">—</div>
-                <div class="user-role">Administrator</div>
-            </div>
-            <button class="logout-btn" onclick="logout()">Sign Out</button>
-        </div>
+        <button class="logout-btn" onclick="logout()">Sign Out</button>
     </div>
 </header>
 
+<aside>
+    <div class="sidebar-section">
+        <div class="sidebar-title">Content Sources</div>
+        <ul class="sidebar-menu">
+            <li class="menu-item">
+                <a class="menu-link active" onclick="switchView('all')">
+                    <span class="menu-icon">📋</span>
+                    <span>All Sources</span>
+                    <span class="menu-count" id="count-all">0</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a class="menu-link" onclick="switchView('outlets')">
+                    <span class="menu-icon">📰</span>
+                    <span>News Outlets</span>
+                    <span class="menu-count" id="count-outlets">0</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a class="menu-link" onclick="switchView('streamers')">
+                    <span class="menu-icon">🎥</span>
+                    <span>Streamers</span>
+                    <span class="menu-count" id="count-streamers">0</span>
+                </a>
+            </li>
+            <li class="menu-item">
+                <a class="menu-link" onclick="switchView('vcs')">
+                    <span class="menu-icon">💼</span>
+                    <span>VCs / Influencers</span>
+                    <span class="menu-count" id="count-vcs">0</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</aside>
+
 <main>
-    <div class="dashboard-title">
-        <h1>Dashboard</h1>
-        <p>Manage gaming outlets, streamers, and VCs</p>
+    <div class="content-header">
+        <h1 id="page-title">All Sources</h1>
+        <p id="page-desc">Manage all gaming outlets, streamers, and VCs</p>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs-container">
-        <button class="tab-btn active" data-category="all" onclick="switchCategory('all')">
-            <span class="tab-icon">📋</span> All Sources
-        </button>
-        <button class="tab-btn" data-category="outlets" onclick="switchCategory('outlets')">
-            <span class="tab-icon">📰</span> News Outlets
-        </button>
-        <button class="tab-btn" data-category="streamers" onclick="switchCategory('streamers')">
-            <span class="tab-icon">🎥</span> Streamers
-        </button>
-        <button class="tab-btn" data-category="vcs" onclick="switchCategory('vcs')">
-            <span class="tab-icon">💼</span> VCs / Influencers
-        </button>
-    </div>
-
-    <div class="dashboard-grid">
-        <!-- Content Panel -->
-        <div class="panel" style="grid-column: 1 / -1;">
-            <div class="panel-header">
-                <span class="panel-icon" id="panel-icon">📋</span>
-                <span class="panel-title" id="panel-title">All Sources</span>
-                <span class="panel-count" id="panel-count">0</span>
-            </div>
-            <div id="content-panel">
-                <div class="loading">Loading sources...</div>
-            </div>
+    <div class="panel">
+        <div id="content-area">
+            <div class="loading">Loading sources...</div>
         </div>
     </div>
 </main>
@@ -425,57 +420,94 @@
         window.location.href = '/login';
     }
 
-    // ─── Data ───
+    // ─── Data & Views ───
     let allOutlets = [];
-    let currentCategory = 'all';
+    let currentView = 'all';
 
-    // ─── Category Icons & Labels ───
-    const categoryInfo = {
-        all: { icon: '📋', label: 'All Sources', filter: () => true },
-        outlets: { icon: '📰', label: 'News Outlets', filter: (o) => !o.category || o.category.includes('gaming') || o.category.includes('news') || o.category.includes('esports') || o.category.includes('console') || o.category.includes('mobile') || o.category.includes('pc') },
-        streamers: { icon: '🎥', label: 'Streamers', filter: (o) => o.category && o.category.includes('stream') },
-        vcs: { icon: '💼', label: 'VCs / Influencers', filter: (o) => o.category && (o.category.includes('vc') || o.category.includes('influencer') || o.category.includes('creator')) }
+    const viewInfo = {
+        all: {
+            icon: '📋',
+            title: 'All Sources',
+            desc: 'Manage all gaming outlets, streamers, and VCs',
+            filter: () => true,
+            countId: 'count-all'
+        },
+        outlets: {
+            icon: '📰',
+            title: 'News Outlets',
+            desc: 'Gaming news outlets, esports, and gaming industry',
+            filter: (o) => !o.category || o.category.includes('gaming') || o.category.includes('news') || o.category.includes('esports') || o.category.includes('console') || o.category.includes('mobile') || o.category.includes('pc'),
+            countId: 'count-outlets'
+        },
+        streamers: {
+            icon: '🎥',
+            title: 'Streamers',
+            desc: 'Gaming content creators and streamers',
+            filter: (o) => o.category && o.category.includes('stream'),
+            countId: 'count-streamers'
+        },
+        vcs: {
+            icon: '💼',
+            title: 'VCs / Influencers',
+            desc: 'Venture capitalists and gaming influencers',
+            filter: (o) => o.category && (o.category.includes('vc') || o.category.includes('influencer') || o.category.includes('creator')),
+            countId: 'count-vcs'
+        }
     };
 
-    // ─── Tab Switching ───
-    function switchCategory(category) {
-        currentCategory = category;
+    // ─── View Switching ───
+    function switchView(view) {
+        currentView = view;
 
-        // Update active tab
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.category === category);
+        // Update active menu link
+        document.querySelectorAll('.menu-link').forEach(link => {
+            link.classList.toggle('active', link.onclick.toString().includes("'" + view + "'"));
         });
 
-        // Update panel header
-        const info = categoryInfo[category];
-        document.getElementById('panel-icon').textContent = info.icon;
-        document.getElementById('panel-title').textContent = info.label;
+        // Better approach: update all links based on view
+        const links = document.querySelectorAll('.menu-link');
+        links.forEach((link, i) => {
+            const views = ['all', 'outlets', 'streamers', 'vcs'];
+            link.classList.toggle('active', views[i] === view);
+        });
 
-        // Re-render with filter
-        renderOutlets();
+        // Update page header
+        const info = viewInfo[view];
+        document.getElementById('page-title').textContent = info.title;
+        document.getElementById('page-desc').textContent = info.desc;
+
+        // Re-render
+        renderView();
     }
 
     // ─── Data Loading ───
-    async function loadAllOutlets() {
+    async function loadOutlets() {
         try {
             const response = await fetch('/api/outlets/');
-            allOutlets = Array.isArray(await response.json()) ? await response.json() : [];
-            renderOutlets();
+            const data = await response.json();
+            allOutlets = Array.isArray(data) ? data : [];
+
+            // Update counts
+            Object.keys(viewInfo).forEach(view => {
+                const filtered = allOutlets.filter(viewInfo[view].filter);
+                const countEl = document.getElementById(viewInfo[view].countId);
+                if (countEl) countEl.textContent = filtered.length;
+            });
+
+            renderView();
         } catch (err) {
-            document.getElementById('content-panel').innerHTML =
-                '<div class="error">Failed to load sources<br><button onclick="loadAllOutlets()">Retry</button></div>';
+            document.getElementById('content-area').innerHTML =
+                '<div class="error">Failed to load sources<br><button onclick="loadOutlets()">Retry</button></div>';
         }
     }
 
-    function renderOutlets() {
-        const info = categoryInfo[currentCategory];
+    function renderView() {
+        const info = viewInfo[currentView];
         const filtered = allOutlets.filter(info.filter);
 
-        document.getElementById('panel-count').textContent = filtered.length;
-
         if (filtered.length === 0) {
-            document.getElementById('content-panel').innerHTML =
-                '<div class="empty">No ' + info.label.toLowerCase() + ' found yet.</div>';
+            document.getElementById('content-area').innerHTML =
+                '<div class="empty">No ' + info.title.toLowerCase() + ' found yet.</div>';
             return;
         }
 
@@ -487,19 +519,18 @@
                 '<li class="item">' +
                 '<span class="item-name" title="' + (o.name || '—') + '">' + (o.name || '—') + '</span>' +
                 '<span class="item-meta">' +
-                '<span class="badge badge-lang" title="' + (o.language || '?') + '">' + (o.language || '?') + '</span>' +
-                '<span class="badge" style="background: rgba(156,163,175,0.15); color: #d1d5db;" title="' + category + '">' + category.substring(0, 10) + '</span>' +
+                '<span class="badge badge-lang">' + (o.language || '?') + '</span>' +
+                '<span class="badge" style="background: rgba(156,163,175,0.15); color: #d1d5db;">' + category.substring(0, 12) + '</span>' +
                 '<span class="badge ' + active + '">' + (o.is_active ? 'On' : 'Off') + '</span>' +
                 '</span></li>';
         }
         html += '</ul>';
-        document.getElementById('content-panel').innerHTML = html;
+        document.getElementById('content-area').innerHTML = html;
     }
 
     // ─── Init ───
-    window.switchCategory = switchCategory;
     checkAuth();
-    loadAllOutlets();
+    loadOutlets();
 </script>
 </body>
 </html>
