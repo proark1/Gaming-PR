@@ -746,21 +746,25 @@
             icon: '📰',
             title: 'News Outlets',
             desc: 'Gaming news outlets, esports, and gaming industry',
-            filter: (o) => !o.category || o.category.includes('gaming') || o.category.includes('news') || o.category.includes('esports') || o.category.includes('console') || o.category.includes('mobile') || o.category.includes('pc'),
+            filter: (o) => {
+                const c = o.category || '';
+                if (c === 'streamer' || c === 'vc' || c === 'gaming_influencer') return false;
+                return !c || c.includes('gaming') || c.includes('news') || c.includes('esports') || c.includes('console') || c.includes('mobile') || c.includes('pc') || c.includes('playstation') || c.includes('nintendo') || c.includes('xbox');
+            },
             countId: 'count-outlets'
         },
         streamers: {
             icon: '🎥',
             title: 'Streamers',
             desc: 'Gaming content creators and streamers',
-            filter: (o) => o.category && o.category.includes('stream'),
+            filter: (o) => o.category === 'streamer',
             countId: 'count-streamers'
         },
         vcs: {
             icon: '💼',
             title: 'VCs / Influencers',
             desc: 'Venture capitalists and gaming influencers',
-            filter: (o) => o.category && (o.category.includes('vc') || o.category.includes('influencer') || o.category.includes('creator')),
+            filter: (o) => o.category && (o.category === 'vc' || o.category === 'gaming_influencer'),
             countId: 'count-vcs'
         }
     };

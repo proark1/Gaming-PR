@@ -127,6 +127,73 @@ GAMING_OUTLETS = [
     {"name": "Automaton", "url": "https://automaton-media.com", "rss_feed_url": "https://automaton-media.com/feed/", "language": "ja", "region": "JP", "country": "Japan", "scraper_type": "rss", "priority": 2, "category": "gaming_news"},
     {"name": "PlayStation Blog Japan", "url": "https://blog.ja.playstation.com", "rss_feed_url": "https://blog.ja.playstation.com/feed/", "language": "ja", "region": "JP", "country": "Japan", "scraper_type": "rss", "priority": 3, "category": "playstation"},
     {"name": "Nintendo Dream", "url": "https://www.ndw.jp", "rss_feed_url": None, "language": "ja", "region": "JP", "country": "Japan", "scraper_type": "generic", "priority": 3, "category": "nintendo"},
+
+    # ═══════════════════════════════════════════
+    # STREAMERS & CONTENT CREATORS
+    # ═══════════════════════════════════════════
+    # English Streamers
+    {"name": "Ninja", "url": "https://www.twitch.tv/ninja", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "One of the most recognized gaming streamers worldwide"},
+    {"name": "Shroud", "url": "https://www.twitch.tv/shroud", "rss_feed_url": None, "language": "en", "region": "CA", "country": "Canada", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Former CS:GO pro, top FPS streamer"},
+    {"name": "Pokimane", "url": "https://www.twitch.tv/pokimane", "rss_feed_url": None, "language": "en", "region": "CA", "country": "Canada", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Top female gaming content creator and streamer"},
+    {"name": "xQc", "url": "https://www.twitch.tv/xqc", "rss_feed_url": None, "language": "en", "region": "CA", "country": "Canada", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Most-watched Twitch streamer, variety content"},
+    {"name": "DrDisrespect", "url": "https://www.youtube.com/@DrDisrespect", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Iconic gaming entertainer and streamer"},
+    {"name": "TimTheTatman", "url": "https://www.twitch.tv/timthetatman", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "streamer", "description": "Popular variety gaming streamer"},
+    {"name": "summit1g", "url": "https://www.twitch.tv/summit1g", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "streamer", "description": "Veteran FPS and variety streamer"},
+    {"name": "NICKMERCS", "url": "https://www.twitch.tv/nickmercs", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "streamer", "description": "FPS and battle royale content creator"},
+    {"name": "Valkyrae", "url": "https://www.youtube.com/@Valkyrae", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "streamer", "description": "YouTube Gaming co-owner and content creator"},
+    {"name": "Tfue", "url": "https://www.twitch.tv/tfue", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "streamer", "description": "Competitive gaming streamer"},
+    {"name": "Asmongold", "url": "https://www.twitch.tv/asmongold", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "MMO and gaming culture commentator"},
+    {"name": "Sodapoppin", "url": "https://www.twitch.tv/sodapoppin", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "streamer", "description": "Veteran variety and MMO streamer"},
+    {"name": "Myth", "url": "https://www.twitch.tv/myth", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 3, "category": "streamer", "description": "Former Fortnite pro, variety streamer"},
+    {"name": "CohhCarnage", "url": "https://www.twitch.tv/cohhcarnage", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "streamer", "description": "RPG and story-driven game streamer"},
+    {"name": "Lirik", "url": "https://www.twitch.tv/lirik", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "streamer", "description": "Veteran variety streamer, one of the OG Twitch streamers"},
+    # Spanish Streamers
+    {"name": "Rubius", "url": "https://www.twitch.tv/rubius", "rss_feed_url": None, "language": "es", "region": "ES", "country": "Spain", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Top Spanish-speaking gaming content creator"},
+    {"name": "Ibai", "url": "https://www.twitch.tv/ibai", "rss_feed_url": None, "language": "es", "region": "ES", "country": "Spain", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Massive Spanish streamer and entertainment creator"},
+    {"name": "Auronplay", "url": "https://www.twitch.tv/auronplay", "rss_feed_url": None, "language": "es", "region": "ES", "country": "Spain", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Top Spanish gaming and variety streamer"},
+    # Portuguese Streamers
+    {"name": "Gaules", "url": "https://www.twitch.tv/gaules", "rss_feed_url": None, "language": "pt", "region": "BR", "country": "Brazil", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Biggest Brazilian CS and gaming streamer"},
+    {"name": "Alanzoka", "url": "https://www.twitch.tv/alanzoka", "rss_feed_url": None, "language": "pt", "region": "BR", "country": "Brazil", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Top Brazilian variety gaming streamer"},
+    # French Streamers
+    {"name": "Squeezie", "url": "https://www.twitch.tv/squeezie", "rss_feed_url": None, "language": "fr", "region": "FR", "country": "France", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "France's biggest gaming content creator"},
+    {"name": "Gotaga", "url": "https://www.twitch.tv/gotaga", "rss_feed_url": None, "language": "fr", "region": "FR", "country": "France", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Top French esports and FPS streamer"},
+    # Japanese Streamers
+    {"name": "Kuzuha", "url": "https://www.youtube.com/@Kuzuha", "rss_feed_url": None, "language": "ja", "region": "JP", "country": "Japan", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Top Japanese VTuber and gaming streamer"},
+    {"name": "Stylishnoob", "url": "https://www.twitch.tv/stylishnoob4", "rss_feed_url": None, "language": "ja", "region": "JP", "country": "Japan", "scraper_type": "generic", "priority": 2, "category": "streamer", "description": "Popular Japanese FPS streamer"},
+    # Chinese Streamers
+    {"name": "PDD", "url": "https://www.douyu.com/101", "rss_feed_url": None, "language": "zh-CN", "region": "CN", "country": "China", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Former LoL pro, top Chinese gaming streamer"},
+    # Russian Streamers
+    {"name": "Bratishkinoff", "url": "https://www.twitch.tv/bratishkinoff", "rss_feed_url": None, "language": "ru", "region": "RU", "country": "Russia", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Top Russian variety gaming streamer"},
+    # Arabic Streamers
+    {"name": "BanderitaX", "url": "https://www.youtube.com/@BanderitaX", "rss_feed_url": None, "language": "ar", "region": "SA", "country": "Saudi Arabia", "scraper_type": "generic", "priority": 1, "category": "streamer", "description": "Biggest Arab gaming YouTuber and content creator"},
+
+    # ═══════════════════════════════════════════
+    # VCs & GAMING INFLUENCERS
+    # ═══════════════════════════════════════════
+    # Gaming-Focused Venture Capital
+    {"name": "a16z Games", "url": "https://a16z.com/games/", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "vc", "description": "Andreessen Horowitz gaming fund, major gaming/web3 investor"},
+    {"name": "BITKRAFT Ventures", "url": "https://www.bitkraft.vc", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "vc", "description": "Leading gaming and esports-focused VC firm"},
+    {"name": "Griffin Gaming Partners", "url": "https://griffingp.com", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "vc", "description": "Gaming-dedicated venture capital fund"},
+    {"name": "Makers Fund", "url": "https://www.makersfund.com", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "vc", "description": "Global interactive entertainment venture fund"},
+    {"name": "Galaxy Interactive", "url": "https://galaxyinteractive.com", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "vc", "description": "VC focused on interactive entertainment and gaming"},
+    {"name": "Konvoy Ventures", "url": "https://www.konvoy.vc", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "vc", "description": "Dedicated gaming venture fund"},
+    {"name": "Play Ventures", "url": "https://www.playventures.vc", "rss_feed_url": None, "language": "en", "region": "FI", "country": "Finland", "scraper_type": "generic", "priority": 1, "category": "vc", "description": "Gaming-focused VC by industry veterans"},
+    {"name": "Hiro Capital", "url": "https://hiro.capital", "rss_feed_url": None, "language": "en", "region": "UK", "country": "United Kingdom", "scraper_type": "generic", "priority": 2, "category": "vc", "description": "European games, esports and digital sports VC"},
+    {"name": "Ludus Ventures", "url": "https://www.ludus.vc", "rss_feed_url": None, "language": "en", "region": "UK", "country": "United Kingdom", "scraper_type": "generic", "priority": 2, "category": "vc", "description": "Early-stage gaming VC fund"},
+    {"name": "Vgames", "url": "https://www.vgames.vc", "rss_feed_url": None, "language": "en", "region": "IL", "country": "Israel", "scraper_type": "generic", "priority": 2, "category": "vc", "description": "Gaming-focused investment fund"},
+    {"name": "Sisu Game Ventures", "url": "https://www.sisugameventures.com", "rss_feed_url": None, "language": "en", "region": "FI", "country": "Finland", "scraper_type": "generic", "priority": 2, "category": "vc", "description": "Nordic gaming VC fund"},
+    {"name": "Transcend Fund", "url": "https://transcendfund.com", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "vc", "description": "Gaming and interactive media VC"},
+    {"name": "NetEase Capital", "url": "https://www.neteasecapital.com", "rss_feed_url": None, "language": "zh-CN", "region": "CN", "country": "China", "scraper_type": "generic", "priority": 1, "category": "vc", "description": "NetEase's gaming investment arm"},
+    {"name": "Tencent Investment", "url": "https://www.tencentinvestment.com", "rss_feed_url": None, "language": "zh-CN", "region": "CN", "country": "China", "scraper_type": "generic", "priority": 1, "category": "vc", "description": "World's largest gaming company investment division"},
+    # Gaming Industry Influencers
+    {"name": "Geoff Keighley", "url": "https://twitter.com/geoffkeighley", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "gaming_influencer", "description": "Creator of The Game Awards and gaming journalism icon"},
+    {"name": "Jason Schreier", "url": "https://twitter.com/jasonschreier", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 1, "category": "gaming_influencer", "description": "Bloomberg gaming journalist and industry insider"},
+    {"name": "SkillUp", "url": "https://www.youtube.com/@SkillUp", "rss_feed_url": None, "language": "en", "region": "AU", "country": "Australia", "scraper_type": "generic", "priority": 2, "category": "gaming_influencer", "description": "In-depth gaming reviews and industry analysis"},
+    {"name": "YongYea", "url": "https://www.youtube.com/@YongYea", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "gaming_influencer", "description": "Gaming industry news and commentary"},
+    {"name": "Angry Joe", "url": "https://www.youtube.com/@AngryJoeShow", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "gaming_influencer", "description": "Gaming reviews and industry commentary"},
+    {"name": "Jim Sterling", "url": "https://www.youtube.com/@jimsterling", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "gaming_influencer", "description": "Gaming industry critic and consumer advocate"},
+    {"name": "Noclip", "url": "https://www.youtube.com/@NoclipDocs", "rss_feed_url": None, "language": "en", "region": "US", "country": "United States", "scraper_type": "generic", "priority": 2, "category": "gaming_influencer", "description": "Gaming documentary channel and industry storytelling"},
+    {"name": "DigitalFoundry", "url": "https://www.youtube.com/@DigitalFoundry", "rss_feed_url": None, "language": "en", "region": "UK", "country": "United Kingdom", "scraper_type": "generic", "priority": 1, "category": "gaming_influencer", "description": "Technical analysis of gaming hardware and software"},
 ]
 
 
