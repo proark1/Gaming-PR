@@ -885,7 +885,7 @@
 
         try {
             const response = await fetch(
-                `/api/outlets/${selectedOutlet.id}/messages?token=${token}`
+                `/api/messages/outlets/${selectedOutlet.id}/messages?token=${token}`
             );
             if (!response.ok) throw new Error('Failed to load messages');
             const messages = await response.json();
