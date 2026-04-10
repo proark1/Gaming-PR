@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Float, JSON
+from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, Text, Float, JSON
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -35,7 +35,7 @@ class Streamer(Base):
     subscriber_count = Column(Integer, nullable=True)
     avg_viewers = Column(Integer, nullable=True)
     peak_viewers = Column(Integer, nullable=True)
-    total_views = Column(Integer, nullable=True)
+    total_views = Column(BigInteger, nullable=True)
     avg_stream_duration_hours = Column(Float, nullable=True)
     stream_schedule = Column(Text, nullable=True)  # e.g. "Mon-Fri 2pm-8pm EST"
     is_partnered = Column(Boolean, default=False)
