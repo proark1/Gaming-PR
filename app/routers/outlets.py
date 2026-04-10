@@ -95,3 +95,13 @@ def delete_outlet(outlet_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Outlet not found")
     db.delete(outlet)
     db.commit()
+
+
+@router.post("/{outlet_id}/scrape")
+def scrape_outlet(outlet_id: int, db: Session = Depends(get_db)):
+    """Scrape an outlet's website for additional info."""
+    from app.services.contact_scraper import scrape_outlet_website
+    outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
+    if not outlet:
+        raise HTTPException(status_code=404, detail="Outlet not found")
+    return scrape_outlet_website(db, outlet_id)
