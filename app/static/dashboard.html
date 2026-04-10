@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
         :root {
             --bg-primary: #0a0a0f;
             --bg-secondary: #111118;
@@ -20,572 +19,214 @@
             --accent-light: #9b7fff;
             --green: #22c55e;
             --red: #f87171;
+            --yellow: #fbbf24;
+            --blue: #60a5fa;
             --radius: 12px;
         }
-
         html { scroll-behavior: smooth; }
-
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             display: grid;
-            grid-template-columns: 280px 1fr 360px;
-            grid-template-rows: 70px 1fr;
+            grid-template-columns: 220px 1fr;
+            grid-template-rows: 56px 1fr;
         }
-
         .bg-grid {
-            position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(124, 92, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(124, 92, 255, 0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-            z-index: 0;
-            pointer-events: none;
+            position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(124,92,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(124,92,255,0.03) 1px, transparent 1px);
+            background-size: 60px 60px; z-index: 0; pointer-events: none;
         }
-
-        /* ─── Header ─── */
         header {
-            grid-column: 1 / -1;
-            position: relative;
-            z-index: 20;
-            background: rgba(17, 17, 24, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            padding: 0 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            grid-column: 1 / -1; position: relative; z-index: 20;
+            background: rgba(17,17,24,0.85); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border); padding: 0 20px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 700;
-            font-size: 18px;
-        }
-
+        .header-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
         .logo-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 13px;
         }
-
-        .header-user {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .user-info {
-            text-align: right;
-            font-size: 13px;
-        }
-
-        .user-email {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-
-        .user-role {
-            color: var(--text-secondary);
-            font-size: 12px;
-        }
-
+        .header-user { display: flex; align-items: center; gap: 14px; }
+        .user-info { text-align: right; font-size: 12px; }
+        .user-email { color: var(--text-primary); font-weight: 500; }
+        .user-role { color: var(--text-secondary); font-size: 11px; }
         .logout-btn {
-            background: rgba(248, 113, 113, 0.1);
-            color: var(--red);
-            border: 1px solid rgba(248, 113, 113, 0.3);
-            border-radius: 6px;
-            padding: 8px 16px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.2s;
+            background: rgba(248,113,113,0.1); color: var(--red);
+            border: 1px solid rgba(248,113,113,0.3); border-radius: 5px;
+            padding: 6px 12px; cursor: pointer; font-size: 12px; font-weight: 600;
         }
+        .logout-btn:hover { background: rgba(248,113,113,0.2); }
 
-        .logout-btn:hover {
-            background: rgba(248, 113, 113, 0.2);
-        }
-
-        /* ─── Sidebar ─── */
+        /* Sidebar */
         aside {
-            grid-row: 2;
-            position: relative;
-            z-index: 10;
-            background: rgba(17, 17, 24, 0.6);
-            border-right: 1px solid var(--border);
-            padding: 24px 0;
-            overflow-y: auto;
+            grid-row: 2; position: relative; z-index: 10;
+            background: rgba(17,17,24,0.6); border-right: 1px solid var(--border);
+            padding: 12px 0; overflow-y: auto;
         }
-
-        .sidebar-section {
-            padding: 0;
-            margin-bottom: 8px;
-        }
-
         .sidebar-title {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 12px 20px 8px;
+            font-size: 10px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1px; padding: 10px 16px 4px;
         }
-
-        .sidebar-menu {
-            list-style: none;
-        }
-
-        .menu-item {
-            padding: 0;
-        }
-
+        .sidebar-menu { list-style: none; }
         .menu-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 16px; color: var(--text-secondary); text-decoration: none;
+            cursor: pointer; font-size: 13px; transition: all 0.15s;
             border-left: 3px solid transparent;
         }
-
-        .menu-link:hover {
-            color: var(--text-primary);
-            background: rgba(124, 92, 255, 0.1);
-        }
-
-        .menu-link.active {
-            color: var(--accent-light);
-            background: rgba(124, 92, 255, 0.15);
-            border-left-color: var(--accent);
-        }
-
-        .menu-icon {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-        }
-
+        .menu-link:hover { color: var(--text-primary); background: rgba(124,92,255,0.08); }
+        .menu-link.active { color: var(--accent-light); background: rgba(124,92,255,0.12); border-left-color: var(--accent); }
+        .menu-icon { font-size: 15px; width: 20px; text-align: center; }
         .menu-count {
-            margin-left: auto;
-            background: rgba(124, 92, 255, 0.2);
-            color: var(--accent-light);
-            font-size: 11px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-family: 'JetBrains Mono', monospace;
+            margin-left: auto; background: rgba(124,92,255,0.2); color: var(--accent-light);
+            font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px;
         }
 
-        /* ─── Main ─── */
+        /* Main */
         main {
-            grid-row: 2;
-            grid-column: 2;
-            position: relative;
-            z-index: 1;
-            overflow-y: auto;
-            padding: 40px 32px;
+            grid-row: 2; grid-column: 2; position: relative; z-index: 1;
+            overflow-y: auto; padding: 24px;
         }
+        .content-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+        .content-header h1 { font-size: 22px; font-weight: 700; }
+        .content-header p { color: var(--text-secondary); font-size: 13px; }
+        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-        .content-header {
-            margin-bottom: 32px;
+        /* Panels & Cards */
+        .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+        .panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: var(--accent-light); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .stat-card {
+            background: rgba(124,92,255,0.08); border: 1px solid rgba(124,92,255,0.2);
+            border-radius: 10px; padding: 16px; text-align: center;
         }
+        .stat-card .stat-value { font-size: 28px; font-weight: 800; color: var(--accent-light); }
+        .stat-card .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .content-header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .content-header p {
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-
-        .panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 28px;
-        }
-
-        .items-list {
-            list-style: none;
-        }
-
+        /* Items list */
+        .items-list { list-style: none; }
         .item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 12px;
-            border-bottom: 1px solid rgba(42, 42, 58, 0.4);
-            font-size: 13px;
-            gap: 16px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s;
-            border: none;
-            color: inherit;
-            font: inherit;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 12px; font-size: 13px; gap: 12px;
+            cursor: pointer; border-radius: 8px; transition: all 0.15s;
+            border: none; color: inherit; font: inherit; width: 100%;
+            background: none; text-align: left;
         }
+        .item:hover { background: rgba(124,92,255,0.1); }
+        .item.selected { background: rgba(124,92,255,0.18); border-left: 3px solid var(--accent); }
+        .item-name { font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-meta { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
 
-        .item:hover {
-            background: rgba(124, 92, 255, 0.12);
-        }
+        /* Badges */
+        .badge { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; white-space: nowrap; }
+        .badge-lang { background: rgba(124,92,255,0.15); color: var(--accent-light); }
+        .badge-active { background: rgba(34,197,94,0.15); color: var(--green); }
+        .badge-inactive { background: rgba(248,113,113,0.15); color: var(--red); }
+        .badge-cat { background: rgba(156,163,175,0.12); color: #d1d5db; }
+        .badge-info { background: rgba(96,165,250,0.15); color: var(--blue); }
+        .badge-warn { background: rgba(251,191,36,0.15); color: var(--yellow); }
 
-        .item:active {
-            background: rgba(124, 92, 255, 0.15);
-        }
-
-        .item.selected {
-            background: rgba(124, 92, 255, 0.2);
-            border-left: 3px solid var(--accent);
-        }
-
-        .item:last-child { border-bottom: none; }
-
-        .item-name {
-            font-weight: 500;
-            color: var(--text-primary);
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .item-meta {
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-            align-items: center;
-        }
-
-        .badge {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .badge-lang {
-            background: rgba(124, 92, 255, 0.15);
-            color: var(--accent-light);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .badge-active {
-            background: rgba(34, 197, 94, 0.15);
-            color: var(--green);
-        }
-
-        .badge-inactive {
-            background: rgba(248, 113, 113, 0.15);
-            color: var(--red);
-        }
-
-        .loading, .error, .empty {
-            padding: 40px 20px;
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-
-        .error {
-            color: var(--red);
-        }
-
-        .error button {
-            margin-top: 12px;
-            background: transparent;
-            color: var(--accent-light);
-            border: 1px solid var(--accent);
-            border-radius: 4px;
-            padding: 6px 12px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .error button:hover {
-            background: rgba(124, 92, 255, 0.15);
-        }
-
-        /* ─── Message Panel ─── */
-        .message-panel {
-            grid-row: 2;
-            grid-column: 3;
-            background: var(--bg-card);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            z-index: 5;
-        }
-
-        .message-panel.hidden {
-            display: none;
-        }
-
-        .panel-header {
-            padding: 20px 16px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .panel-header h2 {
-            font-size: 16px;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .panel-header-subtitle {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin: 4px 0 0;
-        }
-
-        .close-panel {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 20px;
-            padding: 4px;
-            transition: color 0.2s;
-        }
-
-        .close-panel:hover {
-            color: var(--text-primary);
-        }
-
-        .panel-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .compose-section {
-            background: rgba(124, 92, 255, 0.1);
-            border: 1px solid rgba(124, 92, 255, 0.3);
-            border-radius: 8px;
-            padding: 16px;
-        }
-
-        .compose-section h3 {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: var(--accent-light);
-        }
-
-        .form-group {
-            margin-bottom: 12px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            border-radius: 6px;
-            padding: 8px 10px;
-            font-size: 13px;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.2);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
+        /* Buttons */
         .btn {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: none;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            padding: 7px 14px; border-radius: 6px; border: none;
+            font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
         }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-light); }
+        .btn-secondary { background: rgba(124,92,255,0.2); color: var(--accent-light); }
+        .btn-secondary:hover:not(:disabled) { background: rgba(124,92,255,0.3); }
+        .btn-danger { background: rgba(248,113,113,0.15); color: var(--red); }
+        .btn-danger:hover:not(:disabled) { background: rgba(248,113,113,0.25); }
+        .btn-success { background: rgba(34,197,94,0.15); color: var(--green); }
+        .btn-success:hover:not(:disabled) { background: rgba(34,197,94,0.25); }
+        .btn-sm { padding: 4px 10px; font-size: 11px; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-primary {
-            background: var(--accent);
-            color: white;
+        /* Forms */
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; background: var(--bg-secondary); border: 1px solid var(--border);
+            color: var(--text-primary); border-radius: 6px; padding: 8px 10px;
+            font-size: 13px; font-family: inherit;
         }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(124,92,255,0.2);
+        }
+        .form-group textarea { resize: vertical; min-height: 70px; font-size: 12px; }
+        .form-row { display: flex; gap: 12px; }
+        .form-row .form-group { flex: 1; }
 
-        .btn-primary:hover:not(:disabled) {
-            background: var(--accent-light);
-            transform: translateY(-1px);
-        }
+        /* Tables */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table th { text-align: left; padding: 8px 10px; color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        .data-table td { padding: 8px 10px; border-bottom: 1px solid rgba(42,42,58,0.3); }
+        .data-table tr:hover td { background: rgba(124,92,255,0.05); }
 
-        .btn-secondary {
-            background: rgba(124, 92, 255, 0.2);
-            color: var(--accent-light);
-        }
+        /* Detail panel */
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12px; }
+        .detail-item label { color: var(--text-muted); font-size: 10px; text-transform: uppercase; display: block; margin-bottom: 2px; }
+        .detail-item span { color: var(--text-primary); font-weight: 500; }
+        .detail-full { grid-column: 1 / -1; }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+        .tag { background: rgba(124,92,255,0.12); color: var(--accent-light); padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 600; }
 
-        .btn-secondary:hover:not(:disabled) {
-            background: rgba(124, 92, 255, 0.3);
+        /* Tabs */
+        .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+        .tab {
+            padding: 8px 16px; font-size: 12px; font-weight: 600; color: var(--text-secondary);
+            cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s;
+            background: none; border-top: none; border-left: none; border-right: none;
         }
+        .tab:hover { color: var(--text-primary); }
+        .tab.active { color: var(--accent-light); border-bottom-color: var(--accent); }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        /* Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100;
+            display: flex; align-items: center; justify-content: center;
         }
+        .modal {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 24px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto;
+        }
+        .modal h2 { font-size: 18px; margin-bottom: 16px; }
+        .modal-close { float: right; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 20px; }
 
-        .messages-section {
-            flex: 1;
-            min-height: 200px;
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 20px; right: 20px; z-index: 200;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px 20px; font-size: 13px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: opacity 0.3s;
         }
+        .toast.success { border-color: var(--green); color: var(--green); }
+        .toast.error { border-color: var(--red); color: var(--red); }
 
-        .messages-section h3 {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: var(--text-secondary);
+        /* Live feed */
+        .feed-item {
+            background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+            border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 12px;
+            animation: fadeIn 0.3s;
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 
-        .message-item {
-            background: rgba(124, 92, 255, 0.08);
-            border: 1px solid rgba(124, 92, 255, 0.2);
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 8px;
-            font-size: 12px;
-        }
-
-        .message-item-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-        }
-
-        .message-item-subject {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .message-item-status {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-
-        .status-draft {
-            background: rgba(156, 163, 175, 0.2);
-            color: #d1d5db;
-        }
-
-        .status-sent {
-            background: rgba(34, 197, 94, 0.2);
-            color: var(--green);
-        }
-
-        .status-failed {
-            background: rgba(248, 113, 113, 0.2);
-            color: var(--red);
-        }
-
-        .message-item-body {
-            color: var(--text-secondary);
-            line-height: 1.4;
-            margin-bottom: 6px;
-        }
-
-        .message-item-time {
-            color: var(--text-muted);
-            font-size: 11px;
-        }
-
-        .no-outlet {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-secondary);
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .no-outlet-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.6;
-        }
-
-        @media (max-width: 1200px) {
-            body { grid-template-columns: 200px 1fr 280px; }
-            .message-panel { width: 280px; }
-        }
+        .loading, .error, .empty { padding: 30px 20px; text-align: center; color: var(--text-secondary); font-size: 13px; }
+        .error { color: var(--red); }
+        .error button { margin-top: 8px; background: transparent; color: var(--accent-light); border: 1px solid var(--accent); border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 11px; }
+        .hidden { display: none !important; }
+        .scroll-y { max-height: 500px; overflow-y: auto; }
 
         @media (max-width: 900px) {
-            body { grid-template-columns: 1fr 280px; }
-            aside { display: none; }
-            .message-panel { width: 280px; }
-        }
-
-        @media (max-width: 768px) {
             body { grid-template-columns: 1fr; }
-            .message-panel { display: none; }
-            aside { grid-column: 1; grid-row: 1 / 3; height: 70px; width: 100%; padding: 0; display: flex; align-items: center; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; overflow-y: hidden; }
-            main { grid-row: 2; grid-column: 1; padding: 24px; }
-            .sidebar-section { display: none; }
-            .sidebar-section:first-child { display: flex; padding: 0 20px; margin: 0; }
-            .sidebar-title { display: none; }
-            .sidebar-menu { display: flex; gap: 0; }
-            .menu-link { padding: 12px 12px; border: none; border-bottom: 2px solid transparent; border-radius: 0; }
-            .menu-link.active { border-bottom-color: var(--accent); background: transparent; }
+            aside { display: none; }
+            .grid-4 { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -593,450 +234,875 @@
 <div class="bg-grid"></div>
 
 <header>
-    <div class="header-logo">
-        <div class="logo-icon">GP</div>
-        <span>Gaming PR</span>
-    </div>
+    <div class="header-logo"><div class="logo-icon">GP</div><span>Gaming PR</span></div>
     <div class="header-user">
-        <div class="user-info">
-            <div class="user-email" id="user-email">—</div>
-            <div class="user-role">Administrator</div>
-        </div>
+        <div class="user-info"><div class="user-email" id="user-email">-</div><div class="user-role">Administrator</div></div>
         <button class="logout-btn" onclick="logout()">Sign Out</button>
     </div>
 </header>
 
 <aside>
-    <div class="sidebar-section">
-        <div class="sidebar-title">Content Sources</div>
-        <ul class="sidebar-menu">
-            <li class="menu-item">
-                <a class="menu-link active" onclick="switchView('all')">
-                    <span class="menu-icon">📋</span>
-                    <span>All Sources</span>
-                    <span class="menu-count" id="count-all">0</span>
-                </a>
-            </li>
-            <li class="menu-item">
-                <a class="menu-link" onclick="switchView('outlets')">
-                    <span class="menu-icon">📰</span>
-                    <span>News Outlets</span>
-                    <span class="menu-count" id="count-outlets">0</span>
-                </a>
-            </li>
-            <li class="menu-item">
-                <a class="menu-link" onclick="switchView('streamers')">
-                    <span class="menu-icon">🎥</span>
-                    <span>Streamers</span>
-                    <span class="menu-count" id="count-streamers">0</span>
-                </a>
-            </li>
-            <li class="menu-item">
-                <a class="menu-link" onclick="switchView('vcs')">
-                    <span class="menu-icon">💼</span>
-                    <span>VCs / Influencers</span>
-                    <span class="menu-count" id="count-vcs">0</span>
-                </a>
-            </li>
-        </ul>
-    </div>
+    <div class="sidebar-title">Sources</div>
+    <ul class="sidebar-menu">
+        <li><a class="menu-link active" data-section="outlets" onclick="go('outlets')"><span class="menu-icon">📰</span>News Outlets<span class="menu-count" id="cnt-outlets">0</span></a></li>
+        <li><a class="menu-link" data-section="streamers" onclick="go('streamers')"><span class="menu-icon">🎥</span>Streamers<span class="menu-count" id="cnt-streamers">0</span></a></li>
+        <li><a class="menu-link" data-section="vcs" onclick="go('vcs')"><span class="menu-icon">💼</span>Gaming VCs<span class="menu-count" id="cnt-vcs">0</span></a></li>
+    </ul>
+    <div class="sidebar-title">Content</div>
+    <ul class="sidebar-menu">
+        <li><a class="menu-link" data-section="articles" onclick="go('articles')"><span class="menu-icon">📄</span>Articles</a></li>
+        <li><a class="menu-link" data-section="outreach" onclick="go('outreach')"><span class="menu-icon">✉️</span>Outreach</a></li>
+    </ul>
+    <div class="sidebar-title">Operations</div>
+    <ul class="sidebar-menu">
+        <li><a class="menu-link" data-section="scraper" onclick="go('scraper')"><span class="menu-icon">🔄</span>Scraper</a></li>
+        <li><a class="menu-link" data-section="email" onclick="go('email')"><span class="menu-icon">📧</span>Email</a></li>
+        <li><a class="menu-link" data-section="webhooks" onclick="go('webhooks')"><span class="menu-icon">🔗</span>Webhooks</a></li>
+        <li><a class="menu-link" data-section="export" onclick="go('export')"><span class="menu-icon">📦</span>Export</a></li>
+    </ul>
+    <div class="sidebar-title">System</div>
+    <ul class="sidebar-menu">
+        <li><a class="menu-link" data-section="monitoring" onclick="go('monitoring')"><span class="menu-icon">📊</span>Monitoring</a></li>
+        <li><a class="menu-link" data-section="livefeed" onclick="go('livefeed')"><span class="menu-icon">⚡</span>Live Feed</a></li>
+    </ul>
 </aside>
 
-<main>
-    <div class="content-header">
-        <h1 id="page-title">All Sources</h1>
-        <p id="page-desc">Manage all gaming outlets, streamers, and VCs</p>
-    </div>
-
-    <div class="panel">
-        <div id="content-area">
-            <div class="loading">Loading sources...</div>
-        </div>
-    </div>
+<main id="main-content">
+    <div class="loading">Loading...</div>
 </main>
 
-<div class="message-panel hidden" id="message-panel">
-    <div class="panel-header">
-        <div>
-            <h2 id="panel-outlet-name">—</h2>
-            <div class="panel-header-subtitle" id="panel-outlet-category">—</div>
-        </div>
-        <button class="close-panel" onclick="closeMessagePanel()">✕</button>
-    </div>
-    <div class="panel-content">
-        <div class="compose-section">
-            <h3>✉️ Compose Message</h3>
-            <div class="form-group">
-                <label>Subject</label>
-                <input type="text" id="compose-subject" placeholder="E.g., Partnership Inquiry">
-            </div>
-            <div class="form-group">
-                <label>Type</label>
-                <select id="compose-type">
-                    <option value="inquiry">General Inquiry</option>
-                    <option value="interview_request">Interview Request</option>
-                    <option value="partnership">Partnership Offer</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Message</label>
-                <textarea id="compose-body" placeholder="Write your message here..."></textarea>
-            </div>
-            <div class="button-group">
-                <button class="btn btn-secondary" id="btn-draft" onclick="saveDraft()">Save Draft</button>
-                <button class="btn btn-primary" id="btn-send" onclick="sendMessage()">Send</button>
-            </div>
-        </div>
-
-        <div class="messages-section">
-            <h3>📋 Recent Messages</h3>
-            <div id="messages-list"></div>
-        </div>
-    </div>
-</div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
 
 <script>
-    // ─── Auth Check ───
-    function checkAuth() {
-        const token = localStorage.getItem('auth_token');
-        if (!token) {
-            window.location.href = '/login';
-            return;
-        }
-        verifyToken(token);
+// ─── State ───
+const token = localStorage.getItem('auth_token');
+let section = 'outlets';
+let outlets = [], streamers = [], vcs = [];
+let selectedItem = null;
+let ws = null;
+
+// ─── Auth ───
+async function checkAuth() {
+    if (!token) { window.location.href = '/login'; return; }
+    try {
+        const r = await fetch(`/api/auth/verify?token=${token}`);
+        if (!r.ok) throw 0;
+        const d = await r.json();
+        document.getElementById('user-email').textContent = d.email;
+    } catch { localStorage.removeItem('auth_token'); window.location.href = '/login'; }
+}
+function logout() { localStorage.removeItem('auth_token'); window.location.href = '/login'; }
+
+// ─── Navigation ───
+function go(s) {
+    section = s; selectedItem = null;
+    document.querySelectorAll('.menu-link').forEach(l => l.classList.toggle('active', l.dataset.section === s));
+    render();
+}
+
+// ─── Toast ───
+function toast(msg, type = 'success') {
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = msg;
+    document.getElementById('toast-root').appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ─── Modal ───
+function showModal(title, html) {
+    document.getElementById('modal-root').innerHTML =
+        `<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal"><button class="modal-close" onclick="closeModal()">✕</button><h2>${title}</h2>${html}</div></div>`;
+}
+function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
+
+// ─── API Helpers ───
+async function api(url, opts = {}) {
+    const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const r = await fetch(url, { ...opts, headers });
+    if (!r.ok) {
+        const t = await r.text().catch(() => '');
+        throw new Error(t || `HTTP ${r.status}`);
     }
+    if (r.status === 204) return null;
+    return r.json();
+}
 
-    async function verifyToken(token) {
-        try {
-            const response = await fetch(`/api/auth/verify?token=${token}`);
-            if (!response.ok) {
-                localStorage.removeItem('auth_token');
-                window.location.href = '/login';
-                return;
-            }
-            const data = await response.json();
-            document.getElementById('user-email').textContent = data.email;
-        } catch (err) {
-            localStorage.removeItem('auth_token');
-            window.location.href = '/login';
-        }
-    }
+// ─── Data Loading ───
+async function loadOutlets() { try { outlets = await api('/api/outlets/'); } catch { outlets = []; } }
+async function loadStreamers() { try { streamers = await api('/api/streamers/'); } catch { streamers = []; } }
+async function loadVCs() { try { vcs = await api('/api/gaming-vcs/'); } catch { vcs = []; } }
 
-    function logout() {
-        localStorage.removeItem('auth_token');
-        window.location.href = '/login';
-    }
+function updateCounts() {
+    document.getElementById('cnt-outlets').textContent = outlets.length;
+    document.getElementById('cnt-streamers').textContent = streamers.length;
+    document.getElementById('cnt-vcs').textContent = vcs.length;
+}
 
-    // ─── Data & Views ───
-    let allOutlets = [];
-    let currentView = 'all';
-    let selectedOutlet = null;
-    const token = localStorage.getItem('auth_token');
+// ─── Render Router ───
+function render() {
+    const m = document.getElementById('main-content');
+    const renderers = { outlets: renderOutlets, streamers: renderStreamers, vcs: renderVCs, articles: renderArticles, outreach: renderOutreach, scraper: renderScraper, email: renderEmail, webhooks: renderWebhooks, export: renderExport, monitoring: renderMonitoring, livefeed: renderLiveFeed };
+    (renderers[section] || renderOutlets)(m);
+}
 
-    const viewInfo = {
-        all: {
-            icon: '📋',
-            title: 'All Sources',
-            desc: 'Manage all gaming outlets, streamers, and VCs',
-            filter: () => true,
-            countId: 'count-all'
-        },
-        outlets: {
-            icon: '📰',
-            title: 'News Outlets',
-            desc: 'Gaming news outlets, esports, and gaming industry',
-            filter: (o) => {
-                const c = o.category || '';
-                if (c === 'streamer' || c === 'vc' || c === 'gaming_influencer') return false;
-                return !c || c.includes('gaming') || c.includes('news') || c.includes('esports') || c.includes('console') || c.includes('mobile') || c.includes('pc') || c.includes('playstation') || c.includes('nintendo') || c.includes('xbox');
-            },
-            countId: 'count-outlets'
-        },
-        streamers: {
-            icon: '🎥',
-            title: 'Streamers',
-            desc: 'Gaming content creators and streamers',
-            filter: (o) => o.category === 'streamer',
-            countId: 'count-streamers'
-        },
-        vcs: {
-            icon: '💼',
-            title: 'VCs / Influencers',
-            desc: 'Venture capitalists and gaming influencers',
-            filter: (o) => o.category && (o.category === 'vc' || o.category === 'gaming_influencer'),
-            countId: 'count-vcs'
-        }
+// ─── Outlets Section ───
+function renderOutlets(m) {
+    if (selectedItem && selectedItem._type === 'outlet') return renderOutletDetail(m);
+    m.innerHTML = `
+        <div class="content-header"><div><h1>News Outlets</h1><p>Manage ${outlets.length} gaming news outlets</p></div>
+        <div class="header-actions"><button class="btn btn-primary" onclick="showCreateOutletForm()">+ Add Outlet</button><button class="btn btn-secondary" onclick="scrapeAllOutlets()">Scrape All</button></div></div>
+        <div class="panel"><div id="outlets-list">${renderItemsList(outlets, 'outlet')}</div></div>`;
+}
+
+function renderOutletDetail(m) {
+    const o = selectedItem;
+    m.innerHTML = `
+        <div class="content-header"><div><h1><button class="btn btn-sm btn-secondary" onclick="selectedItem=null;render()" style="margin-right:8px;">← Back</button>${esc(o.name)}</h1><p>${esc(o.url)}</p></div>
+        <div class="header-actions">
+            <button class="btn btn-secondary btn-sm" onclick="scrapeItem('outlet',${o.id})">Scrape Website</button>
+            <button class="btn btn-primary btn-sm" onclick="showOutreachForm('outlet',${o.id},'${esc(o.name)}')">Generate Outreach</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteItem('outlets',${o.id})">Delete</button>
+        </div></div>
+        <div class="tabs">
+            <button class="tab active" onclick="showOutletTab('info',this)">Info</button>
+            <button class="tab" onclick="showOutletTab('editorial',this)">Editorial</button>
+            <button class="tab" onclick="showOutletTab('audience',this)">Audience</button>
+            <button class="tab" onclick="showOutletTab('coverage',this)">Coverage</button>
+            <button class="tab" onclick="showOutletTab('messages',this)">Messages</button>
+        </div>
+        <div id="detail-tab-content">${renderOutletInfo(o)}</div>`;
+}
+
+function showOutletTab(tab, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const o = selectedItem;
+    const c = document.getElementById('detail-tab-content');
+    if (tab === 'info') c.innerHTML = renderOutletInfo(o);
+    else if (tab === 'editorial') c.innerHTML = renderOutletEditorial(o);
+    else if (tab === 'audience') c.innerHTML = renderOutletAudience(o);
+    else if (tab === 'coverage') c.innerHTML = renderOutletCoverage(o);
+    else if (tab === 'messages') loadItemMessages('outlet', o.id);
+}
+
+function renderOutletInfo(o) {
+    return `<div class="panel"><h3>Basic Information</h3><div class="detail-grid">
+        ${dv('Name', o.name)}${dv('URL', o.url)}${dv('Language', o.language)}${dv('Region', o.region)}
+        ${dv('Country', o.country)}${dv('Category', o.category)}${dv('Priority', o.priority)}${dv('Scraper Type', o.scraper_type)}
+        ${dv('Active', o.is_active ? 'Yes' : 'No')}${dv('Monthly Visitors', fmt(o.monthly_visitors))}
+        ${dv('Contact Email', o.contact_email)}${dv('Description', o.description, true)}
+        </div></div>
+        <div class="panel"><h3>Social Media</h3><div class="detail-grid">
+        ${dv('Twitter', o.social_twitter)}${dv('Twitter Followers', fmt(o.social_twitter_followers))}
+        ${dv('Facebook', o.social_facebook)}${dv('Facebook Followers', fmt(o.social_facebook_followers))}
+        ${dv('YouTube', o.social_youtube)}${dv('YouTube Subs', fmt(o.social_youtube_subscribers))}
+        ${dv('Instagram', o.social_instagram)}${dv('Instagram Followers', fmt(o.social_instagram_followers))}
+        ${dv('TikTok', o.social_tiktok)}${dv('Discord', o.social_discord)}
+        </div></div>
+        <div class="panel"><h3>Scraping Stats</h3><div class="detail-grid">
+        ${dv('Total Scraped', o.total_articles_scraped)}${dv('Avg Per Scrape', o.avg_articles_per_scrape?.toFixed(1))}
+        ${dv('Last Scraped', fmtDate(o.last_scraped_at))}${dv('Last Success', fmtDate(o.last_successful_scrape_at))}
+        ${dv('Consecutive Failures', o.consecutive_failures)}${dv('Created', fmtDate(o.created_at))}
+        </div></div>`;
+}
+
+function renderOutletEditorial(o) {
+    return `<div class="panel"><h3>Editorial Details</h3><div class="detail-grid">
+        ${dv('Editor-in-Chief', o.editor_in_chief)}${dv('Editor Email', o.editor_email)}
+        ${dv('Submission Email', o.submission_email)}${dv('Submission Guidelines', o.submission_guidelines_url)}
+        ${dv('Preferred Contact', o.preferred_contact_method)}${dv('Response Time', o.typical_response_time)}
+        ${dv('Press Page', o.press_page_url)}${dv('Press Kit Reqs', o.press_kit_requirements, true)}
+        ${dvTags('Editorial Focus', o.editorial_focus)}
+        ${dvTags('Content Types Accepted', o.content_types_accepted)}
+        </div></div>
+        <div class="panel"><h3>Staff</h3><div class="detail-grid">
+        ${dv('Freelance Opportunities', o.freelance_opportunities != null ? (o.freelance_opportunities ? 'Yes' : 'No') : '-')}
+        ${dv('Freelance Rate', o.freelance_rate)}
+        ${dvJson('Staff Writers', o.staff_writers)}
+        </div></div>`;
+}
+
+function renderOutletAudience(o) {
+    return `<div class="panel"><h3>Audience & Reach</h3><div class="detail-grid">
+        ${dv('Alexa Rank', fmt(o.alexa_rank))}${dv('Domain Authority', o.domain_authority)}
+        ${dv('Newsletter Subs', fmt(o.newsletter_subscribers))}${dv('Age Range', o.audience_age_range)}
+        ${dv('Podcast', o.podcast_name)}${dv('Podcast URL', o.podcast_url)}
+        ${dv('YouTube Channel', o.youtube_channel_url)}
+        ${dvTags('Audience Platforms', o.audience_platforms)}
+        ${dvJson('Audience Geography', o.audience_geography)}
+        </div></div>`;
+}
+
+function renderOutletCoverage(o) {
+    return `<div class="panel"><h3>Coverage Patterns</h3><div class="detail-grid">
+        ${dv('Reviews', o.publishes_reviews != null ? (o.publishes_reviews ? 'Yes' : 'No') : '-')}
+        ${dv('Previews', o.publishes_previews != null ? (o.publishes_previews ? 'Yes' : 'No') : '-')}
+        ${dv('Interviews', o.publishes_interviews != null ? (o.publishes_interviews ? 'Yes' : 'No') : '-')}
+        ${dv('Features', o.publishes_features != null ? (o.publishes_features ? 'Yes' : 'No') : '-')}
+        ${dv('Review Scale', o.review_scale)}${dv('Avg Articles/Day', o.average_articles_per_day)}
+        ${dvTags('Games Covered', o.games_covered)}
+        ${dvTags('Platforms Covered', o.platforms_covered)}
+        ${dvTags('Genres Covered', o.genres_covered)}
+        </div></div>`;
+}
+
+// ─── Streamers Section ───
+function renderStreamers(m) {
+    if (selectedItem && selectedItem._type === 'streamer') return renderStreamerDetail(m);
+    m.innerHTML = `
+        <div class="content-header"><div><h1>Streamers</h1><p>Manage ${streamers.length} gaming streamers</p></div>
+        <div class="header-actions"><button class="btn btn-secondary" onclick="scrapeAllType('streamers')">Scrape All</button></div></div>
+        <div class="panel"><div id="streamers-list">${renderItemsList(streamers, 'streamer')}</div></div>`;
+}
+
+function renderStreamerDetail(m) {
+    const s = selectedItem;
+    m.innerHTML = `
+        <div class="content-header"><div><h1><button class="btn btn-sm btn-secondary" onclick="selectedItem=null;render()" style="margin-right:8px;">← Back</button>${esc(s.name)}</h1><p>${esc(s.url || '')}</p></div>
+        <div class="header-actions">
+            <button class="btn btn-secondary btn-sm" onclick="scrapeItem('streamer',${s.id})">Scrape</button>
+            <button class="btn btn-primary btn-sm" onclick="showOutreachForm('streamer',${s.id},'${esc(s.name)}')">Generate Outreach</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteItem('streamers',${s.id})">Delete</button>
+        </div></div>
+        <div class="panel"><h3>Profile</h3><div class="detail-grid">
+        ${dv('Real Name', s.real_name)}${dv('Platform', s.platform)}${dv('Language', s.language)}
+        ${dv('Region', s.region)}${dv('Country', s.country)}${dv('Tier', s.tier)}${dv('Category', s.category)}
+        ${dv('Twitch', s.twitch_username)}${dv('YouTube', s.youtube_channel)}${dv('Kick', s.kick_username)}
+        ${dv('Bio', s.bio, true)}
+        </div></div>
+        <div class="panel"><h3>Audience & Metrics</h3><div class="detail-grid">
+        ${dv('Followers', fmt(s.follower_count))}${dv('Subscribers', fmt(s.subscriber_count))}
+        ${dv('Avg Viewers', fmt(s.avg_viewers))}${dv('Peak Viewers', fmt(s.peak_viewers))}
+        ${dv('Total Views', fmt(s.total_views))}${dv('Avg Stream Duration', s.avg_stream_duration_hours ? s.avg_stream_duration_hours + 'h' : '-')}
+        ${dv('Schedule', s.stream_schedule)}${dv('Partnered', s.is_partnered ? 'Yes' : 'No')}
+        ${dv('Variety Streamer', s.is_variety_streamer ? 'Yes' : 'No')}
+        </div></div>
+        <div class="panel"><h3>Content</h3><div class="detail-grid">
+        ${dv('Primary Game', s.primary_game)}${dv('Content Style', s.content_style)}
+        ${dvTags('Games Played', s.games_played)}${dvTags('Categories', s.content_categories)}
+        ${dvTags('Notable Achievements', s.notable_achievements)}
+        </div></div>
+        <div class="panel"><h3>Contact & Business</h3><div class="detail-grid">
+        ${dv('Contact Email', s.contact_email)}${dv('Business Email', s.business_email)}
+        ${dv('Manager', s.manager_name)}${dv('Manager Email', s.manager_email)}
+        ${dv('Agency', s.agency)}${dv('Accepts Game Codes', s.accepts_game_codes != null ? (s.accepts_game_codes ? 'Yes' : 'No') : '-')}
+        ${dv('Accepts Sponsored', s.accepts_sponsored_streams != null ? (s.accepts_sponsored_streams ? 'Yes' : 'No') : '-')}
+        ${dv('Sponsorship Rate', s.estimated_sponsorship_rate)}
+        ${dvTags('Past Sponsors', s.past_sponsors)}
+        </div></div>
+        <div class="panel"><h3>Social Media</h3><div class="detail-grid">
+        ${dv('Twitter', s.social_twitter)}${dv('Twitter Followers', fmt(s.twitter_followers))}
+        ${dv('Instagram', s.social_instagram)}${dv('Instagram Followers', fmt(s.instagram_followers))}
+        ${dv('Discord', s.social_discord)}${dv('Discord Members', fmt(s.discord_members))}
+        ${dv('YouTube', s.social_youtube)}${dv('TikTok', s.social_tiktok)}
+        </div></div>
+        <div class="panel"><h3>Esports</h3><div class="detail-grid">
+        ${dv('Esports Player', s.is_esports_player ? 'Yes' : 'No')}${dv('Team', s.esports_team)}
+        ${dv('Role', s.esports_role)}${dvTags('Tournaments', s.tournament_history)}
+        </div></div>`;
+}
+
+// ─── Gaming VCs Section ───
+function renderVCs(m) {
+    if (selectedItem && selectedItem._type === 'vc') return renderVCDetail(m);
+    m.innerHTML = `
+        <div class="content-header"><div><h1>Gaming VCs</h1><p>Manage ${vcs.length} gaming venture capital firms</p></div>
+        <div class="header-actions"><button class="btn btn-secondary" onclick="scrapeAllType('gaming-vcs')">Scrape All</button></div></div>
+        <div class="panel"><div id="vcs-list">${renderItemsList(vcs, 'vc')}</div></div>`;
+}
+
+function renderVCDetail(m) {
+    const v = selectedItem;
+    m.innerHTML = `
+        <div class="content-header"><div><h1><button class="btn btn-sm btn-secondary" onclick="selectedItem=null;render()" style="margin-right:8px;">← Back</button>${esc(v.name)}</h1><p>${esc(v.url || '')}</p></div>
+        <div class="header-actions">
+            <button class="btn btn-secondary btn-sm" onclick="scrapeItem('gaming-vc',${v.id})">Scrape</button>
+            <button class="btn btn-primary btn-sm" onclick="showOutreachForm('gaming_vc',${v.id},'${esc(v.name)}')">Generate Outreach</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteItem('gaming-vcs',${v.id})">Delete</button>
+        </div></div>
+        <div class="panel"><h3>Firm Details</h3><div class="detail-grid">
+        ${dv('Description', v.description, true)}${dv('Founded', v.founded_year)}
+        ${dv('HQ', v.headquarters)}${dv('Region', v.region)}${dv('Country', v.country)}
+        ${dv('Firm Type', v.firm_type)}${dv('Tier', v.tier)}${dv('Team Size', v.team_size)}
+        ${dv('Thesis', v.thesis, true)}
+        </div></div>
+        <div class="panel"><h3>Investment Focus</h3><div class="detail-grid">
+        ${dv('Fund Size', v.fund_size)}${dv('AUM', v.total_aum)}
+        ${dv('Check Size', v.typical_check_size)}${dv('Total Investments', v.total_investments)}${dv('Total Exits', v.total_exits)}
+        ${dvTags('Stage', v.investment_stage)}${dvTags('Focus', v.investment_focus)}
+        ${dvTags('Subsectors', v.gaming_subsectors)}${dvTags('Platforms', v.preferred_platforms)}
+        </div></div>
+        <div class="panel"><h3>Portfolio</h3><div class="detail-grid">
+        ${dv('Portfolio Count', v.portfolio_companies_count)}${dv('Active', v.active_portfolio_count)}
+        ${dvJson('Notable Portfolio', v.notable_portfolio)}${dvJson('Notable Exits', v.notable_exits)}
+        </div></div>
+        <div class="panel"><h3>Team & Contact</h3><div class="detail-grid">
+        ${dv('Contact Email', v.contact_email)}${dv('Pitch Email', v.pitch_email)}
+        ${dv('Pitch Form', v.pitch_form_url)}${dv('Phone', v.phone)}
+        ${dvJson('Partners', v.partners)}${dvJson('Decision Makers', v.key_decision_makers)}
+        </div></div>
+        <div class="panel"><h3>Social & Activity</h3><div class="detail-grid">
+        ${dv('Twitter', v.social_twitter)}${dv('LinkedIn', v.social_linkedin)}
+        ${dv('Crunchbase', v.social_crunchbase)}${dv('Blog', v.blog_url)}
+        ${dvTags('Events', v.events_attended)}${dvJson('Recent Investments', v.recent_investments)}
+        </div></div>`;
+}
+
+// ─── Articles Section ───
+async function renderArticles(m) {
+    m.innerHTML = `<div class="content-header"><div><h1>Scraped Articles</h1><p>Browse all scraped articles</p></div></div>
+        <div class="panel"><div class="form-row"><div class="form-group"><input id="article-search" placeholder="Search articles..." onkeyup="if(event.key==='Enter')searchArticles()"></div>
+        <div class="form-group" style="flex:0"><button class="btn btn-primary" onclick="searchArticles()">Search</button></div></div></div>
+        <div class="panel"><div id="articles-content"><div class="loading">Loading articles...</div></div></div>`;
+    try {
+        const data = await api('/api/scraper/articles?limit=50');
+        const articles = Array.isArray(data) ? data : (data.articles || []);
+        document.getElementById('articles-content').innerHTML = renderArticlesList(articles);
+    } catch (e) { document.getElementById('articles-content').innerHTML = `<div class="error">Failed to load: ${esc(e.message)}</div>`; }
+}
+
+async function searchArticles() {
+    const q = document.getElementById('article-search')?.value || '';
+    const el = document.getElementById('articles-content');
+    el.innerHTML = '<div class="loading">Searching...</div>';
+    try {
+        const data = await api(`/api/scraper/articles?limit=50&search=${encodeURIComponent(q)}`);
+        const articles = Array.isArray(data) ? data : (data.articles || []);
+        el.innerHTML = renderArticlesList(articles);
+    } catch (e) { el.innerHTML = `<div class="error">${esc(e.message)}</div>`; }
+}
+
+function renderArticlesList(articles) {
+    if (!articles.length) return '<div class="empty">No articles found</div>';
+    return `<table class="data-table"><thead><tr><th>Title</th><th>Outlet</th><th>Published</th><th>Actions</th></tr></thead><tbody>
+        ${articles.map(a => `<tr><td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.title || '-')}</td>
+        <td>${esc(a.outlet_name || a.outlet_id || '-')}</td><td>${fmtDate(a.published_at || a.scraped_at)}</td>
+        <td><button class="btn btn-sm btn-secondary" onclick="viewArticle(${a.id})">View</button></td></tr>`).join('')}</tbody></table>`;
+}
+
+async function viewArticle(id) {
+    try {
+        const a = await api(`/api/scraper/articles/${id}`);
+        showModal(esc(a.title || 'Article'), `
+            <div class="detail-grid" style="margin-bottom:16px">
+            ${dv('URL', a.url)}${dv('Published', fmtDate(a.published_at))}${dv('Outlet', a.outlet_name || a.outlet_id)}
+            ${dv('Author', a.author)}${dv('Language', a.language)}
+            </div>
+            <div class="panel"><h3>Content</h3><div style="font-size:13px;line-height:1.6;max-height:400px;overflow-y:auto">${esc(a.full_content || a.summary || a.description || 'No content available')}</div></div>
+            <div style="margin-top:12px"><button class="btn btn-secondary btn-sm" onclick="viewArticleHistory(${id})">Content History</button>
+            <button class="btn btn-secondary btn-sm" onclick="viewTranslations(${a.article_id || id})">Translations</button></div>`);
+    } catch (e) { toast('Failed to load article: ' + e.message, 'error'); }
+}
+
+async function viewArticleHistory(id) {
+    try {
+        const h = await api(`/api/scraper/articles/${id}/history`);
+        const items = Array.isArray(h) ? h : [];
+        showModal('Content History', items.length ? items.map(i => `<div class="feed-item"><strong>${fmtDate(i.snapshot_at || i.created_at)}</strong><br>${esc((i.content || i.summary || '').substring(0, 200))}...</div>`).join('') : '<div class="empty">No history</div>');
+    } catch (e) { toast(e.message, 'error'); }
+}
+
+async function viewTranslations(articleId) {
+    try {
+        const t = await api(`/api/articles/${articleId}/translations/`);
+        const items = Array.isArray(t) ? t : [];
+        showModal('Translations', items.length ?
+            items.map(i => `<div class="feed-item"><span class="badge badge-lang">${i.language}</span> <strong>${esc(i.translated_title || '-')}</strong><br><small>${esc((i.translated_summary || '').substring(0, 150))}</small></div>`).join('') +
+            `<button class="btn btn-secondary" style="margin-top:12px" onclick="retryTranslation(${articleId})">Retry Translations</button>` :
+            `<div class="empty">No translations yet</div><button class="btn btn-primary" style="margin-top:12px" onclick="retryTranslation(${articleId})">Generate Translations</button>`);
+    } catch (e) { toast(e.message, 'error'); }
+}
+
+async function retryTranslation(articleId) {
+    try { await api(`/api/articles/${articleId}/translations/retry`, { method: 'POST' }); toast('Translation queued'); } catch (e) { toast(e.message, 'error'); }
+}
+
+// ─── Outreach Section ───
+async function renderOutreach(m) {
+    m.innerHTML = `<div class="content-header"><div><h1>Outreach</h1><p>Generate and manage personalized outreach messages</p></div>
+        <div class="header-actions"><button class="btn btn-primary" onclick="showOutreachForm()">+ Generate Message</button></div></div>
+        <div id="outreach-stats"></div>
+        <div class="panel"><h3>Generated Messages</h3><div id="outreach-list"><div class="loading">Loading...</div></div></div>`;
+    try {
+        const [msgs, stats] = await Promise.all([api('/api/outreach/messages'), api('/api/outreach/stats').catch(() => null)]);
+        if (stats) document.getElementById('outreach-stats').innerHTML = `<div class="grid-4" style="margin-bottom:16px">
+            ${statCard(stats.total || 0, 'Total')}${statCard(stats.drafts || 0, 'Drafts')}${statCard(stats.sent || 0, 'Sent')}${statCard(stats.replied || 0, 'Replied')}</div>`;
+        const list = Array.isArray(msgs) ? msgs : [];
+        document.getElementById('outreach-list').innerHTML = list.length ? `<table class="data-table"><thead><tr><th>Target</th><th>Subject</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+            ${list.map(m => `<tr><td>${esc(m.recipient_name || m.target_type)}</td><td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.subject)}</td>
+            <td><span class="badge badge-info">${m.message_type}</span></td><td><span class="badge badge-${m.status==='sent'?'active':'cat'}">${m.status}</span></td>
+            <td><button class="btn btn-sm btn-secondary" onclick="viewOutreachMsg(${m.id})">View</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteOutreach(${m.id})">Del</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">No outreach messages yet. Generate one!</div>';
+    } catch (e) { document.getElementById('outreach-list').innerHTML = `<div class="error">${esc(e.message)}</div>`; }
+}
+
+function showOutreachForm(targetType, targetId, targetName) {
+    showModal('Generate Outreach Message', `
+        <div class="form-group"><label>Target Type</label><select id="or-type" onchange="updateOutreachTargets()">
+            <option value="outlet" ${targetType==='outlet'?'selected':''}>News Outlet</option>
+            <option value="streamer" ${targetType==='streamer'?'selected':''}>Streamer</option>
+            <option value="gaming_vc" ${targetType==='gaming_vc'?'selected':''}>Gaming VC</option></select></div>
+        <div class="form-group"><label>Target</label><select id="or-target">${targetId ? `<option value="${targetId}">${esc(targetName)}</option>` : ''}</select></div>
+        <div class="form-row">
+            <div class="form-group"><label>Message Type</label><select id="or-msg-type">
+                <option value="pitch">Pitch</option><option value="follow_up">Follow Up</option>
+                <option value="intro">Introduction</option><option value="coverage_request">Coverage Request</option>
+                <option value="partnership">Partnership</option></select></div>
+            <div class="form-group"><label>Tone</label><select id="or-tone">
+                <option value="professional">Professional</option><option value="casual">Casual</option>
+                <option value="enthusiastic">Enthusiastic</option><option value="formal">Formal</option></select></div>
+        </div>
+        <div class="form-group"><label>Game Title</label><input id="or-game" placeholder="Your game title"></div>
+        <div class="form-group"><label>Game Description</label><textarea id="or-desc" placeholder="Brief description of your game..."></textarea></div>
+        <div class="form-group"><label>Key Selling Points (comma separated)</label><input id="or-points" placeholder="Unique mechanic, Award-winning, 1M wishlists"></div>
+        <button class="btn btn-primary" onclick="generateOutreach()" style="margin-top:8px">Generate Message</button>`);
+    if (!targetId) updateOutreachTargets();
+}
+
+function updateOutreachTargets() {
+    const type = document.getElementById('or-type').value;
+    const sel = document.getElementById('or-target');
+    let items = type === 'outlet' ? outlets : type === 'streamer' ? streamers : vcs;
+    sel.innerHTML = items.map(i => `<option value="${i.id}">${esc(i.name)}</option>`).join('');
+}
+
+async function generateOutreach() {
+    const type = document.getElementById('or-type').value;
+    const targetId = parseInt(document.getElementById('or-target').value);
+    const body = {
+        target_type: type, target_id: targetId,
+        message_type: document.getElementById('or-msg-type').value,
+        tone: document.getElementById('or-tone').value,
+        game_title: document.getElementById('or-game').value,
+        game_description: document.getElementById('or-desc').value,
+        key_selling_points: document.getElementById('or-points').value.split(',').map(s => s.trim()).filter(Boolean)
     };
+    try {
+        const msg = await api('/api/outreach/generate', { method: 'POST', body: JSON.stringify(body) });
+        closeModal();
+        toast('Outreach message generated!');
+        if (section === 'outreach') renderOutreach(document.getElementById('main-content'));
+        else showModal('Generated Message', `<div class="panel"><h3>${esc(msg.subject)}</h3><div style="font-size:13px;line-height:1.7;white-space:pre-wrap">${esc(msg.body_text || msg.body_html || '')}</div></div>`);
+    } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
 
-    // ─── View Switching ───
-    function switchView(view) {
-        currentView = view;
+async function viewOutreachMsg(id) {
+    try {
+        const m = await api(`/api/outreach/messages/${id}`);
+        showModal(esc(m.subject), `<div class="detail-grid" style="margin-bottom:16px">
+            ${dv('Target', m.recipient_name || m.target_type)}${dv('Type', m.message_type)}${dv('Tone', m.tone)}
+            ${dv('Status', m.status)}${dv('Game', m.game_title)}${dv('Created', fmtDate(m.created_at))}</div>
+            <div class="panel"><div style="font-size:13px;line-height:1.7;white-space:pre-wrap">${esc(m.body_text || m.body_html || '')}</div></div>`);
+    } catch (e) { toast(e.message, 'error'); }
+}
 
-        // Update active menu link
-        document.querySelectorAll('.menu-link').forEach(link => {
-            link.classList.toggle('active', link.onclick.toString().includes("'" + view + "'"));
-        });
+async function deleteOutreach(id) {
+    if (!confirm('Delete this outreach message?')) return;
+    try { await api(`/api/outreach/messages/${id}`, { method: 'DELETE' }); toast('Deleted'); renderOutreach(document.getElementById('main-content')); } catch (e) { toast(e.message, 'error'); }
+}
 
-        // Better approach: update all links based on view
-        const links = document.querySelectorAll('.menu-link');
-        links.forEach((link, i) => {
-            const views = ['all', 'outlets', 'streamers', 'vcs'];
-            link.classList.toggle('active', views[i] === view);
-        });
+// ─── Scraper Section ───
+async function renderScraper(m) {
+    m.innerHTML = `<div class="content-header"><div><h1>Scraper</h1><p>Run scrapes, manage jobs, circuit breakers</p></div>
+        <div class="header-actions"><button class="btn btn-primary" onclick="runScrape()">Run Scrape (All)</button>
+        <button class="btn btn-secondary" onclick="processRetryQueue()">Process Retry Queue</button></div></div>
+        <div class="tabs">
+            <button class="tab active" onclick="loadScraperTab('stats',this)">Stats</button>
+            <button class="tab" onclick="loadScraperTab('jobs',this)">Jobs</button>
+            <button class="tab" onclick="loadScraperTab('circuit',this)">Circuit Breakers</button>
+            <button class="tab" onclick="loadScraperTab('retry',this)">Retry Queue</button>
+            <button class="tab" onclick="loadScraperTab('schedule',this)">Schedule</button>
+        </div>
+        <div id="scraper-content"><div class="loading">Loading...</div></div>`;
+    loadScraperTab('stats');
+}
 
-        // Update page header
-        const info = viewInfo[view];
-        document.getElementById('page-title').textContent = info.title;
-        document.getElementById('page-desc').textContent = info.desc;
+async function loadScraperTab(tab, btn) {
+    if (btn) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
+    const el = document.getElementById('scraper-content');
+    el.innerHTML = '<div class="loading">Loading...</div>';
+    try {
+        if (tab === 'stats') {
+            const s = await api('/api/scraper/stats');
+            el.innerHTML = `<div class="grid-4">${statCard(s.total_articles || 0, 'Articles')}${statCard(s.total_outlets || 0, 'Outlets')}${statCard(s.total_jobs || 0, 'Jobs')}${statCard(s.articles_today || 0, 'Today')}</div>`;
+        } else if (tab === 'jobs') {
+            const jobs = await api('/api/scraper/jobs');
+            const list = Array.isArray(jobs) ? jobs : [];
+            el.innerHTML = list.length ? `<div class="panel"><table class="data-table"><thead><tr><th>ID</th><th>Status</th><th>Outlets</th><th>New Articles</th><th>Started</th></tr></thead><tbody>
+                ${list.slice(0, 50).map(j => `<tr><td>${j.id}</td><td><span class="badge badge-${j.status==='completed'?'active':j.status==='failed'?'inactive':'info'}">${j.status}</span></td>
+                <td>${j.total_outlets || '-'}</td><td>${j.total_new_articles || 0}</td><td>${fmtDate(j.started_at)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No jobs</div>';
+        } else if (tab === 'circuit') {
+            const cb = await api('/api/scraper/circuit-breakers');
+            const entries = typeof cb === 'object' ? Object.entries(cb) : [];
+            el.innerHTML = entries.length ? `<div class="panel"><table class="data-table"><thead><tr><th>Outlet</th><th>State</th><th>Failures</th><th>Actions</th></tr></thead><tbody>
+                ${entries.map(([k, v]) => `<tr><td>${esc(k)}</td><td><span class="badge badge-${v.state==='closed'?'active':v.state==='open'?'inactive':'warn'}">${v.state}</span></td>
+                <td>${v.failure_count || 0}</td><td>${v.state !== 'closed' ? `<button class="btn btn-sm btn-success" onclick="resetCircuitBreaker(${v.outlet_id || k})">Reset</button>` : '-'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No circuit breaker data</div>';
+        } else if (tab === 'retry') {
+            const rq = await api('/api/scraper/retry-queue');
+            el.innerHTML = `<div class="panel"><div class="detail-grid">${dv('Pending', rq.pending || 0)}${dv('Processing', rq.processing || 0)}${dv('Completed', rq.completed || 0)}${dv('Failed', rq.failed || 0)}</div></div>`;
+        } else if (tab === 'schedule') {
+            const sch = await api('/api/scraper/schedule');
+            const entries = Array.isArray(sch) ? sch : Object.entries(sch || {}).map(([k,v]) => ({name:k,...v}));
+            el.innerHTML = entries.length ? `<div class="panel"><table class="data-table"><thead><tr><th>Outlet</th><th>Interval</th><th>Next Scrape</th><th>Priority</th></tr></thead><tbody>
+                ${entries.slice(0,50).map(s => `<tr><td>${esc(s.name || s.outlet_name || '-')}</td><td>${s.interval_minutes || s.interval || '-'}min</td><td>${fmtDate(s.next_scrape_at || s.next_run)}</td><td>${s.priority || '-'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No schedule data</div>';
+        }
+    } catch (e) { el.innerHTML = `<div class="error">${esc(e.message)}</div>`; }
+}
 
-        // Re-render
-        renderView();
-    }
+async function runScrape() {
+    toast('Starting scrape...');
+    try { const r = await api('/api/scraper/run', { method: 'POST' }); toast(`Scrape complete: ${r.total_new_articles || 0} new articles`); } catch (e) { toast('Scrape failed: ' + e.message, 'error'); }
+}
 
-    // ─── Data Loading ───
-    async function loadOutlets() {
+async function processRetryQueue() {
+    try { const r = await api('/api/scraper/retry-queue/process', { method: 'POST' }); toast(`Processed ${r.processed || 0} items`); } catch (e) { toast(e.message, 'error'); }
+}
+
+async function resetCircuitBreaker(outletId) {
+    try { await api(`/api/scraper/circuit-breakers/${outletId}/reset`, { method: 'POST' }); toast('Circuit breaker reset'); loadScraperTab('circuit'); } catch (e) { toast(e.message, 'error'); }
+}
+
+// ─── Email Section ───
+async function renderEmail(m) {
+    m.innerHTML = `<div class="content-header"><div><h1>Email</h1><p>Manage domains and send emails</p></div>
+        <div class="header-actions"><button class="btn btn-primary" onclick="showConnectDomainForm()">+ Connect Domain</button>
+        <button class="btn btn-secondary" onclick="showSendEmailForm()">Send Email</button></div></div>
+        <div class="tabs">
+            <button class="tab active" onclick="loadEmailTab('domains',this)">Domains</button>
+            <button class="tab" onclick="loadEmailTab('sent',this)">Sent Emails</button>
+            <button class="tab" onclick="loadEmailTab('stats',this)">Stats</button>
+        </div>
+        <div id="email-content"><div class="loading">Loading...</div></div>`;
+    loadEmailTab('domains');
+}
+
+async function loadEmailTab(tab, btn) {
+    if (btn) { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); btn.classList.add('active'); }
+    const el = document.getElementById('email-content');
+    el.innerHTML = '<div class="loading">Loading...</div>';
+    try {
+        if (tab === 'domains') {
+            const domains = await api('/api/email/domains');
+            const list = Array.isArray(domains) ? domains : [];
+            el.innerHTML = list.length ? `<div class="panel"><table class="data-table"><thead><tr><th>Domain</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+                ${list.map(d => `<tr><td>${esc(d.domain || d.name)}</td><td><span class="badge badge-${d.is_verified?'active':'warn'}">${d.is_verified ? 'Verified' : 'Pending'}</span></td>
+                <td><button class="btn btn-sm btn-secondary" onclick="verifyDomain(${d.id})">Verify</button> <button class="btn btn-sm btn-secondary" onclick="viewDomainDNS(${d.id})">DNS</button> <button class="btn btn-sm btn-danger" onclick="deleteDomain(${d.id})">Del</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No domains connected</div>';
+        } else if (tab === 'sent') {
+            const emails = await api('/api/email/emails');
+            const list = Array.isArray(emails) ? emails : [];
+            el.innerHTML = list.length ? `<div class="panel"><table class="data-table"><thead><tr><th>To</th><th>Subject</th><th>Status</th><th>Sent</th></tr></thead><tbody>
+                ${list.slice(0,50).map(e => `<tr><td>${esc(e.to_email || e.recipient)}</td><td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.subject)}</td>
+                <td><span class="badge badge-${e.status==='delivered'?'active':'inactive'}">${e.status}</span></td><td>${fmtDate(e.sent_at || e.created_at)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No emails sent</div>';
+        } else if (tab === 'stats') {
+            const s = await api('/api/email/stats');
+            el.innerHTML = `<div class="grid-4">${statCard(s.total_sent || 0, 'Sent')}${statCard(s.total_delivered || 0, 'Delivered')}${statCard(s.total_opened || 0, 'Opened')}${statCard(s.total_bounced || 0, 'Bounced')}</div>`;
+        }
+    } catch (e) { el.innerHTML = `<div class="error">${esc(e.message)}</div>`; }
+}
+
+function showConnectDomainForm() {
+    showModal('Connect Domain', `
+        <div class="form-group"><label>Domain Name</label><input id="domain-name" placeholder="mail.yourdomain.com"></div>
+        <button class="btn btn-primary" onclick="connectDomain()">Connect</button>`);
+}
+
+async function connectDomain() {
+    const domain = document.getElementById('domain-name').value.trim();
+    if (!domain) return;
+    try { await api('/api/email/domains', { method: 'POST', body: JSON.stringify({ domain }) }); closeModal(); toast('Domain connected'); loadEmailTab('domains'); } catch (e) { toast(e.message, 'error'); }
+}
+
+async function verifyDomain(id) {
+    try { await api(`/api/email/domains/${id}/verify`, { method: 'POST' }); toast('Verification triggered'); loadEmailTab('domains'); } catch (e) { toast(e.message, 'error'); }
+}
+
+async function viewDomainDNS(id) {
+    try {
+        const d = await api(`/api/email/domains/${id}`);
+        const records = d.dns_records || d.records || [];
+        showModal('DNS Records', records.length ? `<table class="data-table"><thead><tr><th>Type</th><th>Name</th><th>Value</th></tr></thead><tbody>
+            ${records.map(r => `<tr><td>${esc(r.type)}</td><td style="word-break:break-all">${esc(r.name || r.host)}</td><td style="word-break:break-all;font-size:11px">${esc(r.value || r.data)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No DNS records</div>');
+    } catch (e) { toast(e.message, 'error'); }
+}
+
+async function deleteDomain(id) {
+    if (!confirm('Delete this domain?')) return;
+    try { await api(`/api/email/domains/${id}`, { method: 'DELETE' }); toast('Domain removed'); loadEmailTab('domains'); } catch (e) { toast(e.message, 'error'); }
+}
+
+function showSendEmailForm() {
+    showModal('Send Email', `
+        <div class="form-row"><div class="form-group"><label>From Email</label><input id="send-from" placeholder="you@yourdomain.com"></div>
+        <div class="form-group"><label>To Email</label><input id="send-to" placeholder="recipient@example.com"></div></div>
+        <div class="form-group"><label>Subject</label><input id="send-subject" placeholder="Email subject"></div>
+        <div class="form-group"><label>Body (HTML)</label><textarea id="send-body" rows="6" placeholder="<p>Your email content...</p>"></textarea></div>
+        <button class="btn btn-primary" onclick="sendEmail()">Send</button>`);
+}
+
+async function sendEmail() {
+    try {
+        await api('/api/email/send', { method: 'POST', body: JSON.stringify({
+            from_email: document.getElementById('send-from').value, to_email: document.getElementById('send-to').value,
+            subject: document.getElementById('send-subject').value, body_html: document.getElementById('send-body').value
+        })});
+        closeModal(); toast('Email sent!');
+    } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+// ─── Webhooks Section ───
+async function renderWebhooks(m) {
+    m.innerHTML = `<div class="content-header"><div><h1>Webhooks</h1><p>Manage webhook notifications</p></div>
+        <div class="header-actions"><button class="btn btn-primary" onclick="showWebhookForm()">+ Add Webhook</button></div></div>
+        <div class="panel"><div id="webhooks-list"><div class="loading">Loading...</div></div></div>`;
+    try {
+        const hooks = await api('/api/webhooks/');
+        const list = Array.isArray(hooks) ? hooks : [];
+        document.getElementById('webhooks-list').innerHTML = list.length ? `<table class="data-table"><thead><tr><th>URL</th><th>Events</th><th>Active</th><th>Actions</th></tr></thead><tbody>
+            ${list.map(h => `<tr><td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.url)}</td>
+            <td>${(h.events || []).map(e => `<span class="badge badge-info">${e}</span> `).join('')}</td>
+            <td><span class="badge badge-${h.is_active?'active':'inactive'}">${h.is_active?'On':'Off'}</span></td>
+            <td><button class="btn btn-sm btn-secondary" onclick="toggleWebhook(${h.id})">Toggle</button>
+            <button class="btn btn-sm btn-secondary" onclick="testWebhook(${h.id})">Test</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteWebhook(${h.id})">Del</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">No webhooks configured</div>';
+    } catch (e) { document.getElementById('webhooks-list').innerHTML = `<div class="error">${esc(e.message)}</div>`; }
+}
+
+function showWebhookForm() {
+    showModal('Add Webhook', `
+        <div class="form-group"><label>URL</label><input id="wh-url" placeholder="https://your-server.com/webhook"></div>
+        <div class="form-group"><label>Events (comma separated)</label><input id="wh-events" placeholder="new_article, scrape_complete"></div>
+        <div class="form-group"><label>Secret (optional)</label><input id="wh-secret" placeholder="webhook-secret-key"></div>
+        <button class="btn btn-primary" onclick="createWebhook()">Create</button>`);
+}
+
+async function createWebhook() {
+    try {
+        await api('/api/webhooks/', { method: 'POST', body: JSON.stringify({
+            url: document.getElementById('wh-url').value,
+            events: document.getElementById('wh-events').value.split(',').map(s => s.trim()).filter(Boolean),
+            secret: document.getElementById('wh-secret').value || undefined
+        })});
+        closeModal(); toast('Webhook created'); renderWebhooks(document.getElementById('main-content'));
+    } catch (e) { toast(e.message, 'error'); }
+}
+
+async function toggleWebhook(id) { try { await api(`/api/webhooks/${id}/toggle`, { method: 'POST' }); toast('Toggled'); renderWebhooks(document.getElementById('main-content')); } catch (e) { toast(e.message, 'error'); } }
+async function testWebhook(id) { try { await api(`/api/webhooks/${id}/test`, { method: 'POST' }); toast('Test event sent'); } catch (e) { toast(e.message, 'error'); } }
+async function deleteWebhook(id) { if (!confirm('Delete webhook?')) return; try { await api(`/api/webhooks/${id}`, { method: 'DELETE' }); toast('Deleted'); renderWebhooks(document.getElementById('main-content')); } catch (e) { toast(e.message, 'error'); } }
+
+// ─── Export Section ───
+function renderExport(m) {
+    m.innerHTML = `<div class="content-header"><div><h1>Export</h1><p>Download articles in various formats</p></div></div>
+        <div class="grid-3">
+            <div class="panel" style="text-align:center">
+                <h3>JSON Export</h3><p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Download all articles as JSON</p>
+                <div class="form-group"><label>Language (optional)</label><input id="exp-lang-json" placeholder="en, fr, de..."></div>
+                <button class="btn btn-primary" onclick="doExport('json')">Download JSON</button>
+            </div>
+            <div class="panel" style="text-align:center">
+                <h3>CSV Export</h3><p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Download all articles as CSV</p>
+                <div class="form-group"><label>Language (optional)</label><input id="exp-lang-csv" placeholder="en, fr, de..."></div>
+                <button class="btn btn-primary" onclick="doExport('csv')">Download CSV</button>
+            </div>
+            <div class="panel" style="text-align:center">
+                <h3>RSS Feed</h3><p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Subscribe to the article feed</p>
+                <div class="form-group"><label>Language (optional)</label><input id="exp-lang-rss" placeholder="en, fr, de..."></div>
+                <button class="btn btn-secondary" onclick="doExport('rss')">Open RSS Feed</button>
+            </div>
+        </div>`;
+}
+
+function doExport(format) {
+    const lang = document.getElementById(`exp-lang-${format}`)?.value.trim();
+    let url = `/api/export/${format}`;
+    if (lang) url += `?language=${encodeURIComponent(lang)}`;
+    if (format === 'rss') window.open(url, '_blank');
+    else window.location.href = url;
+}
+
+// ─── Monitoring Section ───
+async function renderMonitoring(m) {
+    m.innerHTML = `<div class="content-header"><div><h1>Monitoring</h1><p>System health and scraper status</p></div>
+        <div class="header-actions"><button class="btn btn-secondary" onclick="renderMonitoring(document.getElementById('main-content'))">Refresh</button></div></div>
+        <div id="monitor-content"><div class="loading">Loading dashboard...</div></div>`;
+    try {
+        const [dash, health] = await Promise.all([api('/api/monitoring/dashboard'), api('/api/monitoring/health')]);
+        const el = document.getElementById('monitor-content');
+        el.innerHTML = `
+            <div class="grid-4" style="margin-bottom:16px">
+                ${statCard(dash.active_outlets || 0, 'Active Outlets')}
+                ${statCard(dash.total_articles || 0, 'Total Articles')}
+                ${statCard(dash.articles_last_24h || 0, 'Last 24h')}
+                ${statCard(dash.failing_outlets || 0, 'Failing')}
+            </div>
+            <div class="grid-2">
+                <div class="panel"><h3>System Health</h3><div class="detail-grid">
+                    ${dv('Status', health.status)}${dv('Database', health.database || '-')}
+                    ${dv('Scheduler', health.scheduler || '-')}${dv('Version', health.version || '-')}
+                </div></div>
+                <div class="panel"><h3>Scraper Health</h3><div class="detail-grid">
+                    ${dv('Last Scrape', fmtDate(dash.last_scrape_at))}${dv('Avg Duration', dash.avg_scrape_duration ? dash.avg_scrape_duration + 's' : '-')}
+                    ${dv('Success Rate', dash.success_rate ? dash.success_rate + '%' : '-')}${dv('Queue Size', dash.retry_queue_size || 0)}
+                </div></div>
+            </div>`;
+    } catch (e) { document.getElementById('monitor-content').innerHTML = `<div class="error">${esc(e.message)}</div>`; }
+}
+
+// ─── Live Feed Section ───
+function renderLiveFeed(m) {
+    m.innerHTML = `<div class="content-header"><div><h1>Live Feed</h1><p>Real-time article stream via WebSocket</p></div>
+        <div class="header-actions"><button class="btn btn-primary" id="ws-btn" onclick="toggleWS()">Connect</button></div></div>
+        <div class="panel"><div id="ws-status" style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">Disconnected</div>
+        <div id="ws-feed" class="scroll-y" style="max-height:600px"></div></div>`;
+    if (ws) document.getElementById('ws-status').textContent = 'Connected';
+}
+
+function toggleWS() {
+    if (ws) { ws.close(); ws = null; document.getElementById('ws-status').textContent = 'Disconnected'; document.getElementById('ws-btn').textContent = 'Connect'; return; }
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${proto}//${location.host}/ws/feed`);
+    ws.onopen = () => { document.getElementById('ws-status').textContent = 'Connected'; document.getElementById('ws-btn').textContent = 'Disconnect'; };
+    ws.onmessage = (e) => {
         try {
-            const response = await fetch('/api/outlets/');
-            const data = await response.json();
-            allOutlets = Array.isArray(data) ? data : [];
-
-            // Update counts
-            Object.keys(viewInfo).forEach(view => {
-                const filtered = allOutlets.filter(viewInfo[view].filter);
-                const countEl = document.getElementById(viewInfo[view].countId);
-                if (countEl) countEl.textContent = filtered.length;
-            });
-
-            renderView();
-
-            // Auto-select first outlet to show message panel
-            if (allOutlets.length > 0) {
-                selectOutlet(allOutlets[0].id);
+            const data = JSON.parse(e.data);
+            const feed = document.getElementById('ws-feed');
+            if (feed) {
+                const item = document.createElement('div');
+                item.className = 'feed-item';
+                item.innerHTML = `<strong>${esc(data.title || 'New Article')}</strong><br><small>${esc(data.outlet_name || '')} - ${fmtDate(data.published_at)}</small>`;
+                feed.prepend(item);
+                if (feed.children.length > 100) feed.lastChild.remove();
             }
-        } catch (err) {
-            document.getElementById('content-area').innerHTML =
-                '<div class="error">Failed to load sources<br><button onclick="loadOutlets()">Retry</button></div>';
-        }
-    }
+        } catch {}
+    };
+    ws.onclose = () => { ws = null; const s = document.getElementById('ws-status'); if (s) s.textContent = 'Disconnected'; const b = document.getElementById('ws-btn'); if (b) b.textContent = 'Connect'; };
+}
 
-    function renderView() {
-        const info = viewInfo[currentView];
-        const filtered = allOutlets.filter(info.filter);
+// ─── Shared Helpers ───
+function renderItemsList(items, type) {
+    if (!items.length) return `<div class="empty">No ${type}s found</div>`;
+    return items.map(o => {
+        const lang = o.language || '';
+        const cat = (o.category || o.firm_type || o.platform || '').replace(/_/g, ' ');
+        const active = o.is_active !== false;
+        return `<button class="item ${selectedItem && selectedItem.id === o.id && selectedItem._type === type ? 'selected' : ''}" onclick="selectItem('${type}',${o.id})" style="width:100%;text-align:left">
+            <span class="item-name" title="${esc(o.name)}">${esc(o.name)}</span>
+            <span class="item-meta">
+                ${lang ? `<span class="badge badge-lang">${lang}</span>` : ''}
+                ${cat ? `<span class="badge badge-cat">${cat.substring(0, 14)}</span>` : ''}
+                <span class="badge badge-${active ? 'active' : 'inactive'}">${active ? 'On' : 'Off'}</span>
+            </span></button>`;
+    }).join('');
+}
 
-        if (filtered.length === 0) {
-            document.getElementById('content-area').innerHTML =
-                '<div class="empty">No ' + info.title.toLowerCase() + ' found yet.</div>';
-            return;
-        }
+function selectItem(type, id) {
+    const src = type === 'outlet' ? outlets : type === 'streamer' ? streamers : vcs;
+    selectedItem = src.find(i => i.id === id);
+    if (selectedItem) selectedItem._type = type;
+    render();
+}
 
-        let html = '';
-        for (const o of filtered) {
-            const active = o.is_active ? 'badge-active' : 'badge-inactive';
-            const category = (o.category || 'uncategorized').replace(/_/g, ' ');
-            const selected = selectedOutlet && selectedOutlet.id === o.id ? 'selected' : '';
-            html +=
-                '<button class="item ' + selected + '" onclick="selectOutlet(' + o.id + ')" style="width: 100%; background: none; text-align: left;">' +
-                '<span class="item-name" title="' + (o.name || '—') + '">' + (o.name || '—') + '</span>' +
-                '<span class="item-meta">' +
-                '<span class="badge badge-lang">' + (o.language || '?') + '</span>' +
-                '<span class="badge" style="background: rgba(156,163,175,0.15); color: #d1d5db;">' + category.substring(0, 12) + '</span>' +
-                '<span class="badge ' + active + '">' + (o.is_active ? 'On' : 'Off') + '</span>' +
-                '</span></button>';
-        }
-        document.getElementById('content-area').innerHTML = html;
-    }
+async function scrapeItem(type, id) {
+    toast('Scraping...');
+    try {
+        const url = type === 'outlet' ? `/api/outreach/scrape/outlet/${id}` : type === 'streamer' ? `/api/outreach/scrape/streamer/${id}` : `/api/outreach/scrape/gaming-vc/${id}`;
+        await api(url, { method: 'POST' });
+        toast('Scrape complete!');
+        await Promise.all([loadOutlets(), loadStreamers(), loadVCs()]);
+        if (selectedItem) { const src = type === 'outlet' ? outlets : type === 'streamer' ? streamers : vcs; const fresh = src.find(i => i.id === id); if (fresh) { fresh._type = type; selectedItem = fresh; } }
+        render();
+    } catch (e) { toast('Scrape failed: ' + e.message, 'error'); }
+}
 
-    // ─── Messaging ───
-    function selectOutlet(outletId) {
-        selectedOutlet = allOutlets.find(o => o.id === outletId);
-        if (!selectedOutlet) return;
+async function scrapeAllOutlets() {
+    toast('Scraping all outlets...');
+    try { await api('/api/outreach/scrape/all-outlets', { method: 'POST' }); toast('Done!'); await loadOutlets(); render(); } catch (e) { toast(e.message, 'error'); }
+}
 
-        // Update panel header
-        const category = (selectedOutlet.category || 'uncategorized').replace(/_/g, ' ');
-        document.getElementById('panel-outlet-name').textContent = selectedOutlet.name || '—';
-        document.getElementById('panel-outlet-category').textContent = category;
+async function scrapeAllType(type) {
+    toast(`Scraping all ${type}...`);
+    try { await api(`/api/outreach/scrape/all-${type}`, { method: 'POST' }); toast('Done!'); await Promise.all([loadStreamers(), loadVCs()]); render(); } catch (e) { toast(e.message, 'error'); }
+}
 
-        // Clear form
-        document.getElementById('compose-subject').value = '';
-        document.getElementById('compose-body').value = '';
-        document.getElementById('compose-type').value = 'inquiry';
+async function deleteItem(endpoint, id) {
+    if (!confirm('Delete this item?')) return;
+    try { await api(`/api/${endpoint}/${id}`, { method: 'DELETE' }); toast('Deleted'); selectedItem = null; await Promise.all([loadOutlets(), loadStreamers(), loadVCs()]); updateCounts(); render(); } catch (e) { toast(e.message, 'error'); }
+}
 
-        // Show panel
-        document.getElementById('message-panel').classList.remove('hidden');
+async function loadItemMessages(type, id) {
+    const el = document.getElementById('detail-tab-content');
+    el.innerHTML = '<div class="loading">Loading messages...</div>';
+    try {
+        const msgs = await api(`/api/messages/outlets/${id}/messages?token=${token}`);
+        const list = Array.isArray(msgs) ? msgs : [];
+        el.innerHTML = `<div class="panel">
+            <h3>Compose Message</h3>
+            <div class="form-group"><label>Subject</label><input id="msg-subj" placeholder="Subject"></div>
+            <div class="form-group"><label>Type</label><select id="msg-type"><option value="inquiry">General Inquiry</option><option value="interview_request">Interview Request</option><option value="partnership">Partnership</option><option value="other">Other</option></select></div>
+            <div class="form-group"><label>Body</label><textarea id="msg-body" placeholder="Write your message..."></textarea></div>
+            <div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="saveMsg(${id},'draft')">Save Draft</button><button class="btn btn-primary" onclick="saveMsg(${id},'send')">Send</button></div>
+        </div>
+        <div class="panel"><h3>Recent Messages</h3>${list.length ? list.map(m => `<div class="feed-item" style="background:rgba(124,92,255,0.08);border-color:rgba(124,92,255,0.2)">
+            <div style="display:flex;justify-content:space-between"><strong>${esc(m.subject || '(no subject)')}</strong><span class="badge badge-${m.status==='sent'?'active':'cat'}">${m.status}</span></div>
+            <div style="color:var(--text-secondary);margin:4px 0">${esc((m.body||'').substring(0,120))}</div>
+            <small style="color:var(--text-muted)">${fmtDate(m.created_at)}</small></div>`).join('') : '<div class="empty">No messages yet</div>'}</div>`;
+    } catch (e) { el.innerHTML = `<div class="error">${esc(e.message)}</div>`; }
+}
 
-        // Load messages for this outlet
-        loadOutletMessages();
+async function saveMsg(outletId, action) {
+    const subj = document.getElementById('msg-subj').value.trim();
+    const body = document.getElementById('msg-body').value.trim();
+    if (!subj || !body) { toast('Fill in subject and body', 'error'); return; }
+    try {
+        const msg = await api('/api/messages', { method: 'POST', body: JSON.stringify({ outlet_id: outletId, subject: subj, body, message_type: document.getElementById('msg-type').value }) });
+        if (action === 'send') await api(`/api/messages/${msg.id}/send`, { method: 'POST' });
+        toast(action === 'send' ? 'Message sent!' : 'Draft saved');
+        loadItemMessages('outlet', outletId);
+    } catch (e) { toast(e.message, 'error'); }
+}
 
-        // Re-render to highlight selected item
-        renderView();
-    }
+function showCreateOutletForm() {
+    showModal('Add Outlet', `
+        <div class="form-row"><div class="form-group"><label>Name</label><input id="new-o-name" placeholder="Outlet name"></div>
+        <div class="form-group"><label>URL</label><input id="new-o-url" placeholder="https://example.com"></div></div>
+        <div class="form-row"><div class="form-group"><label>Language</label><input id="new-o-lang" value="en" placeholder="en"></div>
+        <div class="form-group"><label>Region</label><input id="new-o-region" value="NA" placeholder="NA, EU, APAC..."></div></div>
+        <div class="form-row"><div class="form-group"><label>RSS Feed URL</label><input id="new-o-rss" placeholder="https://example.com/rss"></div>
+        <div class="form-group"><label>Category</label><input id="new-o-cat" value="gaming_news" placeholder="gaming_news"></div></div>
+        <button class="btn btn-primary" onclick="createOutlet()" style="margin-top:8px">Create</button>`);
+}
 
-    function closeMessagePanel() {
-        selectedOutlet = null;
-        document.getElementById('message-panel').classList.add('hidden');
-        renderView();
-    }
+async function createOutlet() {
+    try {
+        await api('/api/outlets/', { method: 'POST', body: JSON.stringify({
+            name: document.getElementById('new-o-name').value, url: document.getElementById('new-o-url').value,
+            language: document.getElementById('new-o-lang').value, region: document.getElementById('new-o-region').value,
+            rss_feed_url: document.getElementById('new-o-rss').value || undefined, category: document.getElementById('new-o-cat').value
+        })});
+        closeModal(); toast('Outlet created'); await loadOutlets(); updateCounts(); render();
+    } catch (e) { toast(e.message, 'error'); }
+}
 
-    async function loadOutletMessages() {
-        if (!selectedOutlet) return;
-        const list = document.getElementById('messages-list');
-        list.innerHTML = '<div class="loading">Loading messages...</div>';
+// ─── Formatting helpers ───
+function esc(s) { if (s == null) return '-'; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function fmt(n) { return n != null ? Number(n).toLocaleString() : '-'; }
+function fmtDate(d) { if (!d) return '-'; try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch { return d; } }
+function dv(label, val, full) { return `<div class="detail-item ${full ? 'detail-full' : ''}"><label>${esc(label)}</label><span>${val != null && val !== '' ? esc(String(val)) : '-'}</span></div>`; }
+function dvTags(label, arr) { if (!Array.isArray(arr) || !arr.length) return dv(label, '-', true); return `<div class="detail-item detail-full"><label>${esc(label)}</label><div class="tag-list">${arr.map(t => `<span class="tag">${esc(typeof t === 'object' ? JSON.stringify(t) : t)}</span>`).join('')}</div></div>`; }
+function dvJson(label, val) { if (!val || (Array.isArray(val) && !val.length)) return dv(label, '-', true); return `<div class="detail-item detail-full"><label>${esc(label)}</label><pre style="font-size:11px;color:var(--text-secondary);white-space:pre-wrap;max-height:200px;overflow-y:auto">${esc(JSON.stringify(val, null, 2))}</pre></div>`; }
+function statCard(value, label) { return `<div class="stat-card"><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`; }
 
-        try {
-            const response = await fetch(
-                `/api/messages/outlets/${selectedOutlet.id}/messages?token=${token}`
-            );
-            if (!response.ok) throw new Error('Failed to load messages');
-            const messages = await response.json();
-
-            if (!Array.isArray(messages) || messages.length === 0) {
-                list.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; text-align: center; padding: 20px;">No messages yet</div>';
-                return;
-            }
-
-            let html = '';
-            for (const msg of messages) {
-                const status = msg.status || 'draft';
-                const time = new Date(msg.created_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                html +=
-                    '<div class="message-item">' +
-                    '<div class="message-item-header">' +
-                    '<span class="message-item-subject">' + (msg.subject || '(no subject)') + '</span>' +
-                    '<span class="message-item-status status-' + status + '">' + status.toUpperCase() + '</span>' +
-                    '</div>' +
-                    '<div class="message-item-body">' + (msg.body || '').substring(0, 100) + (msg.body && msg.body.length > 100 ? '...' : '') + '</div>' +
-                    '<div class="message-item-time">' + time + '</div>' +
-                    '</div>';
-            }
-            list.innerHTML = html;
-        } catch (err) {
-            list.innerHTML = '<div class="error">Failed to load messages<br><button onclick="loadOutletMessages()" style="margin-top: 8px;">Retry</button></div>';
-        }
-    }
-
-    async function saveDraft() {
-        if (!selectedOutlet) {
-            alert('Please select an outlet first');
-            return;
-        }
-
-        const subject = document.getElementById('compose-subject').value.trim();
-        const body = document.getElementById('compose-body').value.trim();
-        const messageType = document.getElementById('compose-type').value;
-
-        if (!subject || !body) {
-            alert('Please fill in subject and message');
-            return;
-        }
-
-        const btn = document.getElementById('btn-draft');
-        btn.disabled = true;
-        btn.textContent = 'Saving...';
-
-        try {
-            const response = await fetch('/api/messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    outlet_id: selectedOutlet.id,
-                    subject: subject,
-                    body: body,
-                    message_type: messageType
-                })
-            });
-
-            if (!response.ok) throw new Error('Failed to save draft');
-
-            // Clear form
-            document.getElementById('compose-subject').value = '';
-            document.getElementById('compose-body').value = '';
-
-            // Reload messages
-            await loadOutletMessages();
-            alert('Draft saved');
-        } catch (err) {
-            alert('Error saving draft: ' + err.message);
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Save Draft';
-        }
-    }
-
-    async function sendMessage() {
-        if (!selectedOutlet) {
-            alert('Please select an outlet first');
-            return;
-        }
-
-        const subject = document.getElementById('compose-subject').value.trim();
-        const body = document.getElementById('compose-body').value.trim();
-        const messageType = document.getElementById('compose-type').value;
-
-        if (!subject || !body) {
-            alert('Please fill in subject and message');
-            return;
-        }
-
-        const btn = document.getElementById('btn-send');
-        btn.disabled = true;
-        btn.textContent = 'Sending...';
-
-        try {
-            // First create the message
-            const createResponse = await fetch('/api/messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    outlet_id: selectedOutlet.id,
-                    subject: subject,
-                    body: body,
-                    message_type: messageType
-                })
-            });
-
-            if (!createResponse.ok) throw new Error('Failed to create message');
-            const message = await createResponse.json();
-
-            // Then send it
-            const sendResponse = await fetch(`/api/messages/${message.id}/send`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!sendResponse.ok) throw new Error('Failed to send message');
-
-            // Clear form
-            document.getElementById('compose-subject').value = '';
-            document.getElementById('compose-body').value = '';
-
-            // Reload messages
-            await loadOutletMessages();
-            alert('Message sent successfully!');
-        } catch (err) {
-            alert('Error sending message: ' + err.message);
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Send';
-        }
-    }
-
-    // ─── Init ───
+// ─── Init ───
+async function init() {
     checkAuth();
-    loadOutlets();
+    await Promise.all([loadOutlets(), loadStreamers(), loadVCs()]);
+    updateCounts();
+    render();
+}
+init();
 </script>
 </body>
 </html>
