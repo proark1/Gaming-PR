@@ -70,10 +70,10 @@ def scheduled_retry_queue():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Create any brand-new tables (no-op for tables that already exist)
-    Base.metadata.create_all(bind=engine)
-    # 2. Add new columns to existing tables (idempotent via IF NOT EXISTS)
+    # 1. Drop stale tables + add new columns to gaming_outlets
     run_migrations(engine)
+    # 2. Recreate dropped tables with the full current schema
+    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         outlets_added = seed_outlets(db)
