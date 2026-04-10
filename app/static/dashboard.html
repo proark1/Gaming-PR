@@ -885,7 +885,7 @@ function statCard(v,l){return `<div class="stat-card"><div class="stat-value">${
 
 // ─── Init ───
 async function init() {
-    checkAuth();
+    await checkAuth();
     await loadAll();
     updateCategoryUI();
     render();
