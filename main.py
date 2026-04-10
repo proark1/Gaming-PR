@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse
 
 from app.config import SUPPORTED_LANGUAGES, settings
 from app.database import Base, engine, SessionLocal
+from app.migrations import run_migrations
 from app.routers import articles, outlets, scraper, translations
 from app.routers.monitoring import router as monitoring_router
 from app.routers.webhooks import router as webhooks_router
@@ -69,7 +70,10 @@ def scheduled_retry_queue():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 1. Create any brand-new tables (no-op for tables that already exist)
     Base.metadata.create_all(bind=engine)
+    # 2. Add new columns to existing tables (idempotent via IF NOT EXISTS)
+    run_migrations(engine)
     db = SessionLocal()
     try:
         outlets_added = seed_outlets(db)
