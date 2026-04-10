@@ -44,6 +44,13 @@ class Settings(BaseSettings):
     EMAIL_SERVICE_URL: str = "http://localhost:3000"
     EMAIL_SERVICE_API_KEY: str = ""
 
+    # Twitch API (for streamer import — get free credentials at dev.twitch.tv)
+    TWITCH_CLIENT_ID: str = ""
+    TWITCH_CLIENT_SECRET: str = ""
+
+    # YouTube Data API v3 (for YouTube channel import — get free key at console.cloud.google.com)
+    YOUTUBE_API_KEY: str = ""
+
     # Auth
     ADMIN_EMAIL: str = "admin@gaming-pr.com"
     ADMIN_PASSWORD: str = "admin123"

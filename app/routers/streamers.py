@@ -119,3 +119,27 @@ def scrape_streamer(streamer_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Streamer not found")
     result = scrape_streamer_website(db, streamer_id)
     return result
+
+
+@router.post("/import-twitch")
+def import_twitch_streamers(
+    max_per_category: int = Query(200, ge=1, le=500),
+    min_viewers: int = Query(50, ge=1),
+    db: Session = Depends(get_db),
+):
+    """Pull live streamers from Twitch API across 30 game categories and upsert into DB."""
+    from app.services.twitch_import_service import import_from_twitch
+    from app.config import settings
+    if not settings.TWITCH_CLIENT_ID or not settings.TWITCH_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=400,
+            detail="TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET env vars must be set. "
+                   "Get free credentials at https://dev.twitch.tv/console",
+        )
+    return import_from_twitch(
+        db,
+        settings.TWITCH_CLIENT_ID,
+        settings.TWITCH_CLIENT_SECRET,
+        max_per_category=max_per_category,
+        min_viewers=min_viewers,
+    )
