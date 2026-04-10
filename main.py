@@ -15,7 +15,12 @@ from app.routers.webhooks import router as webhooks_router
 from app.routers.export import router as export_router
 from app.routers.websocket import router as websocket_router
 from app.routers.email import router as email_router
+from app.routers.streamers import router as streamers_router
+from app.routers.gaming_vcs import router as gaming_vcs_router
+from app.routers.outreach import router as outreach_router
 from app.seed.outlets import seed_outlets
+from app.seed.streamers import seed_streamers
+from app.seed.gaming_vcs import seed_gaming_vcs
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -65,8 +70,13 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        added = seed_outlets(db)
-        logger.info(f"Database initialized. {added} new outlets seeded.")
+        outlets_added = seed_outlets(db)
+        streamers_added = seed_streamers(db)
+        vcs_added = seed_gaming_vcs(db)
+        logger.info(
+            f"Database initialized. "
+            f"{outlets_added} outlets, {streamers_added} streamers, {vcs_added} gaming VCs seeded."
+        )
     finally:
         db.close()
 
@@ -104,14 +114,15 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Gaming PR Platform",
     description=(
-        "The world's most advanced gaming news scraper. "
-        "Scrapes 80+ outlets across 10 languages with async concurrency, "
-        "Playwright browser fallback, stealth headers, circuit breakers, "
-        "adaptive scheduling, retry queues, content change tracking, "
-        "WebSocket live feed, webhook notifications, and bulk export. "
-        "Includes robots.txt compliance, sitemap discovery, and content deduplication."
+        "The world's most advanced gaming PR platform. "
+        "Manages 80+ news outlets, 25+ streamers, and 20+ gaming VCs "
+        "across 10+ languages with comprehensive profile data. "
+        "Features website scraping for contact enrichment, "
+        "personalized outreach message generation, async news scraping, "
+        "Playwright browser fallback, circuit breakers, adaptive scheduling, "
+        "WebSocket live feed, webhook notifications, and bulk export."
     ),
-    version="4.0.0",
+    version="5.0.0",
     lifespan=lifespan,
 )
 
@@ -132,6 +143,9 @@ app.include_router(webhooks_router)
 app.include_router(export_router)
 app.include_router(websocket_router)
 app.include_router(email_router)
+app.include_router(streamers_router)
+app.include_router(gaming_vcs_router)
+app.include_router(outreach_router)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -140,9 +154,15 @@ def landing_page():
     return HTMLResponse(content=html_path.read_text(), status_code=200)
 
 
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard():
+    html_path = Path(__file__).parent / "app" / "static" / "dashboard.html"
+    return HTMLResponse(content=html_path.read_text(), status_code=200)
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok", "version": "4.0.0"}
+    return {"status": "ok", "version": "5.0.0"}
 
 
 @app.get("/api/languages")

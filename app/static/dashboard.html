@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gaming PR Platform - Dashboard</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-card: #12121a;
+  --bg-card-hover: #1a1a2e;
+  --bg-modal: #16161f;
+  --border: #2a2a3e;
+  --border-hover: #4a4a6e;
+  --text: #e4e4ef;
+  --text-dim: #8888a0;
+  --text-bright: #ffffff;
+  --accent: #6c5ce7;
+  --accent-glow: rgba(108,92,231,0.3);
+  --green: #00d68f;
+  --green-dim: rgba(0,214,143,0.15);
+  --red: #ff6b6b;
+  --red-dim: rgba(255,107,107,0.15);
+  --orange: #ffa502;
+  --orange-dim: rgba(255,165,2,0.15);
+  --blue: #4ecdc4;
+  --blue-dim: rgba(78,205,196,0.15);
+  --pink: #fd79a8;
+  --purple: #a29bfe;
+  --yellow: #fdcb6e;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ─── Top Nav ─── */
+.top-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+.top-nav h1 { font-size: 20px; font-weight: 700; color: var(--text-bright); }
+.top-nav h1 span { color: var(--accent); }
+.nav-tabs {
+  display: flex; gap: 4px;
+}
+.nav-tab {
+  padding: 8px 20px; border-radius: 8px; cursor: pointer;
+  font-size: 14px; font-weight: 500; color: var(--text-dim);
+  background: transparent; border: none; transition: all 0.2s;
+}
+.nav-tab:hover { color: var(--text); background: var(--bg-card-hover); }
+.nav-tab.active { color: var(--text-bright); background: var(--accent); }
+.nav-search {
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-search input {
+  padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font-size: 14px; width: 240px;
+  outline: none; transition: border-color 0.2s;
+}
+.nav-search input:focus { border-color: var(--accent); }
+
+/* ─── Stats Bar ─── */
+.stats-bar {
+  display: flex; gap: 16px; padding: 20px 32px;
+  overflow-x: auto;
+}
+.stat-card {
+  flex: 1; min-width: 160px; padding: 16px 20px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); text-align: center;
+}
+.stat-card .stat-value {
+  font-size: 28px; font-weight: 700; color: var(--text-bright);
+}
+.stat-card .stat-label {
+  font-size: 12px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* ─── Filter Bar ─── */
+.filter-bar {
+  display: flex; gap: 12px; padding: 0 32px 16px; flex-wrap: wrap; align-items: center;
+}
+.filter-bar select, .filter-bar button {
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg-card);
+  color: var(--text); font-size: 13px; cursor: pointer; outline: none;
+}
+.filter-bar select:focus, .filter-bar button:hover {
+  border-color: var(--accent);
+}
+.filter-bar .btn-scrape {
+  background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600;
+}
+.filter-bar .btn-scrape:hover { opacity: 0.85; }
+
+/* ─── Card Grid ─── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px; padding: 0 32px 32px;
+}
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative; overflow: hidden;
+}
+.card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.card-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+}
+.card-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--accent-glow); display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; color: var(--accent);
+  flex-shrink: 0; overflow: hidden;
+}
+.card-avatar img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+}
+.card-title { font-size: 16px; font-weight: 600; color: var(--text-bright); }
+.card-subtitle { font-size: 12px; color: var(--text-dim); }
+.card-badges {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.badge {
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.badge-green { background: var(--green-dim); color: var(--green); }
+.badge-orange { background: var(--orange-dim); color: var(--orange); }
+.badge-blue { background: var(--blue-dim); color: var(--blue); }
+.badge-red { background: var(--red-dim); color: var(--red); }
+.badge-purple { background: rgba(162,155,254,0.15); color: var(--purple); }
+.badge-pink { background: rgba(253,121,168,0.15); color: var(--pink); }
+.card-desc {
+  font-size: 13px; color: var(--text-dim); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  margin-bottom: 12px;
+}
+.card-meta {
+  display: flex; gap: 16px; font-size: 12px; color: var(--text-dim);
+  border-top: 1px solid var(--border); padding-top: 10px;
+}
+.card-meta span { display: flex; align-items: center; gap: 4px; }
+.card-meta .value { color: var(--text); font-weight: 600; }
+
+/* ─── Modal / Detail View ─── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 200; justify-content: center; align-items: flex-start;
+  padding: 40px 20px; overflow-y: auto;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--bg-modal); border: 1px solid var(--border);
+  border-radius: 16px; width: 100%; max-width: 800px;
+  padding: 32px; position: relative;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg-card); border: 1px solid var(--border);
+  color: var(--text-dim); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.modal-close:hover { background: var(--red-dim); color: var(--red); border-color: var(--red); }
+.modal-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+  padding-bottom: 20px; border-bottom: 1px solid var(--border);
+}
+.modal-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--accent-glow); display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; color: var(--accent);
+  flex-shrink: 0; overflow: hidden;
+}
+.modal-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.modal-name { font-size: 24px; font-weight: 700; color: var(--text-bright); }
+.modal-url { font-size: 13px; color: var(--accent); }
+.modal-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin-bottom: 20px;
+}
+.detail-section {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 16px;
+}
+.detail-section.full { grid-column: 1 / -1; }
+.detail-section h3 {
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--accent); margin-bottom: 10px; font-weight: 600;
+}
+.detail-row {
+  display: flex; justify-content: space-between; padding: 6px 0;
+  border-bottom: 1px solid rgba(42,42,62,0.5); font-size: 13px;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-row .label { color: var(--text-dim); }
+.detail-row .value { color: var(--text); font-weight: 500; text-align: right; max-width: 60%; word-break: break-word; }
+.detail-list { list-style: none; padding: 0; }
+.detail-list li {
+  padding: 4px 0; font-size: 13px; color: var(--text);
+  display: flex; align-items: center; gap: 6px;
+}
+.detail-list li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+.btn-generate {
+  width: 100%; padding: 14px; border-radius: var(--radius-sm);
+  background: var(--accent); border: none; color: #fff;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: opacity 0.2s; margin-top: 8px;
+}
+.btn-generate:hover { opacity: 0.85; }
+.btn-secondary {
+  width: 100%; padding: 12px; border-radius: var(--radius-sm);
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text); font-size: 14px; cursor: pointer;
+  transition: all 0.2s; margin-top: 8px;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ─── Message Preview ─── */
+.message-preview {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 20px; margin-top: 16px;
+}
+.message-preview h4 {
+  font-size: 14px; color: var(--accent); margin-bottom: 8px;
+}
+.message-preview .msg-subject {
+  font-size: 15px; font-weight: 600; color: var(--text-bright); margin-bottom: 12px;
+}
+.message-preview .msg-body {
+  font-size: 13px; color: var(--text); line-height: 1.7;
+  max-height: 300px; overflow-y: auto;
+}
+.message-preview .msg-body ul { margin: 8px 0; padding-left: 20px; }
+.message-preview .msg-body li { margin-bottom: 4px; }
+.message-preview .msg-body strong { color: var(--text-bright); }
+
+/* ─── Loading ─── */
+.loading {
+  display: flex; justify-content: center; padding: 60px;
+}
+.spinner {
+  width: 40px; height: 40px; border: 3px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Empty State ─── */
+.empty-state {
+  text-align: center; padding: 60px 20px; color: var(--text-dim);
+}
+.empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .top-nav { flex-wrap: wrap; gap: 12px; padding: 12px 16px; }
+  .nav-tabs { order: 3; width: 100%; overflow-x: auto; }
+  .card-grid { grid-template-columns: 1fr; padding: 0 16px 16px; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .stats-bar { padding: 12px 16px; }
+  .filter-bar { padding: 0 16px 12px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <h1>Gaming <span>PR</span> Platform</h1>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-tab="outlets">News Outlets</button>
+    <button class="nav-tab" data-tab="streamers">Streamers</button>
+    <button class="nav-tab" data-tab="vcs">Gaming VCs</button>
+    <button class="nav-tab" data-tab="messages">Messages</button>
+  </div>
+  <div class="nav-search">
+    <input type="text" id="searchInput" placeholder="Search..." />
+  </div>
+</nav>
+
+<!-- Stats Bar (filled dynamically) -->
+<div class="stats-bar" id="statsBar"></div>
+
+<!-- Filter Bar -->
+<div class="filter-bar" id="filterBar"></div>
+
+<!-- Card Grid -->
+<div id="content"></div>
+
+<!-- Modal Overlay -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+const API = '';
+let currentTab = 'outlets';
+let allData = { outlets: [], streamers: [], vcs: [], messages: [] };
+
+// ─── Init ───
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+  document.getElementById('searchInput').addEventListener('input', debounce(handleSearch, 300));
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  loadTab('outlets');
+});
+
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  loadTab(tab);
+}
+
+// ─── Data Loading ───
+async function loadTab(tab) {
+  showLoading();
+  try {
+    if (tab === 'outlets') {
+      const [outlets, stats] = await Promise.all([
+        fetch(`${API}/api/outlets`).then(r => r.json()),
+        fetch(`${API}/api/outlets/stats`).then(r => r.json())
+      ]);
+      allData.outlets = outlets;
+      renderStats(stats, 'outlets');
+      renderFilters('outlets');
+      renderOutlets(outlets);
+    } else if (tab === 'streamers') {
+      const [streamers, stats] = await Promise.all([
+        fetch(`${API}/api/streamers`).then(r => r.json()),
+        fetch(`${API}/api/streamers/stats`).then(r => r.json())
+      ]);
+      allData.streamers = streamers;
+      renderStats(stats, 'streamers');
+      renderFilters('streamers');
+      renderStreamers(streamers);
+    } else if (tab === 'vcs') {
+      const [vcs, stats] = await Promise.all([
+        fetch(`${API}/api/gaming-vcs`).then(r => r.json()),
+        fetch(`${API}/api/gaming-vcs/stats`).then(r => r.json())
+      ]);
+      allData.vcs = vcs;
+      renderStats(stats, 'vcs');
+      renderFilters('vcs');
+      renderVCs(vcs);
+    } else if (tab === 'messages') {
+      const [messages, stats] = await Promise.all([
+        fetch(`${API}/api/outreach/messages`).then(r => r.json()),
+        fetch(`${API}/api/outreach/stats`).then(r => r.json())
+      ]);
+      allData.messages = messages;
+      renderStats(stats, 'messages');
+      renderFilters('messages');
+      renderMessages(messages);
+    }
+  } catch (err) {
+    document.getElementById('content').innerHTML = `<div class="empty-state"><h3>Error loading data</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function showLoading() {
+  document.getElementById('content').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+}
+
+// ─── Stats Rendering ───
+function renderStats(stats, tab) {
+  const bar = document.getElementById('statsBar');
+  let html = '';
+  if (tab === 'outlets') {
+    html = `
+      <div class="stat-card"><div class="stat-value">${stats.total_outlets}</div><div class="stat-label">Total Outlets</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.active_outlets}</div><div class="stat-label">Active</div></div>
+      <div class="stat-card"><div class="stat-value">${Object.keys(stats.outlets_by_language||{}).length}</div><div class="stat-label">Languages</div></div>
+      <div class="stat-card"><div class="stat-value">${fmt(stats.total_articles_scraped)}</div><div class="stat-label">Articles Scraped</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.outlets_with_failures}</div><div class="stat-label">With Failures</div></div>
+    `;
+  } else if (tab === 'streamers') {
+    html = `
+      <div class="stat-card"><div class="stat-value">${stats.total_streamers}</div><div class="stat-label">Total Streamers</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.active_streamers}</div><div class="stat-label">Active</div></div>
+      <div class="stat-card"><div class="stat-value">${fmt(stats.total_combined_followers)}</div><div class="stat-label">Combined Followers</div></div>
+      <div class="stat-card"><div class="stat-value">${Object.keys(stats.streamers_by_platform||{}).length}</div><div class="stat-label">Platforms</div></div>
+      <div class="stat-card"><div class="stat-value">${Object.keys(stats.streamers_by_tier||{}).length}</div><div class="stat-label">Tiers</div></div>
+    `;
+  } else if (tab === 'vcs') {
+    html = `
+      <div class="stat-card"><div class="stat-value">${stats.total_vcs}</div><div class="stat-label">Total VCs</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.active_vcs}</div><div class="stat-label">Active</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.total_portfolio_companies}</div><div class="stat-label">Portfolio Companies</div></div>
+      <div class="stat-card"><div class="stat-value">${Object.keys(stats.vcs_by_type||{}).length}</div><div class="stat-label">Firm Types</div></div>
+      <div class="stat-card"><div class="stat-value">${Object.keys(stats.vcs_by_tier||{}).length}</div><div class="stat-label">Tiers</div></div>
+    `;
+  } else if (tab === 'messages') {
+    html = `
+      <div class="stat-card"><div class="stat-value">${stats.total_messages}</div><div class="stat-label">Total Messages</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.total_sent}</div><div class="stat-label">Sent</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.total_opened}</div><div class="stat-label">Opened</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.total_replied}</div><div class="stat-label">Replied</div></div>
+      <div class="stat-card"><div class="stat-value">${(stats.reply_rate*100).toFixed(1)}%</div><div class="stat-label">Reply Rate</div></div>
+    `;
+  }
+  bar.innerHTML = html;
+}
+
+// ─── Filter Rendering ───
+function renderFilters(tab) {
+  const bar = document.getElementById('filterBar');
+  let html = '';
+  if (tab === 'outlets') {
+    const langs = [...new Set(allData.outlets.map(o => o.language))].sort();
+    const cats = [...new Set(allData.outlets.map(o => o.category).filter(Boolean))].sort();
+    html = `
+      <select id="filterLang" onchange="applyFilters()"><option value="">All Languages</option>${langs.map(l => `<option value="${l}">${l}</option>`).join('')}</select>
+      <select id="filterCat" onchange="applyFilters()"><option value="">All Categories</option>${cats.map(c => `<option value="${c}">${c.replace(/_/g,' ')}</option>`).join('')}</select>
+      <button class="btn-scrape" onclick="scrapeAll('outlets')">Scrape All Outlets</button>
+    `;
+  } else if (tab === 'streamers') {
+    const platforms = [...new Set(allData.streamers.map(s => s.platform))].sort();
+    const tiers = [...new Set(allData.streamers.map(s => s.tier).filter(Boolean))].sort();
+    html = `
+      <select id="filterPlatform" onchange="applyFilters()"><option value="">All Platforms</option>${platforms.map(p => `<option value="${p}">${p}</option>`).join('')}</select>
+      <select id="filterTier" onchange="applyFilters()"><option value="">All Tiers</option>${tiers.map(t => `<option value="${t}">${t}</option>`).join('')}</select>
+      <button class="btn-scrape" onclick="scrapeAll('streamers')">Scrape All Streamers</button>
+    `;
+  } else if (tab === 'vcs') {
+    const types = [...new Set(allData.vcs.map(v => v.firm_type).filter(Boolean))].sort();
+    const tiers = [...new Set(allData.vcs.map(v => v.tier).filter(Boolean))].sort();
+    html = `
+      <select id="filterType" onchange="applyFilters()"><option value="">All Types</option>${types.map(t => `<option value="${t}">${t.replace(/_/g,' ')}</option>`).join('')}</select>
+      <select id="filterVCTier" onchange="applyFilters()"><option value="">All Tiers</option>${tiers.map(t => `<option value="${t}">${t}</option>`).join('')}</select>
+      <button class="btn-scrape" onclick="scrapeAll('vcs')">Scrape All VCs</button>
+    `;
+  } else {
+    html = `
+      <select id="filterMsgType" onchange="applyFilters()"><option value="">All Types</option><option value="pitch">Pitch</option><option value="coverage_request">Coverage Request</option><option value="intro">Intro</option></select>
+      <select id="filterMsgTarget" onchange="applyFilters()"><option value="">All Targets</option><option value="outlet">Outlets</option><option value="streamer">Streamers</option><option value="gaming_vc">Gaming VCs</option></select>
+    `;
+  }
+  bar.innerHTML = html;
+}
+
+function applyFilters() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  if (currentTab === 'outlets') {
+    const lang = document.getElementById('filterLang')?.value || '';
+    const cat = document.getElementById('filterCat')?.value || '';
+    let filtered = allData.outlets;
+    if (lang) filtered = filtered.filter(o => o.language === lang);
+    if (cat) filtered = filtered.filter(o => o.category === cat);
+    if (search) filtered = filtered.filter(o => o.name.toLowerCase().includes(search));
+    renderOutlets(filtered);
+  } else if (currentTab === 'streamers') {
+    const platform = document.getElementById('filterPlatform')?.value || '';
+    const tier = document.getElementById('filterTier')?.value || '';
+    let filtered = allData.streamers;
+    if (platform) filtered = filtered.filter(s => s.platform === platform);
+    if (tier) filtered = filtered.filter(s => s.tier === tier);
+    if (search) filtered = filtered.filter(s => s.name.toLowerCase().includes(search));
+    renderStreamers(filtered);
+  } else if (currentTab === 'vcs') {
+    const type = document.getElementById('filterType')?.value || '';
+    const tier = document.getElementById('filterVCTier')?.value || '';
+    let filtered = allData.vcs;
+    if (type) filtered = filtered.filter(v => v.firm_type === type);
+    if (tier) filtered = filtered.filter(v => v.tier === tier);
+    if (search) filtered = filtered.filter(v => v.name.toLowerCase().includes(search));
+    renderVCs(filtered);
+  } else {
+    const msgType = document.getElementById('filterMsgType')?.value || '';
+    const msgTarget = document.getElementById('filterMsgTarget')?.value || '';
+    let filtered = allData.messages;
+    if (msgType) filtered = filtered.filter(m => m.message_type === msgType);
+    if (msgTarget) filtered = filtered.filter(m => m.target_type === msgTarget);
+    if (search) filtered = filtered.filter(m => (m.subject||'').toLowerCase().includes(search));
+    renderMessages(filtered);
+  }
+}
+
+function handleSearch() { applyFilters(); }
+
+// ─── Scraping ───
+async function scrapeAll(type) {
+  const btn = event.target;
+  btn.textContent = 'Scraping...'; btn.disabled = true;
+  try {
+    const endpoint = type === 'outlets' ? 'all-outlets' : type === 'streamers' ? 'all-streamers' : 'all-gaming-vcs';
+    await fetch(`${API}/api/outreach/scrape/${endpoint}`, { method: 'POST' });
+    loadTab(currentTab);
+  } catch (err) {
+    alert('Scraping failed: ' + err.message);
+  } finally {
+    btn.textContent = `Scrape All ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+    btn.disabled = false;
+  }
+}
+
+async function scrapeSingle(type, id) {
+  try {
+    const endpoint = type === 'outlet' ? `outlet/${id}` : type === 'streamer' ? `streamer/${id}` : `gaming-vc/${id}`;
+    const result = await fetch(`${API}/api/outreach/scrape/${endpoint}`, { method: 'POST' }).then(r => r.json());
+    return result;
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
+// ─── Card Rendering: Outlets ───
+function renderOutlets(outlets) {
+  if (!outlets.length) { document.getElementById('content').innerHTML = '<div class="empty-state"><h3>No outlets found</h3></div>'; return; }
+  const grid = outlets.map(o => `
+    <div class="card" onclick="openOutletDetail(${o.id})">
+      <div class="card-header">
+        <div class="card-avatar">${o.logo_url ? `<img src="${esc(o.logo_url)}" onerror="this.replaceWith(document.createTextNode('${esc(o.name[0])}'))">` : esc(o.name[0])}</div>
+        <div>
+          <div class="card-title">${esc(o.name)}</div>
+          <div class="card-subtitle">${esc(o.country||o.region)} &middot; ${esc(o.language)}</div>
+        </div>
+      </div>
+      <div class="card-badges">
+        <span class="badge badge-blue">${esc(o.category||'news').replace(/_/g,' ')}</span>
+        <span class="badge badge-green">P${o.priority}</span>
+        ${o.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Inactive</span>'}
+        ${o.rss_feed_url ? '<span class="badge badge-purple">RSS</span>' : '<span class="badge badge-orange">HTML</span>'}
+      </div>
+      <div class="card-desc">${esc(o.description||'Gaming news outlet covering the latest in gaming.')}</div>
+      <div class="card-meta">
+        <span>Articles: <span class="value">${fmt(o.total_articles_scraped)}</span></span>
+        ${o.contact_email ? `<span>Email: <span class="value">Yes</span></span>` : ''}
+        ${o.social_twitter ? `<span>Twitter: <span class="value">Yes</span></span>` : ''}
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('content').innerHTML = `<div class="card-grid">${grid}</div>`;
+}
+
+// ─── Card Rendering: Streamers ───
+function renderStreamers(streamers) {
+  if (!streamers.length) { document.getElementById('content').innerHTML = '<div class="empty-state"><h3>No streamers found</h3></div>'; return; }
+  const grid = streamers.map(s => `
+    <div class="card" onclick="openStreamerDetail(${s.id})">
+      <div class="card-header">
+        <div class="card-avatar">${s.profile_image_url ? `<img src="${esc(s.profile_image_url)}" onerror="this.replaceWith(document.createTextNode('${esc(s.name[0])}'))">` : esc(s.name[0])}</div>
+        <div>
+          <div class="card-title">${esc(s.name)}</div>
+          <div class="card-subtitle">${esc(s.platform)} &middot; ${esc(s.country||s.language)}</div>
+        </div>
+      </div>
+      <div class="card-badges">
+        <span class="badge badge-purple">${esc(s.tier||'mid')}</span>
+        <span class="badge badge-blue">${esc(s.platform)}</span>
+        ${s.is_partnered ? '<span class="badge badge-green">Partnered</span>' : ''}
+        ${s.is_variety_streamer ? '<span class="badge badge-orange">Variety</span>' : ''}
+        ${s.is_esports_player ? '<span class="badge badge-pink">Esports</span>' : ''}
+      </div>
+      <div class="card-desc">${esc(s.bio||s.primary_game||'Gaming content creator')}</div>
+      <div class="card-meta">
+        <span>Followers: <span class="value">${fmt(s.follower_count)}</span></span>
+        <span>Avg Viewers: <span class="value">${fmt(s.avg_viewers)}</span></span>
+        ${s.primary_game ? `<span>Game: <span class="value">${esc(s.primary_game)}</span></span>` : ''}
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('content').innerHTML = `<div class="card-grid">${grid}</div>`;
+}
+
+// ─── Card Rendering: VCs ───
+function renderVCs(vcs) {
+  if (!vcs.length) { document.getElementById('content').innerHTML = '<div class="empty-state"><h3>No gaming VCs found</h3></div>'; return; }
+  const grid = vcs.map(v => `
+    <div class="card" onclick="openVCDetail(${v.id})">
+      <div class="card-header">
+        <div class="card-avatar">${v.logo_url ? `<img src="${esc(v.logo_url)}" onerror="this.replaceWith(document.createTextNode('${esc(v.name[0])}'))">` : esc(v.name[0])}</div>
+        <div>
+          <div class="card-title">${esc(v.name)}</div>
+          <div class="card-subtitle">${esc(v.headquarters||v.country||'')}</div>
+        </div>
+      </div>
+      <div class="card-badges">
+        <span class="badge badge-purple">${esc(v.tier||'mid')}</span>
+        <span class="badge badge-blue">${esc((v.firm_type||'vc').replace(/_/g,' '))}</span>
+        ${v.fund_size ? `<span class="badge badge-green">${esc(v.fund_size)}</span>` : ''}
+      </div>
+      <div class="card-desc">${esc(v.short_description||v.description||'Gaming-focused investment firm.')}</div>
+      <div class="card-meta">
+        ${v.typical_check_size ? `<span>Check: <span class="value">${esc(v.typical_check_size)}</span></span>` : ''}
+        ${v.portfolio_companies_count ? `<span>Portfolio: <span class="value">${v.portfolio_companies_count}</span></span>` : ''}
+        ${v.total_investments ? `<span>Investments: <span class="value">${v.total_investments}</span></span>` : ''}
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('content').innerHTML = `<div class="card-grid">${grid}</div>`;
+}
+
+// ─── Card Rendering: Messages ───
+function renderMessages(messages) {
+  if (!messages.length) { document.getElementById('content').innerHTML = '<div class="empty-state"><h3>No messages yet</h3><p>Generate outreach messages from outlet, streamer, or VC detail views.</p></div>'; return; }
+  const grid = messages.map(m => `
+    <div class="card" onclick="openMessageDetail(${m.id})">
+      <div class="card-header">
+        <div class="card-avatar" style="font-size:16px;">${m.target_type === 'outlet' ? 'O' : m.target_type === 'streamer' ? 'S' : 'V'}</div>
+        <div>
+          <div class="card-title">${esc(m.recipient_name||'Unknown')}</div>
+          <div class="card-subtitle">${esc(m.target_type)} &middot; ${esc(m.message_type)}</div>
+        </div>
+      </div>
+      <div class="card-badges">
+        <span class="badge ${m.status==='sent'?'badge-green':m.status==='draft'?'badge-orange':'badge-blue'}">${esc(m.status)}</span>
+        <span class="badge badge-purple">${esc(m.message_type)}</span>
+        ${m.was_replied ? '<span class="badge badge-green">Replied</span>' : ''}
+      </div>
+      <div class="card-desc">${esc(m.subject)}</div>
+      <div class="card-meta">
+        ${m.game_title ? `<span>Game: <span class="value">${esc(m.game_title)}</span></span>` : ''}
+        <span>Created: <span class="value">${new Date(m.created_at).toLocaleDateString()}</span></span>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('content').innerHTML = `<div class="card-grid">${grid}</div>`;
+}
+
+// ─── Detail Views ───
+
+async function openOutletDetail(id) {
+  const o = allData.outlets.find(x => x.id === id);
+  if (!o) return;
+  const modal = document.getElementById('modalContent');
+  modal.innerHTML = `
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-header">
+      <div class="modal-avatar">${o.logo_url ? `<img src="${esc(o.logo_url)}" onerror="this.replaceWith(document.createTextNode('${esc(o.name[0])}'))">` : esc(o.name[0])}</div>
+      <div>
+        <div class="modal-name">${esc(o.name)}</div>
+        <a class="modal-url" href="${esc(o.url)}" target="_blank">${esc(o.url)}</a>
+        <div class="modal-badges">
+          <span class="badge badge-blue">${esc((o.category||'news').replace(/_/g,' '))}</span>
+          <span class="badge badge-green">Priority ${o.priority}</span>
+          ${o.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Inactive</span>'}
+          <span class="badge badge-purple">${esc(o.language)}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-section">
+        <h3>General Info</h3>
+        ${detailRow('Country', o.country||o.region)}
+        ${detailRow('Language', o.language)}
+        ${detailRow('Category', (o.category||'').replace(/_/g,' '))}
+        ${detailRow('Scraper Type', o.rss_feed_url ? 'RSS' : 'HTML')}
+        ${detailRow('Monthly Visitors', o.monthly_visitors ? fmt(o.monthly_visitors) : 'N/A')}
+        ${detailRow('Articles Scraped', fmt(o.total_articles_scraped))}
+        ${detailRow('Avg/Scrape', o.avg_articles_per_scrape?.toFixed(1)||'0')}
+      </div>
+      <div class="detail-section">
+        <h3>Contact & Editorial</h3>
+        ${detailRow('Contact Email', o.contact_email||'Not found')}
+        ${detailRow('Editor-in-Chief', o.editor_in_chief||'Not found')}
+        ${detailRow('Submission Email', o.submission_email||'N/A')}
+        ${detailRow('Press Page', o.press_page_url ? `<a href="${esc(o.press_page_url)}" target="_blank">View</a>` : 'N/A')}
+        ${detailRow('Preferred Contact', o.preferred_contact_method||'Email')}
+        ${detailRow('Response Time', o.typical_response_time||'N/A')}
+      </div>
+      <div class="detail-section">
+        <h3>Social Media</h3>
+        ${detailRow('Twitter', o.social_twitter||'N/A')}
+        ${detailRow('Facebook', o.social_facebook||'N/A')}
+        ${detailRow('YouTube', o.social_youtube||'N/A')}
+        ${detailRow('Instagram', o.social_instagram||'N/A')}
+        ${detailRow('Discord', o.social_discord||'N/A')}
+        ${detailRow('TikTok', o.social_tiktok||'N/A')}
+      </div>
+      <div class="detail-section">
+        <h3>Scraping Status</h3>
+        ${detailRow('Last Scraped', o.last_scraped_at ? new Date(o.last_scraped_at).toLocaleString() : 'Never')}
+        ${detailRow('Last Success', o.last_successful_scrape_at ? new Date(o.last_successful_scrape_at).toLocaleString() : 'Never')}
+        ${detailRow('Failures', o.consecutive_failures)}
+        ${detailRow('RSS Feed', o.rss_feed_url ? 'Yes' : 'No')}
+      </div>
+      <div class="detail-section full">
+        <h3>Description</h3>
+        <p style="font-size:13px;line-height:1.6;color:var(--text);">${esc(o.description||'No description available. Click "Scrape Website" to fetch info.')}</p>
+      </div>
+    </div>
+
+    <button class="btn-secondary" onclick="scrapeAndRefresh('outlet', ${o.id})">Scrape Website for More Info</button>
+    <button class="btn-generate" onclick="showGenerateForm('outlet', ${o.id}, '${esc(o.name)}')">Generate Outreach Message</button>
+    <div id="generateForm"></div>
+    <div id="messagePreview"></div>
+  `;
+  openModal();
+}
+
+async function openStreamerDetail(id) {
+  const s = allData.streamers.find(x => x.id === id);
+  if (!s) return;
+  const modal = document.getElementById('modalContent');
+  modal.innerHTML = `
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-header">
+      <div class="modal-avatar">${s.profile_image_url ? `<img src="${esc(s.profile_image_url)}" onerror="this.replaceWith(document.createTextNode('${esc(s.name[0])}'))">` : esc(s.name[0])}</div>
+      <div>
+        <div class="modal-name">${esc(s.name)} ${s.real_name ? `<span style="font-size:14px;color:var(--text-dim);">(${esc(s.real_name)})</span>` : ''}</div>
+        <a class="modal-url" href="${esc(s.url)}" target="_blank">${esc(s.url)}</a>
+        <div class="modal-badges">
+          <span class="badge badge-purple">${esc(s.tier||'mid')}</span>
+          <span class="badge badge-blue">${esc(s.platform)}</span>
+          ${s.is_partnered ? '<span class="badge badge-green">Partnered</span>' : ''}
+          ${s.is_variety_streamer ? '<span class="badge badge-orange">Variety</span>' : ''}
+          ${s.is_esports_player ? '<span class="badge badge-pink">Esports</span>' : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-section">
+        <h3>Audience & Reach</h3>
+        ${detailRow('Followers', fmt(s.follower_count))}
+        ${detailRow('Subscribers', fmt(s.subscriber_count))}
+        ${detailRow('Avg Viewers', fmt(s.avg_viewers))}
+        ${detailRow('Peak Viewers', fmt(s.peak_viewers))}
+        ${detailRow('Total Views', fmt(s.total_views))}
+        ${detailRow('Age Range', s.audience_age_range||'N/A')}
+        ${detailRow('Top Countries', (s.audience_top_countries||[]).join(', ')||'N/A')}
+      </div>
+      <div class="detail-section">
+        <h3>Content</h3>
+        ${detailRow('Primary Game', s.primary_game||'Variety')}
+        ${detailRow('Content Style', s.content_style||'N/A')}
+        ${detailRow('Platform', s.platform)}
+        ${detailRow('Schedule', s.stream_schedule||'N/A')}
+        ${detailRow('Games Played', (s.games_played||[]).slice(0,5).join(', ')||'N/A')}
+        ${detailRow('Categories', (s.content_categories||[]).join(', ')||'N/A')}
+      </div>
+      <div class="detail-section">
+        <h3>Contact & Business</h3>
+        ${detailRow('Email', s.contact_email||'Not found')}
+        ${detailRow('Business Email', s.business_email||'N/A')}
+        ${detailRow('Manager', s.manager_name||'N/A')}
+        ${detailRow('Manager Email', s.manager_email||'N/A')}
+        ${detailRow('Agency', s.agency||'Independent')}
+        ${detailRow('Accepts Codes', s.accepts_game_codes === true ? 'Yes' : s.accepts_game_codes === false ? 'No' : 'Unknown')}
+        ${detailRow('Accepts Sponsors', s.accepts_sponsored_streams === true ? 'Yes' : s.accepts_sponsored_streams === false ? 'No' : 'Unknown')}
+      </div>
+      <div class="detail-section">
+        <h3>Social Media</h3>
+        ${detailRow('Twitter', s.social_twitter||'N/A')}
+        ${s.twitter_followers ? detailRow('Twitter Followers', fmt(s.twitter_followers)) : ''}
+        ${detailRow('Instagram', s.social_instagram||'N/A')}
+        ${s.instagram_followers ? detailRow('IG Followers', fmt(s.instagram_followers)) : ''}
+        ${detailRow('YouTube', s.social_youtube||'N/A')}
+        ${detailRow('Discord', s.social_discord||'N/A')}
+        ${detailRow('TikTok', s.social_tiktok||'N/A')}
+        ${s.discord_members ? detailRow('Discord Members', fmt(s.discord_members)) : ''}
+      </div>
+      ${s.has_sponsorships && s.past_sponsors?.length ? `
+      <div class="detail-section">
+        <h3>Sponsorships</h3>
+        ${detailRow('Rate', s.estimated_sponsorship_rate||'N/A')}
+        ${detailRow('Has Merch', s.has_merch_store ? 'Yes' : 'No')}
+        <ul class="detail-list">${(s.past_sponsors||[]).map(sp => `<li>${esc(sp)}</li>`).join('')}</ul>
+      </div>` : ''}
+      ${s.notable_achievements?.length ? `
+      <div class="detail-section">
+        <h3>Notable Achievements</h3>
+        <ul class="detail-list">${s.notable_achievements.map(a => `<li>${esc(a)}</li>`).join('')}</ul>
+      </div>` : ''}
+      ${s.is_esports_player ? `
+      <div class="detail-section">
+        <h3>Esports</h3>
+        ${detailRow('Team', s.esports_team||'N/A')}
+        ${detailRow('Role', s.esports_role||'N/A')}
+        ${s.tournament_history?.length ? `<ul class="detail-list">${s.tournament_history.map(t => `<li>${esc(typeof t === 'string' ? t : t.name||'')}</li>`).join('')}</ul>` : ''}
+      </div>` : ''}
+      <div class="detail-section full">
+        <h3>Bio</h3>
+        <p style="font-size:13px;line-height:1.6;color:var(--text);">${esc(s.bio||'No bio available. Click "Scrape" to fetch info.')}</p>
+      </div>
+    </div>
+
+    <button class="btn-secondary" onclick="scrapeAndRefresh('streamer', ${s.id})">Scrape for More Info</button>
+    <button class="btn-generate" onclick="showGenerateForm('streamer', ${s.id}, '${esc(s.name)}')">Generate Outreach Message</button>
+    <div id="generateForm"></div>
+    <div id="messagePreview"></div>
+  `;
+  openModal();
+}
+
+async function openVCDetail(id) {
+  const v = allData.vcs.find(x => x.id === id);
+  if (!v) return;
+  const modal = document.getElementById('modalContent');
+  modal.innerHTML = `
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-header">
+      <div class="modal-avatar">${v.logo_url ? `<img src="${esc(v.logo_url)}" onerror="this.replaceWith(document.createTextNode('${esc(v.name[0])}'))">` : esc(v.name[0])}</div>
+      <div>
+        <div class="modal-name">${esc(v.name)}</div>
+        <a class="modal-url" href="${esc(v.url)}" target="_blank">${esc(v.url)}</a>
+        <div class="modal-badges">
+          <span class="badge badge-purple">${esc(v.tier||'mid')}</span>
+          <span class="badge badge-blue">${esc((v.firm_type||'vc').replace(/_/g,' '))}</span>
+          ${v.fund_size ? `<span class="badge badge-green">${esc(v.fund_size)}</span>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-section">
+        <h3>Firm Details</h3>
+        ${detailRow('Headquarters', v.headquarters||'N/A')}
+        ${detailRow('Founded', v.founded_year||'N/A')}
+        ${detailRow('Firm Type', (v.firm_type||'').replace(/_/g,' '))}
+        ${detailRow('Fund Size', v.fund_size||'N/A')}
+        ${detailRow('Total AUM', v.total_aum||'N/A')}
+        ${detailRow('Check Size', v.typical_check_size||'N/A')}
+        ${detailRow('Team Size', v.team_size||'N/A')}
+      </div>
+      <div class="detail-section">
+        <h3>Investment Focus</h3>
+        ${detailRow('Stages', (v.investment_stage||[]).join(', ')||'N/A')}
+        ${detailRow('Focus Areas', (v.investment_focus||[]).join(', ')||'N/A')}
+        ${detailRow('Gaming Subsectors', (v.gaming_subsectors||[]).join(', ')||'N/A')}
+        ${detailRow('Platforms', (v.preferred_platforms||[]).join(', ')||'N/A')}
+        ${detailRow('Total Investments', v.total_investments||'N/A')}
+        ${detailRow('Total Exits', v.total_exits||'N/A')}
+      </div>
+      <div class="detail-section">
+        <h3>Contact</h3>
+        ${detailRow('Contact Email', v.contact_email||'Not found')}
+        ${detailRow('Pitch Email', v.pitch_email||'N/A')}
+        ${detailRow('Pitch Form', v.pitch_form_url ? `<a href="${esc(v.pitch_form_url)}" target="_blank">View</a>` : 'N/A')}
+        ${detailRow('Phone', v.phone||'N/A')}
+        ${detailRow('Twitter', v.social_twitter||'N/A')}
+        ${detailRow('LinkedIn', v.social_linkedin ? `<a href="${esc(v.social_linkedin)}" target="_blank">View</a>` : 'N/A')}
+        ${detailRow('Blog', v.blog_url ? `<a href="${esc(v.blog_url)}" target="_blank">View</a>` : 'N/A')}
+      </div>
+      <div class="detail-section">
+        <h3>Activity</h3>
+        ${detailRow('Portfolio Companies', v.portfolio_companies_count||'N/A')}
+        ${detailRow('Active Portfolio', v.active_portfolio_count||'N/A')}
+        ${detailRow('Events', (v.events_attended||[]).join(', ')||'N/A')}
+        ${detailRow('Newsletter', v.newsletter_url ? `<a href="${esc(v.newsletter_url)}" target="_blank">View</a>` : 'N/A')}
+        ${detailRow('Podcast', v.podcast_url ? `<a href="${esc(v.podcast_url)}" target="_blank">View</a>` : 'N/A')}
+      </div>
+      ${v.partners?.length ? `
+      <div class="detail-section full">
+        <h3>Key Partners (${v.partners.length})</h3>
+        ${v.partners.map(p => `
+          <div class="detail-row">
+            <span class="label">${esc(p.name)}</span>
+            <span class="value">${esc(p.title||'')} ${p.focus ? `- ${esc(p.focus)}` : ''} ${p.linkedin ? `<a href="${esc(p.linkedin)}" target="_blank" style="margin-left:6px;">LinkedIn</a>` : ''}</span>
+          </div>
+        `).join('')}
+      </div>` : ''}
+      ${v.notable_portfolio?.length ? `
+      <div class="detail-section full">
+        <h3>Notable Portfolio (${v.notable_portfolio.length})</h3>
+        <ul class="detail-list">${v.notable_portfolio.map(p => `<li>${esc(p.name||p)} ${p.status ? `<span class="badge badge-${p.status==='active'?'green':p.status==='public'?'blue':'orange'}" style="margin-left:6px;">${esc(p.status)}</span>` : ''}</li>`).join('')}</ul>
+      </div>` : ''}
+      ${v.thesis ? `
+      <div class="detail-section full">
+        <h3>Investment Thesis</h3>
+        <p style="font-size:13px;line-height:1.6;color:var(--text);font-style:italic;">"${esc(v.thesis)}"</p>
+      </div>` : ''}
+      <div class="detail-section full">
+        <h3>Description</h3>
+        <p style="font-size:13px;line-height:1.6;color:var(--text);">${esc(v.description||'No description. Click "Scrape" to fetch info.')}</p>
+      </div>
+    </div>
+
+    <button class="btn-secondary" onclick="scrapeAndRefresh('gaming_vc', ${v.id})">Scrape Website for More Info</button>
+    <button class="btn-generate" onclick="showGenerateForm('gaming_vc', ${v.id}, '${esc(v.name)}')">Generate Outreach Message</button>
+    <div id="generateForm"></div>
+    <div id="messagePreview"></div>
+  `;
+  openModal();
+}
+
+function openMessageDetail(id) {
+  const m = allData.messages.find(x => x.id === id);
+  if (!m) return;
+  const modal = document.getElementById('modalContent');
+  modal.innerHTML = `
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-header">
+      <div class="modal-avatar" style="font-size:20px;">${m.target_type === 'outlet' ? 'O' : m.target_type === 'streamer' ? 'S' : 'V'}</div>
+      <div>
+        <div class="modal-name">Message to ${esc(m.recipient_name||'Unknown')}</div>
+        <div class="modal-url">${esc(m.target_type)} &middot; ${esc(m.message_type)} &middot; ${esc(m.tone||'professional')}</div>
+        <div class="modal-badges">
+          <span class="badge ${m.status==='sent'?'badge-green':'badge-orange'}">${esc(m.status)}</span>
+          ${m.game_title ? `<span class="badge badge-blue">${esc(m.game_title)}</span>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-section full">
+        <h3>Message</h3>
+        <div style="font-size:15px;font-weight:600;color:var(--text-bright);margin-bottom:12px;">Subject: ${esc(m.subject)}</div>
+        <div style="font-size:13px;line-height:1.7;color:var(--text);">${m.body_html}</div>
+      </div>
+      ${m.personalization_data ? `
+      <div class="detail-section full">
+        <h3>Personalization Data Used</h3>
+        ${Object.entries(m.personalization_data).map(([k,v]) => detailRow(k, typeof v === 'object' ? JSON.stringify(v) : String(v))).join('')}
+      </div>` : ''}
+      <div class="detail-section">
+        <h3>Recipient</h3>
+        ${detailRow('Name', m.recipient_name||'N/A')}
+        ${detailRow('Email', m.recipient_email||'N/A')}
+        ${detailRow('Type', m.target_type)}
+      </div>
+      <div class="detail-section">
+        <h3>Status</h3>
+        ${detailRow('Status', m.status)}
+        ${detailRow('Created', new Date(m.created_at).toLocaleString())}
+        ${m.sent_at ? detailRow('Sent', new Date(m.sent_at).toLocaleString()) : ''}
+        ${detailRow('Opened', m.was_opened ? 'Yes' : 'No')}
+        ${detailRow('Replied', m.was_replied ? 'Yes' : 'No')}
+      </div>
+    </div>
+  `;
+  openModal();
+}
+
+// ─── Generate Message Form ───
+function showGenerateForm(targetType, targetId, targetName) {
+  const form = document.getElementById('generateForm');
+  form.innerHTML = `
+    <div class="detail-section full" style="margin-top:16px;">
+      <h3>Generate Personalized Message for ${esc(targetName)}</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+        <div>
+          <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:4px;">Game Title</label>
+          <input type="text" id="genGameTitle" placeholder="Your game title" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:4px;">Message Type</label>
+          <select id="genMsgType" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;">
+            <option value="pitch">Pitch</option>
+            <option value="coverage_request">Coverage Request</option>
+            <option value="intro">Introduction</option>
+            <option value="follow_up">Follow Up</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:4px;">Tone</label>
+          <select id="genTone" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;">
+            <option value="professional">Professional</option>
+            <option value="casual">Casual</option>
+            <option value="enthusiastic">Enthusiastic</option>
+            <option value="formal">Formal</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:4px;">Key Selling Points (comma-separated)</label>
+          <input type="text" id="genPoints" placeholder="Unique mechanic, Award-winning..." style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:4px;">Game Description</label>
+          <textarea id="genGameDesc" placeholder="Brief description of your game..." rows="2" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;resize:vertical;"></textarea>
+        </div>
+      </div>
+      <button class="btn-generate" style="margin-top:12px;" onclick="generateMsg('${targetType}', ${targetId})">Generate Message</button>
+    </div>
+  `;
+}
+
+async function generateMsg(targetType, targetId) {
+  const btn = event.target;
+  btn.textContent = 'Generating...'; btn.disabled = true;
+  const points = document.getElementById('genPoints').value.split(',').map(s => s.trim()).filter(Boolean);
+  try {
+    const resp = await fetch(`${API}/api/outreach/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        target_type: targetType,
+        target_id: targetId,
+        message_type: document.getElementById('genMsgType').value,
+        tone: document.getElementById('genTone').value,
+        game_title: document.getElementById('genGameTitle').value || null,
+        game_description: document.getElementById('genGameDesc').value || null,
+        key_selling_points: points.length ? points : [],
+      })
+    });
+    const msg = await resp.json();
+    if (resp.ok) {
+      document.getElementById('messagePreview').innerHTML = `
+        <div class="message-preview">
+          <h4>Generated Message Preview</h4>
+          <div class="msg-subject">Subject: ${esc(msg.subject)}</div>
+          <div class="msg-body">${msg.body_html}</div>
+          <div style="margin-top:12px;font-size:12px;color:var(--text-dim);">
+            Recipient: ${esc(msg.recipient_name||'N/A')} &middot; Email: ${esc(msg.recipient_email||'Not found')}
+          </div>
+        </div>
+      `;
+    } else {
+      document.getElementById('messagePreview').innerHTML = `<div class="message-preview"><h4>Error</h4><p>${esc(msg.detail||'Failed to generate')}</p></div>`;
+    }
+  } catch (err) {
+    document.getElementById('messagePreview').innerHTML = `<div class="message-preview"><h4>Error</h4><p>${err.message}</p></div>`;
+  } finally {
+    btn.textContent = 'Generate Message'; btn.disabled = false;
+  }
+}
+
+async function scrapeAndRefresh(type, id) {
+  const btn = event.target;
+  btn.textContent = 'Scraping...'; btn.disabled = true;
+  try {
+    await scrapeSingle(type, id);
+    // Reload data
+    if (type === 'outlet') {
+      const o = await fetch(`${API}/api/outlets/${id}`).then(r => r.json());
+      const idx = allData.outlets.findIndex(x => x.id === id);
+      if (idx >= 0) allData.outlets[idx] = o;
+      openOutletDetail(id);
+    } else if (type === 'streamer') {
+      const s = await fetch(`${API}/api/streamers/${id}`).then(r => r.json());
+      const idx = allData.streamers.findIndex(x => x.id === id);
+      if (idx >= 0) allData.streamers[idx] = s;
+      openStreamerDetail(id);
+    } else {
+      const v = await fetch(`${API}/api/gaming-vcs/${id}`).then(r => r.json());
+      const idx = allData.vcs.findIndex(x => x.id === id);
+      if (idx >= 0) allData.vcs[idx] = v;
+      openVCDetail(id);
+    }
+  } catch (err) {
+    alert('Scrape failed: ' + err.message);
+  } finally {
+    btn.textContent = 'Scrape Website for More Info'; btn.disabled = false;
+  }
+}
+
+// ─── Modal Helpers ───
+function openModal() { document.getElementById('modalOverlay').classList.add('active'); document.body.style.overflow = 'hidden'; }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); document.body.style.overflow = ''; }
+
+// ─── Utilities ───
+function esc(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+function fmt(n) { if (n == null) return 'N/A'; return Number(n).toLocaleString(); }
+function detailRow(label, value) { return `<div class="detail-row"><span class="label">${label}</span><span class="value">${value ?? 'N/A'}</span></div>`; }
+</script>
+</body>
+</html>
