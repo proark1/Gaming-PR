@@ -100,7 +100,7 @@ def logout():
 
 
 @router.get("/verify")
-def verify_token(token: str = None):
+def verify_token(token: str = None, db: Session = Depends(get_db)):
     """Verify if token is valid."""
     if not token:
         raise HTTPException(status_code=401, detail="No token provided")
@@ -108,14 +108,14 @@ def verify_token(token: str = None):
     try:
         decoded = base64.b64decode(token.encode()).decode()
         email = decoded.split(':')[0]
-        # Token is valid if it's the admin or it was issued to a registered user
+        # Token is valid if it's the admin
         if email == settings.ADMIN_EMAIL:
             return {"success": True, "email": email}
-
-        # Could check if user exists in DB, but for now just verify format
-        if '@' in email:
+        # Or if the email belongs to a registered active user
+        user = db.query(User).filter(User.email == email, User.is_active.is_(True)).first()
+        if user:
             return {"success": True, "email": email}
-    except:
+    except Exception:
         pass
 
     raise HTTPException(status_code=401, detail="Invalid token")

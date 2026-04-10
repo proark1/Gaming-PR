@@ -431,7 +431,7 @@ async function triggerTwitchImport() {
         const resultDiv = document.getElementById('twitch-import-result');
         const newBtn = document.getElementById('twitch-import-btn');
         if (successMsg && resultDiv) resultDiv.innerHTML = `<div style="background:#d4edda;color:#155724;padding:8px 12px;border-radius:6px;margin-top:8px">${successMsg}</div>`;
-        if (errorMsg && resultDiv) resultDiv.innerHTML = `<div style="background:#f8d7da;color:#721c24;padding:8px 12px;border-radius:6px;margin-top:8px">${errorMsg}</div>`;
+        if (errorMsg && resultDiv) resultDiv.innerHTML = `<div style="background:#f8d7da;color:#721c24;padding:8px 12px;border-radius:6px;margin-top:8px">${esc(errorMsg)}</div>`;
         if (newBtn) { newBtn.disabled = false; newBtn.textContent = 'Import from Twitch'; }
     }
 }
