@@ -218,6 +218,7 @@ let activeCategory = 'outlets'; // 'outlets' | 'streamers' | 'vcs'
 let outlets = [], streamers = [], vcs = [];
 let selectedItem = null;
 let ws = null;
+let outletCategoryFilter = 'all'; // client-side filter for outlets section
 
 const CAT_META = {
     outlets:   { icon: '📰', label: 'News Outlets',  color: 'outlets',   articlesLabel: 'Articles',          targetType: 'outlet'    },
@@ -336,10 +337,16 @@ function render() {
 // ─── SOURCE: Outlets ───
 function renderOutlets(m) {
     if (selectedItem && selectedItem._type === 'outlet') return renderOutletDetail(m);
-    m.innerHTML = `<div class="content-header"><div><h1>News Outlets</h1><p>Manage ${outlets.length} gaming news outlets</p></div>
+    const cats = ['all','gaming_news','esports','pc_gaming','mobile_gaming','console','nintendo','playstation','xbox','gaming_culture','gaming_industry'];
+    const catLabels = {all:'All',gaming_news:'Gaming News',esports:'Esports',pc_gaming:'PC Gaming',mobile_gaming:'Mobile',console:'Console',nintendo:'Nintendo',playstation:'PlayStation',xbox:'Xbox',gaming_culture:'Culture',gaming_industry:'Industry'};
+    const filtered = outletCategoryFilter === 'all' ? outlets : outlets.filter(o => o.category === outletCategoryFilter);
+    const filterChips = cats.map(c => `<button onclick="setOutletFilter('${c}')" style="padding:3px 10px;border-radius:12px;border:1px solid ${outletCategoryFilter===c?'var(--accent)':'var(--border)'};background:${outletCategoryFilter===c?'rgba(124,92,255,0.18)':'transparent'};color:${outletCategoryFilter===c?'var(--accent-light)':'var(--text-secondary)'};cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">${catLabels[c]}</button>`).join('');
+    m.innerHTML = `<div class="content-header"><div><h1>News Outlets</h1><p>Showing ${filtered.length} of ${outlets.length} gaming news outlets</p></div>
         <div class="header-actions"><button class="btn btn-primary" onclick="showCreateOutletForm()">+ Add Outlet</button><button class="btn btn-secondary" onclick="scrapeAllType('outlets')">Scrape All Sites</button></div></div>
-        <div class="panel"><div>${renderItemsList(outlets, 'outlet')}</div></div>`;
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${filterChips}</div>
+        <div class="panel"><div>${renderItemsList(filtered, 'outlet')}</div></div>`;
 }
+function setOutletFilter(cat) { outletCategoryFilter = cat; renderOutlets(document.getElementById('main-content')); }
 
 function renderOutletDetail(m) {
     const o = selectedItem;
