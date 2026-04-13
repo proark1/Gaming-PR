@@ -347,15 +347,60 @@ def BeautifulSoup_to_text(html_content: str) -> str:
 
 # ─── Base Message Variants (for edit-before-bulk flow) ───
 
-def _build_selling_points_prose(points: list[str]) -> str:
-    """Turn selling points into natural flowing prose, not bullet points."""
+def _rewrite_description(desc: str, title: str) -> str:
+    """Rewrite a raw game description into a polished elevator pitch sentence."""
+    if not desc:
+        return ""
+    d = desc.strip().rstrip(".")
+    # If it's already a full sentence (starts with capital, has a verb-like pattern), frame it
+    if len(d) > 80:
+        return f"In short, {title} is {d[0].lower()}{d[1:]}."
+    return f"{title} is {d[0].lower()}{d[1:]}."
+
+
+def _weave_points_narrative(points: list[str], style: str = "flow") -> str:
+    """Transform raw selling points into polished narrative paragraphs.
+    style='flow' = woven prose, style='build' = escalating structure."""
     if not points:
         return ""
-    if len(points) == 1:
-        return html.escape(points[0])
-    last = html.escape(points[-1])
-    rest = ", ".join(html.escape(p) for p in points[:-1])
-    return f"{rest}, and {last}"
+    escaped = [html.escape(p) for p in points]
+
+    if style == "build":
+        # Escalating structure: each point gets its own punchy line
+        lines = []
+        intros = [
+            "First, there's", "On top of that,", "And perhaps most importantly,",
+            "It also features", "Add to that", "Plus,",
+        ]
+        for i, pt in enumerate(escaped):
+            intro = intros[i] if i < len(intros) else "There's also"
+            lines.append(f"{intro} {pt[0].lower()}{pt[1:]}.")
+        return " ".join(lines)
+
+    # Flowing prose
+    if len(escaped) == 1:
+        return f"At its core, {escaped[0][0].lower()}{escaped[0][1:]} is what sets this apart."
+    if len(escaped) == 2:
+        return (
+            f"Two things make this stand out: {escaped[0][0].lower()}{escaped[0][1:]}, "
+            f"and {escaped[1][0].lower()}{escaped[1][1:]}."
+        )
+    # 3+
+    highlights = ", ".join(f"{p[0].lower()}{p[1:]}" for p in escaped[:-1])
+    return (
+        f"What makes this genuinely different: {highlights} "
+        f"— and {escaped[-1][0].lower()}{escaped[-1][1:]}."
+    )
+
+
+def _rewrite_context(ctx: str) -> str:
+    """Turn raw custom context into a polished paragraph."""
+    if not ctx:
+        return ""
+    c = ctx.strip()
+    if not c.endswith(".") and not c.endswith("!") and not c.endswith("?"):
+        c += "."
+    return c
 
 
 def generate_message_variants(
@@ -368,128 +413,137 @@ def generate_message_variants(
 ) -> dict:
     """
     Generate two genuinely distinct, publication-ready message variants.
-    Each uses a completely different structure, persuasion strategy, and voice.
-    The user's game info is woven in naturally — not dumped as lists.
-    Returns dict with variant_a and variant_b.
+    The user's raw input (description, selling points, context) is completely
+    rewritten and reframed into polished PR copy — not inserted verbatim.
     """
     title = html.escape(game_title or "Our Game")
-    desc = html.escape(game_description or "")
+    raw_desc = game_description or ""
     points = key_selling_points or []
-    ctx = html.escape(custom_context or "")
-    sp_prose = _build_selling_points_prose(points)
-    sp_bullets = _format_selling_points(points) if points else ""
+    raw_ctx = custom_context or ""
+
+    desc_pitch = _rewrite_description(raw_desc, title)
+    points_flow = _weave_points_narrative(points, "flow")
+    points_build = _weave_points_narrative(points, "build")
+    ctx_clean = _rewrite_context(raw_ctx)
 
     # Tone-adaptive elements
     if tone == "casual":
         g1, g2 = "Hey Editor,", "Hi Editor,"
         c1, c2 = "Talk soon!", "Looking forward to it!"
-        opener_warm = "Hope you're having a great week."
     elif tone == "enthusiastic":
         g1, g2 = "Hi Editor!", "Hey Editor!"
-        c1, c2 = "Can't wait to hear your thoughts!", "Really looking forward to connecting!"
-        opener_warm = "I'm thrilled to be reaching out to you today."
+        c1, c2 = "Can't wait to hear your thoughts!", "Really excited to connect on this!"
     elif tone == "formal":
         g1, g2 = "Dear Editor,", "Dear Editor,"
         c1, c2 = "Respectfully,", "With kind regards,"
-        opener_warm = "I trust this message finds you well."
     else:
         g1, g2 = "Hi Editor,", "Hello Editor,"
         c1, c2 = "Best regards,", "Looking forward to hearing from you,"
-        opener_warm = "I hope this finds you well."
 
     if message_type == "coverage_request":
-        # ═══════════════════════════════════════════════════
-        # COVERAGE REQUEST — Variant A: "The Newsroom Pitch"
-        # Strategy: Lead with the story, make it easy to say yes
-        # ═══════════════════════════════════════════════════
+
+        # ═══ COVERAGE A: "The Newsroom Pitch" ═══
+        # Strategy: Frame it as a ready-to-publish story. Do all the work for them.
         a_subject = f"{title} — Ready-Made Story for Your Outlet"
+
+        ctx_para_a = f"\nHere's some additional context that could strengthen the piece: {ctx_clean}\n" if ctx_clean else ""
         a_body = f"""{g1}
 
-{opener_warm}
+I have a story that I believe writes itself — and I think your outlet is the right home for it.
 
-I have a story I think is a natural fit for your outlet.
+We're about to launch {title}, and the narrative behind this game is one your readers will connect with. {desc_pitch} {points_flow}
+{ctx_para_a}
+I've already done the legwork to make this as easy as possible for your team. Here's what's ready to go right now:
 
-{title}{f" — {desc}" if desc else ""} is launching soon, and there's a real narrative here that I think your readers would connect with.{f" What sets it apart: {sp_prose}." if sp_prose else ""}
+- A complete press kit with key art, screenshots, and a gameplay trailer
+- A polished fact sheet with everything you'd need for a news piece
+- Developer quotes ready for attribution
+- Exclusive early access if your team wants a hands-on preview
 
-{f"{ctx}" + chr(10) + chr(10) if ctx else ""}Rather than just sending a press release, I wanted to reach out personally because I genuinely think this aligns with what your outlet covers. I've put together a complete press kit — key art, screenshots, gameplay trailer, fact sheet — so if this catches your eye, you can hit the ground running.
+I can also tailor the angle — whether that's a news piece, a feature, a preview, or an interview format. Whatever serves your editorial calendar best.
 
-I can also set up a developer interview, provide early access for a hands-on preview, or tailor assets to whatever format works best for your editorial calendar.
+The launch window is approaching, so priority access is available now for outlets that want to be among the first to cover this.
 
-Would this be something your outlet would be interested in covering? Happy to send everything over immediately.
+Shall I send the full kit over?
 
 {c1}"""
 
-        # ═══════════════════════════════════════════════════
-        # COVERAGE REQUEST — Variant B: "The Story Angle"
-        # Strategy: Propose specific editorial angles, show you know their work
-        # ═══════════════════════════════════════════════════
-        b_subject = f"Three Story Angles on {title} — Pick the One That Fits"
+        # ═══ COVERAGE B: "The Story Angle" ═══
+        # Strategy: Pitch specific editorial angles. Show editorial thinking.
+        b_subject = f"Three Story Angles on {title} — Take Your Pick"
+
+        ctx_para_b = f"\nOne more thing worth noting: {ctx_clean}\n" if ctx_clean else ""
         b_body = f"""{g2}
 
-I've been following your outlet's coverage and wanted to pitch something a bit different — not just "here's a game, please cover it," but three specific angles I think would genuinely resonate with your audience.
+I'd like to pitch you something more specific than "please cover our game." I've put together three editorial angles that I think would genuinely work for your audience — and I'd love your take on which one resonates.
 
-{title}{f" — {desc}" if desc else ""}.{f" The standout elements: {sp_prose}." if sp_prose else ""}
+The game is {title}. {desc_pitch} {points_build}
+{ctx_para_b}
+Here are the angles:
 
-{f"{ctx}" + chr(10) + chr(10) if ctx else ""}Here are the angles I had in mind:
+1. The Making-Of Feature
+The story of how {title} came to life — the creative risks, the pivots, the breakthroughs. I can set up a long-form interview with the team leads, plus behind-the-scenes assets nobody else has seen.
 
-1. The Behind-the-Scenes Story — How {title} went from concept to reality. I can arrange an in-depth interview with the creative leads about the decisions that shaped the game.
+2. The Exclusive First Look
+A hands-on preview with the latest build, paired with assets your outlet publishes first. Ideal for a news piece or preview feature that drives traffic on announcement day.
 
-2. The First-Look Preview — An exclusive hands-on experience with the build, including assets your outlet would be the first to publish.
+3. The Bigger Picture
+What {title} signals about where the industry is heading. This works as a thought piece or feature — I can provide data points, developer perspective, and context to build the argument.
 
-3. The Industry Angle — What {title} represents in the current gaming landscape and why it matters right now. Great for a feature or opinion piece.
+Feel free to pick one, mash them together, or pitch me something completely different. I'll make whatever you need happen.
 
-You're welcome to pick one, combine them, or suggest something entirely different. I'll make it happen.
-
-Which angle interests you most?
+Which direction interests you?
 
 {c2}"""
 
     else:
-        # ═══════════════════════════════════════════════════
-        # PITCH — Variant A: "The Exclusive Offer"
-        # Strategy: Create urgency and exclusivity, make them feel chosen
-        # ═══════════════════════════════════════════════════
+
+        # ═══ PITCH A: "The Exclusive Offer" ═══
+        # Strategy: Scarcity, urgency, make them feel hand-picked.
         a_subject = f"For Your Eyes First: {title}"
+
+        ctx_para_a = f"\n{ctx_clean}\n" if ctx_clean else ""
         a_body = f"""{g1}
 
-I'm reaching out to a very small group of outlets before we go wide with this announcement — and your outlet is one of them.
+I'm writing to you before we announce this publicly — because I want your outlet to have first access.
 
-{title}{f" — {desc}" if desc else ""} is something we've been working on quietly, and we're now ready to show it to the world.{f" What makes it special: {sp_prose}." if sp_prose else ""}
+{title} is the game we've been building behind closed doors, and we're now ready to show it. {desc_pitch} {points_flow}
+{ctx_para_a}
+We're being deliberate about who sees this first. Your outlet is on a very short list, and here's what that means:
 
-{f"{ctx}" + chr(10) + chr(10) if ctx else ""}Before we send this to the broader press list, I wanted to give your outlet the chance to break this story. Here's what I can offer exclusively:
+- You get a review copy or hands-on access before anyone else
+- Your outlet can publish gameplay footage, screenshots, and key art first
+- I'll arrange a dedicated interview with our creative lead — on your schedule
+- If you need custom assets, B-roll, or anything else, I'll have it turned around fast
 
-- A review copy or early access build, available immediately
-- First-to-publish gameplay footage and screenshots
-- A sit-down interview with our lead developer or creative director
-- Any custom assets your team needs for the piece
+Once we open this up to the wider press list, the exclusivity window closes. I'd much rather your team gets the head start.
 
-This window won't last long — once we go public, the exclusivity is gone. But I'd rather your outlet gets first crack at this than anyone else.
-
-Interested? I can have everything in your inbox within the hour.
+If this sounds like a fit, I can have everything in your hands today.
 
 {c1}"""
 
-        # ═══════════════════════════════════════════════════
-        # PITCH — Variant B: "The Relationship Builder"
-        # Strategy: No pressure, focus on mutual value, open a conversation
-        # ═══════════════════════════════════════════════════
-        b_subject = f"{title} — I Think Your Audience Will Love This"
+        # ═══ PITCH B: "The Relationship Builder" ═══
+        # Strategy: Zero pressure. Lead with genuine value. Open a door.
+        b_subject = f"{title} — Built for the Kind of Audience You Reach"
+
+        ctx_para_b = f"\n{ctx_clean}\n" if ctx_clean else ""
         b_body = f"""{g2}
 
-I'll keep this short because I know your inbox is packed.
+I'll be honest — I'm not here to add another pitch to your pile. I'm reaching out because I genuinely think this game and your audience are a perfect match, and I wanted to start a conversation about it.
 
-We're launching {title}{f" — {desc}" if desc else ""}, and I genuinely believe it's the kind of game your audience gets excited about.{f" A few reasons why: {sp_prose}." if sp_prose else ""}
+The game is {title}. {desc_pitch} {points_build}
+{ctx_para_b}
+The early reception has been strong. Players and testers keep telling us the same thing — this is the kind of game they wish they'd heard about sooner. That's exactly why I thought of your outlet.
 
-{f"{ctx}" + chr(10) + chr(10) if ctx else ""}I'm not looking for a favor — I think covering this would be genuinely valuable for your readers. The response from early testers has been overwhelmingly positive, and I'd love for your outlet to see why.
+I don't want to assume what format works best for you, so here's what I can offer — take whatever's useful, ignore the rest:
 
-No strings attached. I can send over:
-- A press kit with everything you need to decide if it's a fit
-- A review copy so your team can experience it firsthand
-- Developer access if you want quotes or an interview
+- A press kit so you can see if it's editorially relevant
+- A review copy for your team to try firsthand — no obligation
+- Access to our developers for quotes, interviews, or a Q&A feature
 
-If it's not the right fit, no hard feelings at all. But if it is, I'd love to make it as easy as possible for your team to cover it.
+If it clicks, amazing — I'll make the process seamless. If it's not the right fit, genuinely no pressure. I'd rather build a relationship with your outlet for the long run than push something that doesn't land.
 
-Worth a look?
+Either way — would it be worth a quick look?
 
 {c2}"""
 
@@ -497,12 +551,12 @@ Worth a look?
         "variant_a": {
             "label": "The Newsroom Pitch" if message_type == "coverage_request" else "The Exclusive Offer",
             "subject": a_subject,
-            "body_text": BeautifulSoup_to_text(a_body) if "<" in a_body else a_body.strip(),
+            "body_text": a_body.strip(),
         },
         "variant_b": {
             "label": "The Story Angle" if message_type == "coverage_request" else "The Relationship Builder",
             "subject": b_subject,
-            "body_text": BeautifulSoup_to_text(b_body) if "<" in b_body else b_body.strip(),
+            "body_text": b_body.strip(),
         },
     }
 
