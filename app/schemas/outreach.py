@@ -43,6 +43,34 @@ class OutreachMessageResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
 
+class GenerateAllOutletsRequest(BaseModel):
+    message_type: str = "pitch"  # pitch, coverage_request
+    tone: str = "professional"  # professional, casual, enthusiastic, formal
+    game_title: Optional[str] = None
+    game_description: Optional[str] = None
+    key_selling_points: Optional[list[str]] = []
+    custom_context: Optional[str] = None
+
+
+class TranslatedMessageItem(BaseModel):
+    language_code: str
+    language_name: str
+    subject: str
+    body_html: str
+    body_text: str
+    outlet_names: list[str]
+
+
+class GenerateAllOutletsResponse(BaseModel):
+    base_language: str = "en"
+    base_subject: str
+    base_body_html: str
+    base_body_text: str
+    translations: list[TranslatedMessageItem]
+    total_languages: int
+    total_outlets_covered: int
+
+
 class OutreachStatsResponse(BaseModel):
     total_messages: int
     messages_by_type: dict[str, int]

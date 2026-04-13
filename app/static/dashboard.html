@@ -263,6 +263,81 @@ a:hover { text-decoration: underline; }
 .message-preview .msg-body li { margin-bottom: 4px; }
 .message-preview .msg-body strong { color: var(--text-bright); }
 
+/* ─── Bulk Generate ─── */
+.bulk-generate-section {
+  padding: 0 32px 32px;
+}
+.bulk-generate-section h2 {
+  font-size: 22px; font-weight: 700; color: var(--text-bright);
+}
+.bulk-generate-form {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.bulk-generate-form .full-width { grid-column: 1 / -1; }
+.bulk-generate-form label {
+  font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 4px;
+}
+.bulk-generate-form input,
+.bulk-generate-form select,
+.bulk-generate-form textarea {
+  width: 100%; padding: 8px 12px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); font-size: 13px; outline: none;
+}
+.bulk-generate-form textarea { resize: vertical; }
+.bulk-generate-form input:focus,
+.bulk-generate-form select:focus,
+.bulk-generate-form textarea:focus { border-color: var(--accent); }
+
+.bulk-results-header {
+  margin: 20px 0 12px; font-size: 14px; color: var(--text-dim);
+}
+.lang-message-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 12px;
+}
+.lang-message-card .lang-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.lang-message-card .lang-header h3 {
+  font-size: 16px; font-weight: 600; color: var(--text-bright); margin: 0;
+}
+.lang-badge {
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  background: rgba(108,92,231,0.15); color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.outlets-list {
+  font-size: 12px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.6;
+}
+.lang-message-card .msg-subject {
+  font-size: 14px; font-weight: 600; color: var(--text-bright); margin-bottom: 8px;
+}
+.lang-message-card .msg-body {
+  font-size: 13px; color: var(--text); line-height: 1.7;
+  max-height: 200px; overflow-y: auto; margin-bottom: 12px;
+}
+.lang-message-card .msg-body p { margin-bottom: 8px; }
+.lang-message-card .msg-body strong { color: var(--text-bright); }
+.lang-message-card .msg-body ul { margin: 8px 0; padding-left: 20px; }
+.lang-message-card .msg-body li { margin-bottom: 4px; }
+.copy-buttons {
+  display: flex; gap: 8px;
+}
+.btn-copy {
+  padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  background: var(--green-dim); border: 1px solid var(--green);
+  color: var(--green);
+}
+.btn-copy:hover { background: var(--green); color: #fff; }
+.btn-copy.copied {
+  background: var(--green); color: #fff;
+}
+
 /* ─── Loading ─── */
 .loading {
   display: flex; justify-content: center; padding: 60px;
@@ -447,6 +522,7 @@ function renderFilters(tab) {
       <select id="filterLang" onchange="applyFilters()"><option value="">All Languages</option>${langs.map(l => `<option value="${l}">${l}</option>`).join('')}</select>
       <select id="filterCat" onchange="applyFilters()"><option value="">All Categories</option>${cats.map(c => `<option value="${c}">${c.replace(/_/g,' ')}</option>`).join('')}</select>
       <button class="btn-scrape" onclick="scrapeAll('outlets')">Scrape All Outlets</button>
+      <button class="btn-scrape" style="background:var(--accent);border-color:var(--accent);" onclick="showBulkGenerateForm()">Generate Message for All Outlets</button>
     `;
   } else if (tab === 'streamers') {
     const platforms = [...new Set(allData.streamers.map(s => s.platform))].sort();
@@ -1068,6 +1144,127 @@ async function scrapeAndRefresh(type, id) {
   } finally {
     btn.textContent = 'Scrape Website for More Info'; btn.disabled = false;
   }
+}
+
+// ─── Bulk Generate for All Outlets ───
+let bulkResultsStore = {};
+
+function showBulkGenerateForm() {
+  document.getElementById('content').innerHTML = `
+    <div class="bulk-generate-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h2>Generate Message for All Outlets</h2>
+        <button class="btn-secondary" onclick="loadTab('outlets')" style="width:auto;padding:8px 20px;">Back to Outlets</button>
+      </div>
+      <div class="bulk-generate-form">
+        <div>
+          <label>Game Title</label>
+          <input type="text" id="genGameTitle" placeholder="Your game title">
+        </div>
+        <div>
+          <label>Message Type</label>
+          <select id="genMsgType">
+            <option value="pitch">Pitch</option>
+            <option value="coverage_request">Coverage Request</option>
+          </select>
+        </div>
+        <div>
+          <label>Tone</label>
+          <select id="genTone">
+            <option value="professional">Professional</option>
+            <option value="casual">Casual</option>
+            <option value="enthusiastic">Enthusiastic</option>
+            <option value="formal">Formal</option>
+          </select>
+        </div>
+        <div>
+          <label>Key Selling Points (comma-separated)</label>
+          <input type="text" id="genPoints" placeholder="Unique mechanic, Award-winning...">
+        </div>
+        <div class="full-width">
+          <label>Game Description</label>
+          <textarea id="genGameDesc" placeholder="Brief description of your game..." rows="2"></textarea>
+        </div>
+        <div class="full-width">
+          <button class="btn-generate" id="bulkGenBtn" onclick="generateForAll()">Generate &amp; Translate for All Outlets</button>
+        </div>
+      </div>
+      <div id="bulkResults"></div>
+    </div>
+  `;
+}
+
+async function generateForAll() {
+  const btn = document.getElementById('bulkGenBtn');
+  btn.textContent = 'Generating & Translating...'; btn.disabled = true;
+  const points = document.getElementById('genPoints').value.split(',').map(s => s.trim()).filter(Boolean);
+  try {
+    const resp = await fetch(`${API}/api/outreach/generate-for-all`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message_type: document.getElementById('genMsgType').value,
+        tone: document.getElementById('genTone').value,
+        game_title: document.getElementById('genGameTitle').value || null,
+        game_description: document.getElementById('genGameDesc').value || null,
+        key_selling_points: points.length ? points : [],
+      })
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      renderBulkResults(data);
+    } else {
+      document.getElementById('bulkResults').innerHTML = `<div class="message-preview"><h4>Error</h4><p>${esc(data.detail||'Failed to generate')}</p></div>`;
+    }
+  } catch (err) {
+    document.getElementById('bulkResults').innerHTML = `<div class="message-preview"><h4>Error</h4><p>${err.message}</p></div>`;
+  } finally {
+    btn.textContent = 'Generate & Translate for All Outlets'; btn.disabled = false;
+  }
+}
+
+function renderBulkResults(data) {
+  bulkResultsStore = {};
+  let html = `<div class="bulk-results-header">Generated messages for <strong>${data.total_languages}</strong> languages covering <strong>${data.total_outlets_covered}</strong> outlets</div>`;
+
+  data.translations.forEach((t, i) => {
+    bulkResultsStore[i] = { subject: t.subject, body_text: t.body_text };
+    html += `
+      <div class="lang-message-card">
+        <div class="lang-header">
+          <h3>${esc(t.language_name)}</h3>
+          <span class="lang-badge">${esc(t.language_code)}</span>
+          <span style="font-size:12px;color:var(--text-dim);margin-left:auto;">${t.outlet_names.length} outlet${t.outlet_names.length!==1?'s':''}</span>
+        </div>
+        <div class="outlets-list">Outlets: ${t.outlet_names.map(n => esc(n)).join(', ')}</div>
+        <div class="msg-subject">Subject: ${esc(t.subject)}</div>
+        <div class="msg-body">${t.body_html}</div>
+        <div class="copy-buttons">
+          <button class="btn-copy" id="copyFull${i}" onclick="copyToClipboard(${i}, 'full', 'copyFull${i}')">Copy Full Message</button>
+          <button class="btn-copy" id="copySubject${i}" onclick="copyToClipboard(${i}, 'subject', 'copySubject${i}')">Copy Subject</button>
+          <button class="btn-copy" id="copyBody${i}" onclick="copyToClipboard(${i}, 'body', 'copyBody${i}')">Copy Body</button>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById('bulkResults').innerHTML = html;
+}
+
+function copyToClipboard(idx, part, btnId) {
+  const data = bulkResultsStore[idx];
+  let text = '';
+  if (part === 'full') text = `Subject: ${data.subject}\n\n${data.body_text}`;
+  else if (part === 'subject') text = data.subject;
+  else text = data.body_text;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 2000);
+  });
 }
 
 // ─── Modal Helpers ───
