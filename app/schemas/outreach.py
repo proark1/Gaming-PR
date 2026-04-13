@@ -52,9 +52,15 @@ class PreviewMessageRequest(BaseModel):
     custom_context: Optional[str] = None
 
 
-class PreviewMessageResponse(BaseModel):
+class MessageVariant(BaseModel):
+    label: str
     subject: str
     body_text: str
+
+
+class PreviewMessageResponse(BaseModel):
+    variant_a: MessageVariant
+    variant_b: MessageVariant
 
 
 class BulkGenerateRequest(BaseModel):

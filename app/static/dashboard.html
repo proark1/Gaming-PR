@@ -196,6 +196,18 @@
         .step.done { background: rgba(34,197,94,0.15); color: var(--green); }
         .step.upcoming { background: var(--bg-secondary); color: var(--text-muted); }
         .step-arrow { color: var(--text-muted); font-size: 16px; margin: 0 4px; }
+        /* Variant picker */
+        .variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+        @media (max-width: 800px) { .variant-grid { grid-template-columns: 1fr; } }
+        .variant-card { background: var(--bg-secondary); border: 2px solid var(--border); border-radius: 10px; padding: 18px; cursor: pointer; transition: all 0.2s; position: relative; }
+        .variant-card:hover { border-color: var(--accent); }
+        .variant-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,255,0.2); }
+        .variant-card.selected::after { content: '\\2713 Selected'; position: absolute; top: 12px; right: 14px; font-size: 11px; font-weight: 700; color: var(--accent); background: rgba(124,92,255,0.12); padding: 2px 10px; border-radius: 10px; }
+        .variant-card .var-label { font-size: 13px; font-weight: 700; color: var(--accent-light); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .variant-card .var-subject { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+        .variant-card .var-body { font-size: 12px; color: var(--text-secondary); line-height: 1.65; max-height: 220px; overflow-y: auto; white-space: pre-wrap; }
+        .editor-section { display: none; }
+        .editor-section.visible { display: block; }
     </style>
 </head>
 <body>
@@ -642,17 +654,17 @@ async function generateOutreach() {
         game_description: document.getElementById('or-desc').value || '',
         key_selling_points: document.getElementById('or-points').value.split(',').map(s=>s.trim()).filter(Boolean),
     };
-    // If "All Outlets" selected, generate preview then show edit page
+    // If "All Outlets" selected, generate two variants then show picker
     if (targetType === 'outlet' && targetVal === 'all') {
         closeModal();
         const m = document.getElementById('main-content');
-        m.innerHTML = `${ctxBanner('generating base message...')}<div class="loading">Generating preview...</div>`;
+        m.innerHTML = `${ctxBanner('generating message variants...')}<div class="loading">Generating two best-practice variants...</div>`;
         try {
             const preview = await api('/api/outreach/generate-preview', {
                 method: 'POST',
                 body: JSON.stringify(params)
             });
-            renderEditBasePage(params, preview.subject, preview.body_text);
+            renderEditBasePage(params, preview.variant_a, preview.variant_b);
         } catch(e) { toast('Failed to generate preview: ' + e.message, 'error'); render(); }
         return;
     }
@@ -679,34 +691,53 @@ let bulkBaseBody = '';
 let bulkMsgMap = {}; // outlet_id -> OutreachMessage
 let bulkFilter = 'all'; // 'all', 'pending', 'done'
 
-function renderEditBasePage(params, subject, bodyText) {
+let variantData = {};
+
+function renderEditBasePage(params, varA, varB) {
     bulkParams = params;
+    variantData = { a: varA, b: varB };
+    const typeLabel = params.message_type === 'coverage_request' ? 'Coverage Request' : 'Pitch';
     const m = document.getElementById('main-content');
-    m.innerHTML = `${ctxBanner('step 1: review &amp; edit your base message')}
+    m.innerHTML = `${ctxBanner('step 1: choose &amp; edit your base message')}
         <div class="step-indicator">
-            <span class="step active">1. Edit Message</span>
+            <span class="step active">1. Choose &amp; Edit</span>
             <span class="step-arrow">&rarr;</span>
             <span class="step upcoming">2. Generate for Outlets</span>
         </div>
-        <div class="content-header"><div><h1>Review &amp; Edit Base Message</h1>
-        <p>This English message will be personalized per outlet (name, email) and translated to each outlet's language</p></div>
+        <div class="content-header"><div><h1>Choose Your ${esc(typeLabel)} Message</h1>
+        <p>Pick a variant, customize it, then send to all outlets — personalized &amp; translated automatically</p></div>
         <div class="header-actions"><button class="btn btn-secondary" onclick="section='outreach';render()">Cancel</button></div></div>
         <div class="bulk-summary">
             <span class="summary-chip">Game: <strong>${esc(params.game_title)}</strong></span>
-            <span class="summary-chip">Type: <strong>${esc(params.message_type)}</strong></span>
+            <span class="summary-chip">Type: <strong>${esc(typeLabel)}</strong></span>
             <span class="summary-chip">Tone: <strong>${esc(params.tone)}</strong></span>
         </div>
-        <div class="panel">
+        <div class="panel" style="background:transparent;border:none;padding:0">
+            <h3 style="margin-bottom:12px">Pick a Variant</h3>
+            <div class="variant-grid">
+                <div class="variant-card selected" id="var-card-a" onclick="selectVariant('a')">
+                    <div class="var-label">${esc(varA.label)}</div>
+                    <div class="var-subject">${esc(varA.subject)}</div>
+                    <div class="var-body">${esc(varA.body_text)}</div>
+                </div>
+                <div class="variant-card" id="var-card-b" onclick="selectVariant('b')">
+                    <div class="var-label">${esc(varB.label)}</div>
+                    <div class="var-subject">${esc(varB.subject)}</div>
+                    <div class="var-body">${esc(varB.body_text)}</div>
+                </div>
+            </div>
+        </div>
+        <div class="panel editor-section visible" id="editor-section">
             <h3>Edit Your Message</h3>
             <div class="edit-msg-form">
                 <div>
                     <label>Subject Line</label>
-                    <input type="text" id="edit-subject" value="${esc(subject)}">
+                    <input type="text" id="edit-subject" value="${esc(varA.subject)}">
                 </div>
                 <div>
                     <label>Message Body</label>
-                    <textarea id="edit-body" rows="14">${esc(bodyText)}</textarea>
-                    <p class="edit-hint">Tip: "Editor" will be replaced with each outlet's editor name. "your outlet" will be replaced with the outlet name. Non-English outlets will receive a translated version.</p>
+                    <textarea id="edit-body" rows="14">${esc(varA.body_text)}</textarea>
+                    <p class="edit-hint">Tip: "Editor" will be replaced with each outlet's editor name. "your outlet" / "your team" will be replaced with the outlet name. Non-English outlets receive a translated version automatically.</p>
                 </div>
             </div>
         </div>
@@ -714,6 +745,16 @@ function renderEditBasePage(params, subject, bodyText) {
             <button class="btn btn-primary" onclick="proceedToOutletList()" style="padding:12px 28px;font-size:14px">Continue to Outlets &rarr;</button>
             <button class="btn btn-secondary" onclick="section='outreach';render()">Cancel</button>
         </div>`;
+}
+
+function selectVariant(which) {
+    const v = which === 'a' ? variantData.a : variantData.b;
+    document.getElementById('var-card-a').classList.toggle('selected', which === 'a');
+    document.getElementById('var-card-b').classList.toggle('selected', which === 'b');
+    document.getElementById('edit-subject').value = v.subject;
+    document.getElementById('edit-body').value = v.body_text;
+    // Scroll editor into view
+    document.getElementById('editor-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function proceedToOutletList() {
@@ -737,7 +778,7 @@ async function renderBulkOutletPage() {
         </div>
         <div class="content-header"><div><h1>Generate for All Outlets</h1>
         <p>Personalized &amp; translated per outlet</p></div>
-        <div class="header-actions"><button class="btn btn-secondary" onclick="renderEditBasePage(bulkParams, bulkBaseSubject, bulkBaseBody)">Back to Edit</button>
+        <div class="header-actions"><button class="btn btn-secondary" onclick="renderEditBasePage(bulkParams, variantData.a, variantData.b)">Back to Edit</button>
         <button class="btn btn-secondary" onclick="section='outreach';render()">Cancel</button></div></div>
         <div class="bulk-summary">
             <span class="summary-chip">Game: <strong>${esc(bulkParams.game_title)}</strong></span>

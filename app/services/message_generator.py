@@ -345,20 +345,20 @@ def BeautifulSoup_to_text(html_content: str) -> str:
     return soup.get_text(separator="\n", strip=True)
 
 
-# ─── Base Message Preview (for edit-before-bulk flow) ───
+# ─── Base Message Variants (for edit-before-bulk flow) ───
 
-def generate_base_message(
+def generate_message_variants(
     message_type: str = "pitch",
     tone: str = "professional",
     game_title: Optional[str] = None,
     game_description: Optional[str] = None,
     key_selling_points: Optional[list[str]] = None,
     custom_context: Optional[str] = None,
-) -> tuple[str, str]:
+) -> dict:
     """
-    Generate a generic English outreach message for the user to edit
-    before bulk-sending to all outlets. Addressed to 'Editor' as a placeholder.
-    Returns (subject, body_text).
+    Generate two distinct best-practice message variants for the user to
+    choose from before bulk-sending. Each variant has a different angle.
+    Returns dict with variant_a and variant_b, each having subject + body_text.
     """
     game_title = game_title or "Our Game"
     game_description = game_description or ""
@@ -368,32 +368,72 @@ def generate_base_message(
     greeting = _personalize_greeting("Editor", tone)
     sp_html = _format_selling_points(key_selling_points) if key_selling_points else ""
     closing = _closing(tone)
+    desc_line = f" — {html.escape(game_description)}" if game_description else ""
+    ctx_line = f"<p>{html.escape(custom_context)}</p>" if custom_context else ""
 
     if message_type == "coverage_request":
-        subject = f"{game_title} - Press Coverage Opportunity"
-        body_html = f"""
+        # ── Variant A: Direct & Resource-Led ──
+        a_subject = f"{game_title} — Coverage Opportunity + Press Kit Ready"
+        a_html = f"""
 <p>{greeting}</p>
-<p>I hope this message finds you well. I'm writing to request coverage of <strong>{html.escape(game_title)}</strong> on your outlet.</p>
-{f"<p>{html.escape(game_description)}</p>" if game_description else ""}
-{f"<p><strong>Key highlights:</strong></p>{sp_html}" if sp_html else ""}
-{f"<p>{html.escape(custom_context)}</p>" if custom_context else ""}
-<p>We have press kits, screenshots, trailers, and dev interviews available. Would any of these be useful for your coverage?</p>
+<p>I'm reaching out because <strong>{html.escape(game_title)}</strong>{desc_line} is launching soon, and I'd love for your outlet to be among the first to cover it.</p>
+{f"<p><strong>Why this stands out:</strong></p>{sp_html}" if sp_html else ""}
+{ctx_line}
+<p>We have a full press kit ready for you — including screenshots, key art, a gameplay trailer, and a fact sheet. I can also arrange an exclusive developer interview or early hands-on access if that would be helpful for your coverage.</p>
+<p>Would any of these work for your editorial calendar? Happy to tailor the assets to what your outlet needs most.</p>
+<p>{closing}</p>
+""".strip()
+
+        # ── Variant B: Story-Angle & Audience-Focused ──
+        b_subject = f"Story Angle: {game_title} — A Fresh Take Your Readers Will Love"
+        b_html = f"""
+<p>{greeting}</p>
+<p>I wanted to share a story angle I think would resonate with your audience.</p>
+<p><strong>{html.escape(game_title)}</strong>{desc_line} brings something genuinely new to the table, and I believe your outlet is the perfect home for this story.</p>
+{f"<p><strong>What makes it noteworthy:</strong></p>{sp_html}" if sp_html else ""}
+{ctx_line}
+<p>I can offer several coverage angles — a behind-the-scenes feature on the development journey, an interview with the creative director, or a first-look preview with exclusive assets. Whatever fits your editorial style best.</p>
+<p>What angle would be most interesting for your outlet? I'll have everything ready to go.</p>
 <p>{closing}</p>
 """.strip()
     else:
-        subject = f"Exclusive: {game_title} - Press Coverage Opportunity"
-        body_html = f"""
+        # ── Variant A: Exclusive Preview Pitch ──
+        a_subject = f"Exclusive First Look: {game_title}"
+        a_html = f"""
 <p>{greeting}</p>
-<p>I'm reaching out to share an exciting new title with your team.</p>
-<p>I'm excited to introduce <strong>{html.escape(game_title)}</strong>{f" - {html.escape(game_description)}" if game_description else ""}.</p>
+<p>I'm excited to offer your outlet an exclusive first look at <strong>{html.escape(game_title)}</strong>{desc_line}.</p>
 {f"<p><strong>Key highlights:</strong></p>{sp_html}" if sp_html else ""}
-{f"<p>{html.escape(custom_context)}</p>" if custom_context else ""}
-<p>I'd be happy to provide press assets, arrange an interview with the development team, or set up an exclusive preview. Please let me know what works best for your outlet.</p>
+{ctx_line}
+<p>We're selectively reaching out to a small number of outlets we genuinely respect, and your team is at the top of that list. I can provide early access, a review copy, press assets, or arrange a hands-on session with the development team — whatever works best for you.</p>
+<p>Would your outlet be interested in covering this? I'd love to set something up.</p>
 <p>{closing}</p>
 """.strip()
 
-    body_text = BeautifulSoup_to_text(body_html)
-    return subject, body_text
+        # ── Variant B: Value Proposition & Partnership Pitch ──
+        b_subject = f"{game_title} — Let's Get Your Audience Excited"
+        b_html = f"""
+<p>{greeting}</p>
+<p>I have a game I think your audience will genuinely love, and I'd like to explore how we can work together to bring it to them.</p>
+<p><strong>{html.escape(game_title)}</strong>{desc_line} is generating real buzz, and I believe a feature on your outlet would be a win for both sides.</p>
+{f"<p><strong>Here's why:</strong></p>{sp_html}" if sp_html else ""}
+{ctx_line}
+<p>I'm flexible on format — whether that's a review copy, an exclusive trailer premiere, a developer Q&A, or a sponsored feature. I want to make this as easy as possible for your team.</p>
+<p>What would be the best way to collaborate? Happy to jump on a quick call or send over a press kit right away.</p>
+<p>{closing}</p>
+""".strip()
+
+    return {
+        "variant_a": {
+            "label": "Direct & Resource-Led" if message_type == "coverage_request" else "Exclusive Preview",
+            "subject": a_subject,
+            "body_text": BeautifulSoup_to_text(a_html),
+        },
+        "variant_b": {
+            "label": "Story-Angle & Audience" if message_type == "coverage_request" else "Partnership & Value",
+            "subject": b_subject,
+            "body_text": BeautifulSoup_to_text(b_html),
+        },
+    }
 
 
 # ─── Main Generation Function ───

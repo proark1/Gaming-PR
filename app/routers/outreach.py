@@ -11,7 +11,7 @@ from app.schemas.outreach import (
     GenerateMessageRequest, OutreachMessageResponse, OutreachStatsResponse,
     BulkGenerateRequest, PreviewMessageRequest, PreviewMessageResponse,
 )
-from app.services.message_generator import generate_message, generate_base_message
+from app.services.message_generator import generate_message, generate_message_variants
 from app.services.translation_service import translate_outreach_message
 from app.services.contact_scraper import (
     scrape_outlet_website, scrape_streamer_website, scrape_vc_website,
@@ -45,9 +45,9 @@ def generate_outreach_message(req: GenerateMessageRequest, db: Session = Depends
 
 @router.post("/generate-preview", response_model=PreviewMessageResponse)
 def generate_preview_message(req: PreviewMessageRequest):
-    """Generate a base English message for the user to review and edit
-    before bulk-sending to all outlets."""
-    subject, body_text = generate_base_message(
+    """Generate two best-practice message variants for the user to choose
+    from and edit before bulk-sending to all outlets."""
+    variants = generate_message_variants(
         message_type=req.message_type,
         tone=req.tone,
         game_title=req.game_title,
@@ -55,7 +55,7 @@ def generate_preview_message(req: PreviewMessageRequest):
         key_selling_points=req.key_selling_points,
         custom_context=req.custom_context,
     )
-    return PreviewMessageResponse(subject=subject, body_text=body_text)
+    return PreviewMessageResponse(**variants)
 
 
 @router.post("/generate-bulk", response_model=list[OutreachMessageResponse], status_code=201)
