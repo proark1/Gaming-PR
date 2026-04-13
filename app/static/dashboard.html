@@ -167,22 +167,23 @@
         @media (max-width: 800px) { body { grid-template-columns: 1fr; } aside { display: none; } .grid-4 { grid-template-columns: 1fr 1fr; } }
 
         /* Bulk Generate */
-        .bulk-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-        .bulk-form .full-width { grid-column: 1 / -1; }
-        .bulk-form label { font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 3px; }
-        .bulk-form input, .bulk-form select, .bulk-form textarea { width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); font-size: 12px; font-family: inherit; outline: none; }
-        .bulk-form input:focus, .bulk-form select:focus, .bulk-form textarea:focus { border-color: var(--accent); }
-        .bulk-form textarea { resize: vertical; }
-        .lang-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
-        .lang-card .lang-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-        .lang-card .lang-hdr h4 { font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0; }
-        .lang-card .outlets-list { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.5; }
-        .lang-card .msg-subj { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
-        .lang-card .msg-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; max-height: 180px; overflow-y: auto; margin-bottom: 10px; white-space: pre-wrap; }
-        .copy-btns { display: flex; gap: 6px; }
-        .btn-copy { padding: 5px 12px; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; background: rgba(34,197,94,0.13); border: 1px solid var(--green); color: var(--green); font-family: inherit; }
+        .bulk-summary { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+        .bulk-summary .summary-chip { padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); }
+        .bulk-summary .summary-chip strong { color: var(--text-primary); }
+        .bulk-progress { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .progress-bar { flex: 1; height: 6px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.4s ease; }
+        .progress-text { font-size: 12px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+        .status-done { color: var(--green); font-weight: 600; }
+        .status-pending { color: var(--text-muted); }
+        .btn-copy { padding: 4px 10px; border-radius: 5px; font-size: 10px; font-weight: 600; cursor: pointer; transition: all 0.15s; background: rgba(34,197,94,0.13); border: 1px solid var(--green); color: var(--green); font-family: inherit; }
         .btn-copy:hover { background: var(--green); color: #fff; }
         .btn-copy.copied { background: var(--green); color: #fff; }
+        .bulk-actions { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+        .filter-chips { display: flex; gap: 6px; margin-left: auto; }
+        .filter-chip { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-family: inherit; transition: all 0.15s; }
+        .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
+        .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
     </style>
 </head>
 <body>
@@ -570,7 +571,7 @@ async function renderOutreach(m) {
     const tt = meta.targetType;
     m.innerHTML = `${ctxBanner(`outreach to ${meta.label.toLowerCase()}`)}
         <div class="content-header"><div><h1>Outreach</h1><p>Personalized messages to ${meta.label.toLowerCase()}</p></div>
-        <div class="header-actions"><button class="btn btn-primary" onclick="showOutreachForm('${tt}')">+ Generate Message</button>${tt==='outlet'?'<button class="btn btn-success" onclick="showBulkGenerateForm()">Generate for All Outlets</button>':''}</div></div>
+        <div class="header-actions"><button class="btn btn-primary" onclick="showOutreachForm('${tt}')">+ Generate Message</button></div></div>
         <div id="or-stats"></div>
         <div class="panel"><h3>Messages for ${meta.label}</h3><div id="or-list"><div class="loading">Loading...</div></div></div>`;
     try {
@@ -614,10 +615,28 @@ function updateOrTargets() {
     const type = document.getElementById('or-type').value;
     const sel = document.getElementById('or-target');
     const items = type==='outlet' ? outlets : type==='streamer' ? streamers : vcs;
-    sel.innerHTML = items.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('');
+    let html = '';
+    if (type === 'outlet') html = '<option value="all">— All Outlets —</option>';
+    html += items.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('');
+    sel.innerHTML = html;
 }
 async function generateOutreach() {
-    const body = { target_type: document.getElementById('or-type').value, target_id: parseInt(document.getElementById('or-target').value), message_type: document.getElementById('or-msg-type').value, tone: document.getElementById('or-tone').value, game_title: document.getElementById('or-game').value, game_description: document.getElementById('or-desc').value, key_selling_points: document.getElementById('or-points').value.split(',').map(s=>s.trim()).filter(Boolean) };
+    const targetType = document.getElementById('or-type').value;
+    const targetVal = document.getElementById('or-target').value;
+    const params = {
+        message_type: document.getElementById('or-msg-type').value,
+        tone: document.getElementById('or-tone').value,
+        game_title: document.getElementById('or-game').value || 'Our Game',
+        game_description: document.getElementById('or-desc').value || '',
+        key_selling_points: document.getElementById('or-points').value.split(',').map(s=>s.trim()).filter(Boolean),
+    };
+    // If "All Outlets" selected, go to bulk page
+    if (targetType === 'outlet' && targetVal === 'all') {
+        closeModal();
+        renderBulkOutletPage(params);
+        return;
+    }
+    const body = { target_type: targetType, target_id: parseInt(targetVal), ...params };
     try {
         const msg = await api('/api/outreach/generate',{method:'POST',body:JSON.stringify(body)});
         closeModal(); toast('Message generated!');
@@ -634,80 +653,209 @@ async function deleteOutreach(id) {
 }
 
 // ─── Bulk Generate for All Outlets ───
-let bulkResultsStore = {};
+let bulkParams = {};
+let bulkMsgMap = {}; // outlet_id -> OutreachMessage
+let bulkFilter = 'all'; // 'all', 'pending', 'done'
 
-function showBulkGenerateForm() {
+async function renderBulkOutletPage(params) {
+    bulkParams = params;
+    bulkFilter = 'all';
     const m = document.getElementById('main-content');
-    m.innerHTML = `${ctxBanner('generate message for all outlet languages')}
-        <div class="content-header"><div><h1>Generate for All Outlets</h1><p>Create one message, translate to all outlet languages</p></div>
-        <div class="header-actions"><button class="btn btn-secondary" onclick="render()">Back to Outreach</button></div></div>
-        <div class="panel"><h3>Message Details</h3>
-        <div class="bulk-form">
-            <div><label>Game Title</label><input type="text" id="bg-title" placeholder="Your game title"></div>
-            <div><label>Message Type</label><select id="bg-type"><option value="pitch">Pitch</option><option value="coverage_request">Coverage Request</option></select></div>
-            <div><label>Tone</label><select id="bg-tone"><option value="professional">Professional</option><option value="casual">Casual</option><option value="enthusiastic">Enthusiastic</option><option value="formal">Formal</option></select></div>
-            <div><label>Key Selling Points (comma separated)</label><input type="text" id="bg-points" placeholder="Unique mechanic, Award-winning..."></div>
-            <div class="full-width"><label>Game Description</label><textarea id="bg-desc" placeholder="Brief description of your game..." rows="2"></textarea></div>
-            <div class="full-width"><button class="btn btn-primary" id="bg-btn" onclick="generateForAll()" style="width:100%;padding:10px">Generate &amp; Translate for All Outlets</button></div>
-        </div></div>
-        <div id="bulk-results"></div>`;
+    m.innerHTML = `${ctxBanner('bulk message generation for all outlets')}
+        <div class="content-header"><div><h1>Generate for All Outlets</h1>
+        <p>Personalized messages translated to each outlet's language</p></div>
+        <div class="header-actions"><button class="btn btn-secondary" onclick="section='outreach';render()">Back to Outreach</button></div></div>
+        <div class="bulk-summary">
+            <span class="summary-chip">Game: <strong>${esc(params.game_title)}</strong></span>
+            <span class="summary-chip">Type: <strong>${esc(params.message_type)}</strong></span>
+            <span class="summary-chip">Tone: <strong>${esc(params.tone)}</strong></span>
+        </div>
+        <div class="bulk-progress">
+            <div class="progress-bar"><div class="progress-fill" id="bulk-prog-fill" style="width:0%"></div></div>
+            <span class="progress-text" id="bulk-prog-text">Loading...</span>
+        </div>
+        <div class="bulk-actions">
+            <button class="btn btn-primary" id="bulk-gen-btn" onclick="generateNextBatch()" disabled>Generate Next 10</button>
+            <div class="filter-chips">
+                <button class="filter-chip active" onclick="setBulkFilter('all',this)">All</button>
+                <button class="filter-chip" onclick="setBulkFilter('pending',this)">Pending</button>
+                <button class="filter-chip" onclick="setBulkFilter('done',this)">Done</button>
+            </div>
+        </div>
+        <div class="panel" style="padding:0;overflow:hidden">
+            <table class="data-table" id="bulk-table"><thead><tr>
+                <th style="width:30px">#</th><th>Outlet</th><th>Language</th><th>Country</th><th>Status</th><th>Actions</th>
+            </tr></thead><tbody id="bulk-tbody"><tr><td colspan="6" class="loading">Loading outlets...</td></tr></tbody></table>
+        </div>`;
+    await loadBulkStatus();
 }
 
-async function generateForAll() {
-    const btn = document.getElementById('bg-btn');
-    btn.textContent = 'Generating & Translating...'; btn.disabled = true;
-    const points = document.getElementById('bg-points').value.split(',').map(s => s.trim()).filter(Boolean);
+async function loadBulkStatus() {
+    // Fetch existing messages for these outlets
     try {
-        const data = await api('/api/outreach/generate-for-all', {
-            method: 'POST',
-            body: JSON.stringify({
-                message_type: document.getElementById('bg-type').value,
-                tone: document.getElementById('bg-tone').value,
-                game_title: document.getElementById('bg-title').value || null,
-                game_description: document.getElementById('bg-desc').value || null,
-                key_selling_points: points.length ? points : [],
-            })
-        });
-        renderBulkResults(data);
-    } catch (e) {
-        document.getElementById('bulk-results').innerHTML = `<div class="error">${esc(e.message)}</div>`;
-    } finally {
-        btn.textContent = 'Generate & Translate for All Outlets'; btn.disabled = false;
+        const msgs = await api('/api/outreach/messages?target_type=outlet&per_page=500');
+        bulkMsgMap = {};
+        for (const msg of msgs) {
+            if (msg.outlet_id && msg.game_title === bulkParams.game_title && msg.message_type === bulkParams.message_type) {
+                bulkMsgMap[msg.outlet_id] = msg;
+            }
+        }
+    } catch(e) { bulkMsgMap = {}; }
+    renderBulkTable();
+}
+
+function renderBulkTable() {
+    const tbody = document.getElementById('bulk-tbody');
+    const btn = document.getElementById('bulk-gen-btn');
+    let filtered = outlets.filter(o => o.is_active !== false);
+    const doneCount = filtered.filter(o => bulkMsgMap[o.id]).length;
+    const totalCount = filtered.length;
+    const pendingCount = totalCount - doneCount;
+
+    // Update progress
+    const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+    document.getElementById('bulk-prog-fill').style.width = pct + '%';
+    document.getElementById('bulk-prog-text').textContent = `${doneCount} / ${totalCount} generated (${pct}%)`;
+
+    // Apply filter
+    if (bulkFilter === 'pending') filtered = filtered.filter(o => !bulkMsgMap[o.id]);
+    else if (bulkFilter === 'done') filtered = filtered.filter(o => bulkMsgMap[o.id]);
+
+    // Enable/disable generate button
+    btn.disabled = pendingCount === 0;
+    btn.textContent = pendingCount > 0 ? `Generate Next ${Math.min(10, pendingCount)}` : 'All Done!';
+    if (pendingCount === 0) btn.classList.remove('btn-primary'), btn.classList.add('btn-success');
+    else btn.classList.remove('btn-success'), btn.classList.add('btn-primary');
+
+    if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty">${bulkFilter==='pending'?'All outlets have messages!':'No outlets match this filter.'}</td></tr>`;
+        return;
     }
+
+    tbody.innerHTML = filtered.map((o, i) => {
+        const msg = bulkMsgMap[o.id];
+        const idx = outlets.indexOf(o) + 1;
+        return `<tr id="bulk-row-${o.id}">
+            <td style="color:var(--text-muted)">${idx}</td>
+            <td><strong>${esc(o.name)}</strong></td>
+            <td><span class="badge badge-lang">${esc(o.language||'en')}</span></td>
+            <td>${esc(o.country||o.region||'-')}</td>
+            <td>${msg
+                ? '<span class="status-done">&#10003; Generated</span>'
+                : '<span class="status-pending">— Pending</span>'}</td>
+            <td>${msg
+                ? `<button class="btn btn-sm btn-secondary" onclick="viewBulkMsg(${o.id})">View</button> <button class="btn-copy" onclick="copyBulkMsg(${o.id},this)">Copy</button>`
+                : ''}</td>
+        </tr>`;
+    }).join('');
 }
 
-function renderBulkResults(data) {
-    bulkResultsStore = {};
-    let html = `<div class="panel"><h3>Translated Messages</h3><p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Generated for <strong>${data.total_languages}</strong> languages covering <strong>${data.total_outlets_covered}</strong> outlets</p>`;
-    data.translations.forEach((t, i) => {
-        bulkResultsStore[i] = { subject: t.subject, body_text: t.body_text };
-        html += `<div class="lang-card">
-            <div class="lang-hdr"><h4>${esc(t.language_name)}</h4><span class="badge badge-lang">${esc(t.language_code)}</span>
-            <span style="font-size:11px;color:var(--text-secondary);margin-left:auto">${t.outlet_names.length} outlet${t.outlet_names.length!==1?'s':''}</span></div>
-            <div class="outlets-list">Outlets: ${t.outlet_names.map(n => esc(n)).join(', ')}</div>
-            <div class="msg-subj">Subject: ${esc(t.subject)}</div>
-            <div class="msg-body">${esc(t.body_text)}</div>
-            <div class="copy-btns">
-                <button class="btn-copy" id="cpFull${i}" onclick="copyBulk(${i},'full','cpFull${i}')">Copy Full Message</button>
-                <button class="btn-copy" id="cpSubj${i}" onclick="copyBulk(${i},'subject','cpSubj${i}')">Copy Subject</button>
-                <button class="btn-copy" id="cpBody${i}" onclick="copyBulk(${i},'body','cpBody${i}')">Copy Body</button>
-            </div></div>`;
-    });
-    html += '</div>';
-    document.getElementById('bulk-results').innerHTML = html;
+function setBulkFilter(f, btn) {
+    bulkFilter = f;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderBulkTable();
 }
 
-function copyBulk(idx, part, btnId) {
-    const d = bulkResultsStore[idx];
-    let text = '';
-    if (part === 'full') text = 'Subject: ' + d.subject + '\n\n' + d.body_text;
-    else if (part === 'subject') text = d.subject;
-    else text = d.body_text;
+async function generateNextBatch() {
+    const btn = document.getElementById('bulk-gen-btn');
+    const pending = outlets.filter(o => o.is_active !== false && !bulkMsgMap[o.id]);
+    const batch = pending.slice(0, 10);
+    if (!batch.length) { toast('All outlets already have messages!'); return; }
+
+    btn.disabled = true;
+    const total = batch.length;
+
+    for (let i = 0; i < total; i++) {
+        btn.textContent = `Generating ${i + 1} / ${total}...`;
+        try {
+            const results = await api('/api/outreach/generate-bulk', {
+                method: 'POST',
+                body: JSON.stringify({
+                    outlet_ids: [batch[i].id],
+                    message_type: bulkParams.message_type,
+                    tone: bulkParams.tone,
+                    game_title: bulkParams.game_title,
+                    game_description: bulkParams.game_description,
+                    key_selling_points: bulkParams.key_selling_points,
+                })
+            });
+            if (results.length) {
+                bulkMsgMap[batch[i].id] = results[0];
+                // Live-update just this row
+                updateBulkRow(batch[i].id);
+                // Update progress bar live
+                const doneCount = outlets.filter(o => o.is_active !== false && bulkMsgMap[o.id]).length;
+                const totalCount = outlets.filter(o => o.is_active !== false).length;
+                const pct = Math.round((doneCount / totalCount) * 100);
+                document.getElementById('bulk-prog-fill').style.width = pct + '%';
+                document.getElementById('bulk-prog-text').textContent = `${doneCount} / ${totalCount} generated (${pct}%)`;
+            }
+        } catch(e) {
+            toast(`Failed for ${batch[i].name}: ${e.message}`, 'error');
+        }
+    }
+
+    toast(`Generated ${total} messages!`);
+    renderBulkTable();
+}
+
+function updateBulkRow(outletId) {
+    const row = document.getElementById('bulk-row-' + outletId);
+    if (!row) return;
+    const msg = bulkMsgMap[outletId];
+    if (!msg) return;
+    const cells = row.querySelectorAll('td');
+    if (cells[4]) cells[4].innerHTML = '<span class="status-done">&#10003; Generated</span>';
+    if (cells[5]) cells[5].innerHTML = `<button class="btn btn-sm btn-secondary" onclick="viewBulkMsg(${outletId})">View</button> <button class="btn-copy" onclick="copyBulkMsg(${outletId},this)">Copy</button>`;
+    row.style.animation = 'fadeIn 0.3s';
+}
+
+function viewBulkMsg(outletId) {
+    const msg = bulkMsgMap[outletId];
+    if (!msg) return;
+    const o = outlets.find(x => x.id === outletId);
+    showModal(esc(msg.subject), `
+        <div class="detail-grid" style="margin-bottom:14px">
+            ${dv('Outlet', o ? o.name : msg.recipient_name)}
+            ${dv('Language', o ? o.language : '-')}
+            ${dv('Recipient', msg.recipient_name || '-')}
+            ${dv('Email', msg.recipient_email || '-')}
+            ${dv('Type', msg.message_type)}
+            ${dv('Tone', msg.tone)}
+            ${dv('Game', msg.game_title)}
+        </div>
+        <div class="panel" style="margin-bottom:12px">
+            <h3 style="font-size:12px;color:var(--accent);margin-bottom:8px">Subject</h3>
+            <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${esc(msg.subject)}</div>
+        </div>
+        <div class="panel" style="margin-bottom:12px">
+            <h3 style="font-size:12px;color:var(--accent);margin-bottom:8px">Message Body</h3>
+            <div style="font-size:13px;line-height:1.7;white-space:pre-wrap;color:var(--text-secondary)">${esc(msg.body_text||'')}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+            <button class="btn btn-success" onclick="copyText(\`Subject: \${${JSON.stringify(msg.subject)}}\\n\\n\${${JSON.stringify(msg.body_text||'')}}\`,this)">Copy Full Message</button>
+            <button class="btn btn-secondary" onclick="copyText(${JSON.stringify(msg.body_text||'')},this)">Copy Body Only</button>
+        </div>
+    `);
+}
+
+function copyBulkMsg(outletId, btn) {
+    const msg = bulkMsgMap[outletId];
+    if (!msg) return;
+    const text = 'Subject: ' + msg.subject + '\n\n' + (msg.body_text || '');
     navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById(btnId);
         const orig = btn.textContent;
         btn.textContent = 'Copied!'; btn.classList.add('copied');
-        setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+    });
+}
+
+function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
     });
 }
 

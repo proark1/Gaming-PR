@@ -6,13 +6,12 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.outreach import OutreachMessage
-from app.config import SUPPORTED_LANGUAGES
 from app.models.outlet import GamingOutlet
 from app.schemas.outreach import (
     GenerateMessageRequest, OutreachMessageResponse, OutreachStatsResponse,
-    GenerateAllOutletsRequest, GenerateAllOutletsResponse, TranslatedMessageItem,
+    BulkGenerateRequest,
 )
-from app.services.message_generator import generate_message, generate_base_message
+from app.services.message_generator import generate_message
 from app.services.translation_service import translate_outreach_message
 from app.services.contact_scraper import (
     scrape_outlet_website, scrape_streamer_website, scrape_vc_website,
@@ -44,88 +43,54 @@ def generate_outreach_message(req: GenerateMessageRequest, db: Session = Depends
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post("/generate-for-all", response_model=GenerateAllOutletsResponse, status_code=200)
-def generate_for_all_outlets(req: GenerateAllOutletsRequest, db: Session = Depends(get_db)):
-    """Generate a base outreach message and translate it into all languages of existing outlets."""
+@router.post("/generate-bulk", response_model=list[OutreachMessageResponse], status_code=201)
+def generate_bulk_outlet_messages(req: BulkGenerateRequest, db: Session = Depends(get_db)):
+    """Generate personalized outreach messages for up to 10 outlets at once.
+    Each message is personalized per outlet and translated to the outlet's language."""
     import logging
-    import time
     logger = logging.getLogger(__name__)
 
-    # 1. Generate base English message
-    base_subject, base_body_html, base_body_text = generate_base_message(
-        message_type=req.message_type,
-        tone=req.tone,
-        game_title=req.game_title,
-        game_description=req.game_description,
-        key_selling_points=req.key_selling_points,
-        custom_context=req.custom_context,
-    )
+    if len(req.outlet_ids) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 outlets per batch")
 
-    # 2. Get all active outlets grouped by language
-    outlets = db.query(GamingOutlet).filter(GamingOutlet.is_active.is_(True)).all()
-    lang_groups: dict[str, list[str]] = {}
-    for o in outlets:
-        lang = o.language or "en"
-        lang_groups.setdefault(lang, []).append(o.name)
-
-    # 3. Translate for each non-English language
-    translations = []
-    total_outlets = 0
-
-    for lang_code, outlet_names in sorted(lang_groups.items()):
-        total_outlets += len(outlet_names)
-        lang_name = SUPPORTED_LANGUAGES.get(lang_code, lang_code)
-
-        if lang_code == "en":
-            translations.append(TranslatedMessageItem(
-                language_code="en",
-                language_name="English",
-                subject=base_subject,
-                body_html=base_body_html,
-                body_text=base_body_text,
-                outlet_names=sorted(outlet_names),
-            ))
-            continue
-
+    results = []
+    for outlet_id in req.outlet_ids:
         try:
-            translated_subject, translated_body = translate_outreach_message(
-                base_subject, base_body_text, "en", lang_code
+            msg = generate_message(
+                db=db,
+                target_type="outlet",
+                target_id=outlet_id,
+                message_type=req.message_type,
+                tone=req.tone,
+                game_title=req.game_title,
+                game_description=req.game_description,
+                key_selling_points=req.key_selling_points,
+                custom_context=req.custom_context,
             )
-            # Wrap translated plain text in HTML paragraphs for display
-            translated_body_html = "".join(
-                f"<p>{line}</p>" for line in translated_body.split("\n") if line.strip()
-            )
-            translations.append(TranslatedMessageItem(
-                language_code=lang_code,
-                language_name=lang_name,
-                subject=translated_subject,
-                body_html=translated_body_html,
-                body_text=translated_body,
-                outlet_names=sorted(outlet_names),
-            ))
-        except Exception as e:
-            logger.error(f"Translation to {lang_code} failed: {e}")
-            translations.append(TranslatedMessageItem(
-                language_code=lang_code,
-                language_name=lang_name,
-                subject=f"[Translation failed] {base_subject}",
-                body_html=f"<p><em>Translation to {lang_name} failed: {str(e)}</em></p>",
-                body_text=f"[Translation failed] {base_body_text}",
-                outlet_names=sorted(outlet_names),
-            ))
+            # Translate if outlet is non-English
+            outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
+            if outlet and outlet.language and outlet.language != "en":
+                try:
+                    translated_subject, translated_body = translate_outreach_message(
+                        msg.subject, msg.body_text, "en", outlet.language
+                    )
+                    msg.subject = translated_subject
+                    msg.body_text = translated_body
+                    msg.body_html = "".join(
+                        f"<p>{line}</p>" for line in translated_body.split("\n") if line.strip()
+                    )
+                    if not msg.personalization_data:
+                        msg.personalization_data = {}
+                    msg.personalization_data["translated_to"] = outlet.language
+                    db.commit()
+                    db.refresh(msg)
+                except Exception as e:
+                    logger.warning(f"Translation to {outlet.language} failed for outlet {outlet_id}: {e}")
+            results.append(msg)
+        except ValueError as e:
+            logger.error(f"Failed to generate for outlet {outlet_id}: {e}")
 
-        # Small delay between translations to avoid rate limiting
-        time.sleep(0.3)
-
-    return GenerateAllOutletsResponse(
-        base_language="en",
-        base_subject=base_subject,
-        base_body_html=base_body_html,
-        base_body_text=base_body_text,
-        translations=translations,
-        total_languages=len(lang_groups),
-        total_outlets_covered=total_outlets,
-    )
+    return results
 
 
 @router.get("/messages", response_model=list[OutreachMessageResponse])
