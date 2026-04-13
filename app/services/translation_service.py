@@ -65,6 +65,17 @@ def translate_text(text: str, source: str, target: str, retries: int = 3) -> str
     return "\n\n".join(translated_chunks)
 
 
+def translate_outreach_message(
+    subject: str, body_text: str, source_lang: str, target_lang: str
+) -> tuple[str, str]:
+    """Translate an outreach message's subject and body text.
+    Returns (translated_subject, translated_body_text).
+    """
+    translated_subject = translate_text(subject, source_lang, target_lang)
+    translated_body = translate_text(body_text, source_lang, target_lang)
+    return translated_subject, translated_body
+
+
 def translate_article(db: Session, article_id: int) -> list[ArticleTranslation]:
     """Translate an article into all supported languages."""
     article = db.query(Article).filter(Article.id == article_id).first()

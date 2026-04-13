@@ -165,6 +165,24 @@
         .scroll-y { overflow-y: auto; }
 
         @media (max-width: 800px) { body { grid-template-columns: 1fr; } aside { display: none; } .grid-4 { grid-template-columns: 1fr 1fr; } }
+
+        /* Bulk Generate */
+        .bulk-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .bulk-form .full-width { grid-column: 1 / -1; }
+        .bulk-form label { font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 3px; }
+        .bulk-form input, .bulk-form select, .bulk-form textarea { width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); font-size: 12px; font-family: inherit; outline: none; }
+        .bulk-form input:focus, .bulk-form select:focus, .bulk-form textarea:focus { border-color: var(--accent); }
+        .bulk-form textarea { resize: vertical; }
+        .lang-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+        .lang-card .lang-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+        .lang-card .lang-hdr h4 { font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0; }
+        .lang-card .outlets-list { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.5; }
+        .lang-card .msg-subj { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+        .lang-card .msg-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; max-height: 180px; overflow-y: auto; margin-bottom: 10px; white-space: pre-wrap; }
+        .copy-btns { display: flex; gap: 6px; }
+        .btn-copy { padding: 5px 12px; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; background: rgba(34,197,94,0.13); border: 1px solid var(--green); color: var(--green); font-family: inherit; }
+        .btn-copy:hover { background: var(--green); color: #fff; }
+        .btn-copy.copied { background: var(--green); color: #fff; }
     </style>
 </head>
 <body>
@@ -552,7 +570,7 @@ async function renderOutreach(m) {
     const tt = meta.targetType;
     m.innerHTML = `${ctxBanner(`outreach to ${meta.label.toLowerCase()}`)}
         <div class="content-header"><div><h1>Outreach</h1><p>Personalized messages to ${meta.label.toLowerCase()}</p></div>
-        <div class="header-actions"><button class="btn btn-primary" onclick="showOutreachForm('${tt}')">+ Generate Message</button></div></div>
+        <div class="header-actions"><button class="btn btn-primary" onclick="showOutreachForm('${tt}')">+ Generate Message</button>${tt==='outlet'?'<button class="btn btn-success" onclick="showBulkGenerateForm()">Generate for All Outlets</button>':''}</div></div>
         <div id="or-stats"></div>
         <div class="panel"><h3>Messages for ${meta.label}</h3><div id="or-list"><div class="loading">Loading...</div></div></div>`;
     try {
@@ -613,6 +631,84 @@ async function viewOutreachMsg(id) {
 async function deleteOutreach(id) {
     if (!confirm('Delete?')) return;
     try { await api(`/api/outreach/messages/${id}`,{method:'DELETE'}); toast('Deleted'); render(); } catch(e){toast(e.message,'error');}
+}
+
+// ─── Bulk Generate for All Outlets ───
+let bulkResultsStore = {};
+
+function showBulkGenerateForm() {
+    const m = document.getElementById('main-content');
+    m.innerHTML = `${ctxBanner('generate message for all outlet languages')}
+        <div class="content-header"><div><h1>Generate for All Outlets</h1><p>Create one message, translate to all outlet languages</p></div>
+        <div class="header-actions"><button class="btn btn-secondary" onclick="render()">Back to Outreach</button></div></div>
+        <div class="panel"><h3>Message Details</h3>
+        <div class="bulk-form">
+            <div><label>Game Title</label><input type="text" id="bg-title" placeholder="Your game title"></div>
+            <div><label>Message Type</label><select id="bg-type"><option value="pitch">Pitch</option><option value="coverage_request">Coverage Request</option></select></div>
+            <div><label>Tone</label><select id="bg-tone"><option value="professional">Professional</option><option value="casual">Casual</option><option value="enthusiastic">Enthusiastic</option><option value="formal">Formal</option></select></div>
+            <div><label>Key Selling Points (comma separated)</label><input type="text" id="bg-points" placeholder="Unique mechanic, Award-winning..."></div>
+            <div class="full-width"><label>Game Description</label><textarea id="bg-desc" placeholder="Brief description of your game..." rows="2"></textarea></div>
+            <div class="full-width"><button class="btn btn-primary" id="bg-btn" onclick="generateForAll()" style="width:100%;padding:10px">Generate &amp; Translate for All Outlets</button></div>
+        </div></div>
+        <div id="bulk-results"></div>`;
+}
+
+async function generateForAll() {
+    const btn = document.getElementById('bg-btn');
+    btn.textContent = 'Generating & Translating...'; btn.disabled = true;
+    const points = document.getElementById('bg-points').value.split(',').map(s => s.trim()).filter(Boolean);
+    try {
+        const data = await api('/api/outreach/generate-for-all', {
+            method: 'POST',
+            body: JSON.stringify({
+                message_type: document.getElementById('bg-type').value,
+                tone: document.getElementById('bg-tone').value,
+                game_title: document.getElementById('bg-title').value || null,
+                game_description: document.getElementById('bg-desc').value || null,
+                key_selling_points: points.length ? points : [],
+            })
+        });
+        renderBulkResults(data);
+    } catch (e) {
+        document.getElementById('bulk-results').innerHTML = `<div class="error">${esc(e.message)}</div>`;
+    } finally {
+        btn.textContent = 'Generate & Translate for All Outlets'; btn.disabled = false;
+    }
+}
+
+function renderBulkResults(data) {
+    bulkResultsStore = {};
+    let html = `<div class="panel"><h3>Translated Messages</h3><p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">Generated for <strong>${data.total_languages}</strong> languages covering <strong>${data.total_outlets_covered}</strong> outlets</p>`;
+    data.translations.forEach((t, i) => {
+        bulkResultsStore[i] = { subject: t.subject, body_text: t.body_text };
+        html += `<div class="lang-card">
+            <div class="lang-hdr"><h4>${esc(t.language_name)}</h4><span class="badge badge-lang">${esc(t.language_code)}</span>
+            <span style="font-size:11px;color:var(--text-secondary);margin-left:auto">${t.outlet_names.length} outlet${t.outlet_names.length!==1?'s':''}</span></div>
+            <div class="outlets-list">Outlets: ${t.outlet_names.map(n => esc(n)).join(', ')}</div>
+            <div class="msg-subj">Subject: ${esc(t.subject)}</div>
+            <div class="msg-body">${esc(t.body_text)}</div>
+            <div class="copy-btns">
+                <button class="btn-copy" id="cpFull${i}" onclick="copyBulk(${i},'full','cpFull${i}')">Copy Full Message</button>
+                <button class="btn-copy" id="cpSubj${i}" onclick="copyBulk(${i},'subject','cpSubj${i}')">Copy Subject</button>
+                <button class="btn-copy" id="cpBody${i}" onclick="copyBulk(${i},'body','cpBody${i}')">Copy Body</button>
+            </div></div>`;
+    });
+    html += '</div>';
+    document.getElementById('bulk-results').innerHTML = html;
+}
+
+function copyBulk(idx, part, btnId) {
+    const d = bulkResultsStore[idx];
+    let text = '';
+    if (part === 'full') text = 'Subject: ' + d.subject + '\n\n' + d.body_text;
+    else if (part === 'subject') text = d.subject;
+    else text = d.body_text;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById(btnId);
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+    });
 }
 
 // ─── SECTION: Scraper (context-aware) ───
