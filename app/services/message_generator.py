@@ -347,6 +347,17 @@ def BeautifulSoup_to_text(html_content: str) -> str:
 
 # ─── Base Message Variants (for edit-before-bulk flow) ───
 
+def _build_selling_points_prose(points: list[str]) -> str:
+    """Turn selling points into natural flowing prose, not bullet points."""
+    if not points:
+        return ""
+    if len(points) == 1:
+        return html.escape(points[0])
+    last = html.escape(points[-1])
+    rest = ", ".join(html.escape(p) for p in points[:-1])
+    return f"{rest}, and {last}"
+
+
 def generate_message_variants(
     message_type: str = "pitch",
     tone: str = "professional",
@@ -356,82 +367,142 @@ def generate_message_variants(
     custom_context: Optional[str] = None,
 ) -> dict:
     """
-    Generate two distinct best-practice message variants for the user to
-    choose from before bulk-sending. Each variant has a different angle.
-    Returns dict with variant_a and variant_b, each having subject + body_text.
+    Generate two genuinely distinct, publication-ready message variants.
+    Each uses a completely different structure, persuasion strategy, and voice.
+    The user's game info is woven in naturally — not dumped as lists.
+    Returns dict with variant_a and variant_b.
     """
-    game_title = game_title or "Our Game"
-    game_description = game_description or ""
-    key_selling_points = key_selling_points or []
-    custom_context = custom_context or ""
+    title = html.escape(game_title or "Our Game")
+    desc = html.escape(game_description or "")
+    points = key_selling_points or []
+    ctx = html.escape(custom_context or "")
+    sp_prose = _build_selling_points_prose(points)
+    sp_bullets = _format_selling_points(points) if points else ""
 
-    greeting = _personalize_greeting("Editor", tone)
-    sp_html = _format_selling_points(key_selling_points) if key_selling_points else ""
-    closing = _closing(tone)
-    desc_line = f" — {html.escape(game_description)}" if game_description else ""
-    ctx_line = f"<p>{html.escape(custom_context)}</p>" if custom_context else ""
+    # Tone-adaptive elements
+    if tone == "casual":
+        g1, g2 = "Hey Editor,", "Hi Editor,"
+        c1, c2 = "Talk soon!", "Looking forward to it!"
+        opener_warm = "Hope you're having a great week."
+    elif tone == "enthusiastic":
+        g1, g2 = "Hi Editor!", "Hey Editor!"
+        c1, c2 = "Can't wait to hear your thoughts!", "Really looking forward to connecting!"
+        opener_warm = "I'm thrilled to be reaching out to you today."
+    elif tone == "formal":
+        g1, g2 = "Dear Editor,", "Dear Editor,"
+        c1, c2 = "Respectfully,", "With kind regards,"
+        opener_warm = "I trust this message finds you well."
+    else:
+        g1, g2 = "Hi Editor,", "Hello Editor,"
+        c1, c2 = "Best regards,", "Looking forward to hearing from you,"
+        opener_warm = "I hope this finds you well."
 
     if message_type == "coverage_request":
-        # ── Variant A: Direct & Resource-Led ──
-        a_subject = f"{game_title} — Coverage Opportunity + Press Kit Ready"
-        a_html = f"""
-<p>{greeting}</p>
-<p>I'm reaching out because <strong>{html.escape(game_title)}</strong>{desc_line} is launching soon, and I'd love for your outlet to be among the first to cover it.</p>
-{f"<p><strong>Why this stands out:</strong></p>{sp_html}" if sp_html else ""}
-{ctx_line}
-<p>We have a full press kit ready for you — including screenshots, key art, a gameplay trailer, and a fact sheet. I can also arrange an exclusive developer interview or early hands-on access if that would be helpful for your coverage.</p>
-<p>Would any of these work for your editorial calendar? Happy to tailor the assets to what your outlet needs most.</p>
-<p>{closing}</p>
-""".strip()
+        # ═══════════════════════════════════════════════════
+        # COVERAGE REQUEST — Variant A: "The Newsroom Pitch"
+        # Strategy: Lead with the story, make it easy to say yes
+        # ═══════════════════════════════════════════════════
+        a_subject = f"{title} — Ready-Made Story for Your Outlet"
+        a_body = f"""{g1}
 
-        # ── Variant B: Story-Angle & Audience-Focused ──
-        b_subject = f"Story Angle: {game_title} — A Fresh Take Your Readers Will Love"
-        b_html = f"""
-<p>{greeting}</p>
-<p>I wanted to share a story angle I think would resonate with your audience.</p>
-<p><strong>{html.escape(game_title)}</strong>{desc_line} brings something genuinely new to the table, and I believe your outlet is the perfect home for this story.</p>
-{f"<p><strong>What makes it noteworthy:</strong></p>{sp_html}" if sp_html else ""}
-{ctx_line}
-<p>I can offer several coverage angles — a behind-the-scenes feature on the development journey, an interview with the creative director, or a first-look preview with exclusive assets. Whatever fits your editorial style best.</p>
-<p>What angle would be most interesting for your outlet? I'll have everything ready to go.</p>
-<p>{closing}</p>
-""".strip()
+{opener_warm}
+
+I have a story I think is a natural fit for your outlet.
+
+{title}{f" — {desc}" if desc else ""} is launching soon, and there's a real narrative here that I think your readers would connect with.{f" What sets it apart: {sp_prose}." if sp_prose else ""}
+
+{f"{ctx}" + chr(10) + chr(10) if ctx else ""}Rather than just sending a press release, I wanted to reach out personally because I genuinely think this aligns with what your outlet covers. I've put together a complete press kit — key art, screenshots, gameplay trailer, fact sheet — so if this catches your eye, you can hit the ground running.
+
+I can also set up a developer interview, provide early access for a hands-on preview, or tailor assets to whatever format works best for your editorial calendar.
+
+Would this be something your outlet would be interested in covering? Happy to send everything over immediately.
+
+{c1}"""
+
+        # ═══════════════════════════════════════════════════
+        # COVERAGE REQUEST — Variant B: "The Story Angle"
+        # Strategy: Propose specific editorial angles, show you know their work
+        # ═══════════════════════════════════════════════════
+        b_subject = f"Three Story Angles on {title} — Pick the One That Fits"
+        b_body = f"""{g2}
+
+I've been following your outlet's coverage and wanted to pitch something a bit different — not just "here's a game, please cover it," but three specific angles I think would genuinely resonate with your audience.
+
+{title}{f" — {desc}" if desc else ""}.{f" The standout elements: {sp_prose}." if sp_prose else ""}
+
+{f"{ctx}" + chr(10) + chr(10) if ctx else ""}Here are the angles I had in mind:
+
+1. The Behind-the-Scenes Story — How {title} went from concept to reality. I can arrange an in-depth interview with the creative leads about the decisions that shaped the game.
+
+2. The First-Look Preview — An exclusive hands-on experience with the build, including assets your outlet would be the first to publish.
+
+3. The Industry Angle — What {title} represents in the current gaming landscape and why it matters right now. Great for a feature or opinion piece.
+
+You're welcome to pick one, combine them, or suggest something entirely different. I'll make it happen.
+
+Which angle interests you most?
+
+{c2}"""
+
     else:
-        # ── Variant A: Exclusive Preview Pitch ──
-        a_subject = f"Exclusive First Look: {game_title}"
-        a_html = f"""
-<p>{greeting}</p>
-<p>I'm excited to offer your outlet an exclusive first look at <strong>{html.escape(game_title)}</strong>{desc_line}.</p>
-{f"<p><strong>Key highlights:</strong></p>{sp_html}" if sp_html else ""}
-{ctx_line}
-<p>We're selectively reaching out to a small number of outlets we genuinely respect, and your team is at the top of that list. I can provide early access, a review copy, press assets, or arrange a hands-on session with the development team — whatever works best for you.</p>
-<p>Would your outlet be interested in covering this? I'd love to set something up.</p>
-<p>{closing}</p>
-""".strip()
+        # ═══════════════════════════════════════════════════
+        # PITCH — Variant A: "The Exclusive Offer"
+        # Strategy: Create urgency and exclusivity, make them feel chosen
+        # ═══════════════════════════════════════════════════
+        a_subject = f"For Your Eyes First: {title}"
+        a_body = f"""{g1}
 
-        # ── Variant B: Value Proposition & Partnership Pitch ──
-        b_subject = f"{game_title} — Let's Get Your Audience Excited"
-        b_html = f"""
-<p>{greeting}</p>
-<p>I have a game I think your audience will genuinely love, and I'd like to explore how we can work together to bring it to them.</p>
-<p><strong>{html.escape(game_title)}</strong>{desc_line} is generating real buzz, and I believe a feature on your outlet would be a win for both sides.</p>
-{f"<p><strong>Here's why:</strong></p>{sp_html}" if sp_html else ""}
-{ctx_line}
-<p>I'm flexible on format — whether that's a review copy, an exclusive trailer premiere, a developer Q&A, or a sponsored feature. I want to make this as easy as possible for your team.</p>
-<p>What would be the best way to collaborate? Happy to jump on a quick call or send over a press kit right away.</p>
-<p>{closing}</p>
-""".strip()
+I'm reaching out to a very small group of outlets before we go wide with this announcement — and your outlet is one of them.
+
+{title}{f" — {desc}" if desc else ""} is something we've been working on quietly, and we're now ready to show it to the world.{f" What makes it special: {sp_prose}." if sp_prose else ""}
+
+{f"{ctx}" + chr(10) + chr(10) if ctx else ""}Before we send this to the broader press list, I wanted to give your outlet the chance to break this story. Here's what I can offer exclusively:
+
+- A review copy or early access build, available immediately
+- First-to-publish gameplay footage and screenshots
+- A sit-down interview with our lead developer or creative director
+- Any custom assets your team needs for the piece
+
+This window won't last long — once we go public, the exclusivity is gone. But I'd rather your outlet gets first crack at this than anyone else.
+
+Interested? I can have everything in your inbox within the hour.
+
+{c1}"""
+
+        # ═══════════════════════════════════════════════════
+        # PITCH — Variant B: "The Relationship Builder"
+        # Strategy: No pressure, focus on mutual value, open a conversation
+        # ═══════════════════════════════════════════════════
+        b_subject = f"{title} — I Think Your Audience Will Love This"
+        b_body = f"""{g2}
+
+I'll keep this short because I know your inbox is packed.
+
+We're launching {title}{f" — {desc}" if desc else ""}, and I genuinely believe it's the kind of game your audience gets excited about.{f" A few reasons why: {sp_prose}." if sp_prose else ""}
+
+{f"{ctx}" + chr(10) + chr(10) if ctx else ""}I'm not looking for a favor — I think covering this would be genuinely valuable for your readers. The response from early testers has been overwhelmingly positive, and I'd love for your outlet to see why.
+
+No strings attached. I can send over:
+- A press kit with everything you need to decide if it's a fit
+- A review copy so your team can experience it firsthand
+- Developer access if you want quotes or an interview
+
+If it's not the right fit, no hard feelings at all. But if it is, I'd love to make it as easy as possible for your team to cover it.
+
+Worth a look?
+
+{c2}"""
 
     return {
         "variant_a": {
-            "label": "Direct & Resource-Led" if message_type == "coverage_request" else "Exclusive Preview",
+            "label": "The Newsroom Pitch" if message_type == "coverage_request" else "The Exclusive Offer",
             "subject": a_subject,
-            "body_text": BeautifulSoup_to_text(a_html),
+            "body_text": BeautifulSoup_to_text(a_body) if "<" in a_body else a_body.strip(),
         },
         "variant_b": {
-            "label": "Story-Angle & Audience" if message_type == "coverage_request" else "Partnership & Value",
+            "label": "The Story Angle" if message_type == "coverage_request" else "The Relationship Builder",
             "subject": b_subject,
-            "body_text": BeautifulSoup_to_text(b_html),
+            "body_text": BeautifulSoup_to_text(b_body) if "<" in b_body else b_body.strip(),
         },
     }
 
