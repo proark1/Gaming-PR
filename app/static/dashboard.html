@@ -184,6 +184,18 @@
         .filter-chip { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-family: inherit; transition: all 0.15s; }
         .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
         .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .edit-msg-form { display: flex; flex-direction: column; gap: 14px; }
+        .edit-msg-form label { font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .edit-msg-form input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); font-size: 14px; font-weight: 600; font-family: inherit; outline: none; }
+        .edit-msg-form textarea { width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); font-size: 13px; line-height: 1.7; font-family: inherit; outline: none; resize: vertical; }
+        .edit-msg-form input:focus, .edit-msg-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(124,92,255,0.15); }
+        .edit-hint { font-size: 11px; color: var(--text-muted); margin-top: -8px; line-height: 1.4; }
+        .step-indicator { display: flex; align-items: center; gap: 0; margin-bottom: 20px; }
+        .step { display: flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 20px; }
+        .step.active { background: var(--accent); color: #fff; }
+        .step.done { background: rgba(34,197,94,0.15); color: var(--green); }
+        .step.upcoming { background: var(--bg-secondary); color: var(--text-muted); }
+        .step-arrow { color: var(--text-muted); font-size: 16px; margin: 0 4px; }
     </style>
 </head>
 <body>
@@ -630,10 +642,18 @@ async function generateOutreach() {
         game_description: document.getElementById('or-desc').value || '',
         key_selling_points: document.getElementById('or-points').value.split(',').map(s=>s.trim()).filter(Boolean),
     };
-    // If "All Outlets" selected, go to bulk page
+    // If "All Outlets" selected, generate preview then show edit page
     if (targetType === 'outlet' && targetVal === 'all') {
         closeModal();
-        renderBulkOutletPage(params);
+        const m = document.getElementById('main-content');
+        m.innerHTML = `${ctxBanner('generating base message...')}<div class="loading">Generating preview...</div>`;
+        try {
+            const preview = await api('/api/outreach/generate-preview', {
+                method: 'POST',
+                body: JSON.stringify(params)
+            });
+            renderEditBasePage(params, preview.subject, preview.body_text);
+        } catch(e) { toast('Failed to generate preview: ' + e.message, 'error'); render(); }
         return;
     }
     const body = { target_type: targetType, target_id: parseInt(targetVal), ...params };
@@ -654,21 +674,75 @@ async function deleteOutreach(id) {
 
 // ─── Bulk Generate for All Outlets ───
 let bulkParams = {};
+let bulkBaseSubject = '';
+let bulkBaseBody = '';
 let bulkMsgMap = {}; // outlet_id -> OutreachMessage
 let bulkFilter = 'all'; // 'all', 'pending', 'done'
 
-async function renderBulkOutletPage(params) {
+function renderEditBasePage(params, subject, bodyText) {
     bulkParams = params;
-    bulkFilter = 'all';
     const m = document.getElementById('main-content');
-    m.innerHTML = `${ctxBanner('bulk message generation for all outlets')}
-        <div class="content-header"><div><h1>Generate for All Outlets</h1>
-        <p>Personalized messages translated to each outlet's language</p></div>
-        <div class="header-actions"><button class="btn btn-secondary" onclick="section='outreach';render()">Back to Outreach</button></div></div>
+    m.innerHTML = `${ctxBanner('step 1: review &amp; edit your base message')}
+        <div class="step-indicator">
+            <span class="step active">1. Edit Message</span>
+            <span class="step-arrow">&rarr;</span>
+            <span class="step upcoming">2. Generate for Outlets</span>
+        </div>
+        <div class="content-header"><div><h1>Review &amp; Edit Base Message</h1>
+        <p>This English message will be personalized per outlet (name, email) and translated to each outlet's language</p></div>
+        <div class="header-actions"><button class="btn btn-secondary" onclick="section='outreach';render()">Cancel</button></div></div>
         <div class="bulk-summary">
             <span class="summary-chip">Game: <strong>${esc(params.game_title)}</strong></span>
             <span class="summary-chip">Type: <strong>${esc(params.message_type)}</strong></span>
             <span class="summary-chip">Tone: <strong>${esc(params.tone)}</strong></span>
+        </div>
+        <div class="panel">
+            <h3>Edit Your Message</h3>
+            <div class="edit-msg-form">
+                <div>
+                    <label>Subject Line</label>
+                    <input type="text" id="edit-subject" value="${esc(subject)}">
+                </div>
+                <div>
+                    <label>Message Body</label>
+                    <textarea id="edit-body" rows="14">${esc(bodyText)}</textarea>
+                    <p class="edit-hint">Tip: "Editor" will be replaced with each outlet's editor name. "your outlet" will be replaced with the outlet name. Non-English outlets will receive a translated version.</p>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn btn-primary" onclick="proceedToOutletList()" style="padding:12px 28px;font-size:14px">Continue to Outlets &rarr;</button>
+            <button class="btn btn-secondary" onclick="section='outreach';render()">Cancel</button>
+        </div>`;
+}
+
+function proceedToOutletList() {
+    bulkBaseSubject = document.getElementById('edit-subject').value;
+    bulkBaseBody = document.getElementById('edit-body').value;
+    if (!bulkBaseSubject.trim() || !bulkBaseBody.trim()) {
+        toast('Subject and body cannot be empty', 'error');
+        return;
+    }
+    renderBulkOutletPage();
+}
+
+async function renderBulkOutletPage() {
+    bulkFilter = 'all';
+    const m = document.getElementById('main-content');
+    m.innerHTML = `${ctxBanner('step 2: generate for all outlets')}
+        <div class="step-indicator">
+            <span class="step done">&#10003; 1. Edit Message</span>
+            <span class="step-arrow">&rarr;</span>
+            <span class="step active">2. Generate for Outlets</span>
+        </div>
+        <div class="content-header"><div><h1>Generate for All Outlets</h1>
+        <p>Personalized &amp; translated per outlet</p></div>
+        <div class="header-actions"><button class="btn btn-secondary" onclick="renderEditBasePage(bulkParams, bulkBaseSubject, bulkBaseBody)">Back to Edit</button>
+        <button class="btn btn-secondary" onclick="section='outreach';render()">Cancel</button></div></div>
+        <div class="bulk-summary">
+            <span class="summary-chip">Game: <strong>${esc(bulkParams.game_title)}</strong></span>
+            <span class="summary-chip">Type: <strong>${esc(bulkParams.message_type)}</strong></span>
+            <span class="summary-chip">Tone: <strong>${esc(bulkParams.tone)}</strong></span>
         </div>
         <div class="bulk-progress">
             <div class="progress-bar"><div class="progress-fill" id="bulk-prog-fill" style="width:0%"></div></div>
@@ -773,6 +847,8 @@ async function generateNextBatch() {
                 method: 'POST',
                 body: JSON.stringify({
                     outlet_ids: [batch[i].id],
+                    base_subject: bulkBaseSubject,
+                    base_body: bulkBaseBody,
                     message_type: bulkParams.message_type,
                     tone: bulkParams.tone,
                     game_title: bulkParams.game_title,

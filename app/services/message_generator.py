@@ -345,6 +345,57 @@ def BeautifulSoup_to_text(html_content: str) -> str:
     return soup.get_text(separator="\n", strip=True)
 
 
+# ─── Base Message Preview (for edit-before-bulk flow) ───
+
+def generate_base_message(
+    message_type: str = "pitch",
+    tone: str = "professional",
+    game_title: Optional[str] = None,
+    game_description: Optional[str] = None,
+    key_selling_points: Optional[list[str]] = None,
+    custom_context: Optional[str] = None,
+) -> tuple[str, str]:
+    """
+    Generate a generic English outreach message for the user to edit
+    before bulk-sending to all outlets. Addressed to 'Editor' as a placeholder.
+    Returns (subject, body_text).
+    """
+    game_title = game_title or "Our Game"
+    game_description = game_description or ""
+    key_selling_points = key_selling_points or []
+    custom_context = custom_context or ""
+
+    greeting = _personalize_greeting("Editor", tone)
+    sp_html = _format_selling_points(key_selling_points) if key_selling_points else ""
+    closing = _closing(tone)
+
+    if message_type == "coverage_request":
+        subject = f"{game_title} - Press Coverage Opportunity"
+        body_html = f"""
+<p>{greeting}</p>
+<p>I hope this message finds you well. I'm writing to request coverage of <strong>{html.escape(game_title)}</strong> on your outlet.</p>
+{f"<p>{html.escape(game_description)}</p>" if game_description else ""}
+{f"<p><strong>Key highlights:</strong></p>{sp_html}" if sp_html else ""}
+{f"<p>{html.escape(custom_context)}</p>" if custom_context else ""}
+<p>We have press kits, screenshots, trailers, and dev interviews available. Would any of these be useful for your coverage?</p>
+<p>{closing}</p>
+""".strip()
+    else:
+        subject = f"Exclusive: {game_title} - Press Coverage Opportunity"
+        body_html = f"""
+<p>{greeting}</p>
+<p>I'm reaching out to share an exciting new title with your team.</p>
+<p>I'm excited to introduce <strong>{html.escape(game_title)}</strong>{f" - {html.escape(game_description)}" if game_description else ""}.</p>
+{f"<p><strong>Key highlights:</strong></p>{sp_html}" if sp_html else ""}
+{f"<p>{html.escape(custom_context)}</p>" if custom_context else ""}
+<p>I'd be happy to provide press assets, arrange an interview with the development team, or set up an exclusive preview. Please let me know what works best for your outlet.</p>
+<p>{closing}</p>
+""".strip()
+
+    body_text = BeautifulSoup_to_text(body_html)
+    return subject, body_text
+
+
 # ─── Main Generation Function ───
 
 def generate_message(

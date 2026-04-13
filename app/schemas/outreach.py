@@ -43,8 +43,24 @@ class OutreachMessageResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
 
+class PreviewMessageRequest(BaseModel):
+    message_type: str = "pitch"
+    tone: str = "professional"
+    game_title: Optional[str] = None
+    game_description: Optional[str] = None
+    key_selling_points: Optional[list[str]] = []
+    custom_context: Optional[str] = None
+
+
+class PreviewMessageResponse(BaseModel):
+    subject: str
+    body_text: str
+
+
 class BulkGenerateRequest(BaseModel):
     outlet_ids: list[int]  # up to 10 at a time
+    base_subject: str  # user-edited English subject
+    base_body: str  # user-edited English body (plain text)
     message_type: str = "pitch"
     tone: str = "professional"
     game_title: Optional[str] = None

@@ -9,9 +9,9 @@ from app.models.outreach import OutreachMessage
 from app.models.outlet import GamingOutlet
 from app.schemas.outreach import (
     GenerateMessageRequest, OutreachMessageResponse, OutreachStatsResponse,
-    BulkGenerateRequest,
+    BulkGenerateRequest, PreviewMessageRequest, PreviewMessageResponse,
 )
-from app.services.message_generator import generate_message
+from app.services.message_generator import generate_message, generate_base_message
 from app.services.translation_service import translate_outreach_message
 from app.services.contact_scraper import (
     scrape_outlet_website, scrape_streamer_website, scrape_vc_website,
@@ -43,10 +43,26 @@ def generate_outreach_message(req: GenerateMessageRequest, db: Session = Depends
         raise HTTPException(status_code=404, detail=str(e))
 
 
+@router.post("/generate-preview", response_model=PreviewMessageResponse)
+def generate_preview_message(req: PreviewMessageRequest):
+    """Generate a base English message for the user to review and edit
+    before bulk-sending to all outlets."""
+    subject, body_text = generate_base_message(
+        message_type=req.message_type,
+        tone=req.tone,
+        game_title=req.game_title,
+        game_description=req.game_description,
+        key_selling_points=req.key_selling_points,
+        custom_context=req.custom_context,
+    )
+    return PreviewMessageResponse(subject=subject, body_text=body_text)
+
+
 @router.post("/generate-bulk", response_model=list[OutreachMessageResponse], status_code=201)
 def generate_bulk_outlet_messages(req: BulkGenerateRequest, db: Session = Depends(get_db)):
-    """Generate personalized outreach messages for up to 10 outlets at once.
-    Each message is personalized per outlet and translated to the outlet's language."""
+    """Generate outreach messages for up to 10 outlets using the user-edited
+    base text. Personalizes the greeting per outlet and translates to the
+    outlet's language."""
     import logging
     logger = logging.getLogger(__name__)
 
@@ -55,40 +71,69 @@ def generate_bulk_outlet_messages(req: BulkGenerateRequest, db: Session = Depend
 
     results = []
     for outlet_id in req.outlet_ids:
-        try:
-            msg = generate_message(
-                db=db,
-                target_type="outlet",
-                target_id=outlet_id,
-                message_type=req.message_type,
-                tone=req.tone,
-                game_title=req.game_title,
-                game_description=req.game_description,
-                key_selling_points=req.key_selling_points,
-                custom_context=req.custom_context,
+        outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
+        if not outlet:
+            logger.error(f"Outlet {outlet_id} not found, skipping")
+            continue
+
+        recipient_name = outlet.editor_in_chief or outlet.name
+        recipient_email = outlet.submission_email or outlet.contact_email
+
+        # Personalize: replace generic "Editor" with actual recipient name
+        personalized_subject = req.base_subject.replace(
+            "for your outlet", f"for {outlet.name}"
+        )
+        personalized_body = req.base_body
+        for placeholder in ["Editor", "editor"]:
+            personalized_body = personalized_body.replace(
+                f"Hi {placeholder},", f"Hi {recipient_name},"
+            ).replace(
+                f"Hey {placeholder},", f"Hey {recipient_name},"
+            ).replace(
+                f"Dear {placeholder},", f"Dear {recipient_name},"
             )
-            # Translate if outlet is non-English
-            outlet = db.query(GamingOutlet).filter(GamingOutlet.id == outlet_id).first()
-            if outlet and outlet.language and outlet.language != "en":
-                try:
-                    translated_subject, translated_body = translate_outreach_message(
-                        msg.subject, msg.body_text, "en", outlet.language
-                    )
-                    msg.subject = translated_subject
-                    msg.body_text = translated_body
-                    msg.body_html = "".join(
-                        f"<p>{line}</p>" for line in translated_body.split("\n") if line.strip()
-                    )
-                    if not msg.personalization_data:
-                        msg.personalization_data = {}
-                    msg.personalization_data["translated_to"] = outlet.language
-                    db.commit()
-                    db.refresh(msg)
-                except Exception as e:
-                    logger.warning(f"Translation to {outlet.language} failed for outlet {outlet_id}: {e}")
-            results.append(msg)
-        except ValueError as e:
-            logger.error(f"Failed to generate for outlet {outlet_id}: {e}")
+        # Replace generic "your outlet" with outlet name
+        personalized_body = personalized_body.replace("your outlet", outlet.name)
+        personalized_body = personalized_body.replace("your team", f"the {outlet.name} team")
+
+        final_subject = personalized_subject
+        final_body = personalized_body
+        personalization = {"base_edited": True}
+
+        # Translate if outlet is non-English
+        if outlet.language and outlet.language != "en":
+            try:
+                final_subject, final_body = translate_outreach_message(
+                    personalized_subject, personalized_body, "en", outlet.language
+                )
+                personalization["translated_to"] = outlet.language
+            except Exception as e:
+                logger.warning(f"Translation to {outlet.language} failed for outlet {outlet_id}: {e}")
+
+        body_html = "".join(
+            f"<p>{line}</p>" for line in final_body.split("\n") if line.strip()
+        )
+
+        msg = OutreachMessage(
+            target_type="outlet",
+            outlet_id=outlet_id,
+            subject=final_subject,
+            body_html=body_html,
+            body_text=final_body,
+            message_type=req.message_type,
+            tone=req.tone,
+            personalization_data=personalization,
+            game_title=req.game_title,
+            game_description=req.game_description,
+            key_selling_points=req.key_selling_points,
+            recipient_name=recipient_name,
+            recipient_email=recipient_email,
+            status="draft",
+        )
+        db.add(msg)
+        db.commit()
+        db.refresh(msg)
+        results.append(msg)
 
     return results
 
